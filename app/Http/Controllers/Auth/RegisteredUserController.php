@@ -19,8 +19,26 @@ class RegisteredUserController extends Controller
 {
     public function create(): View
     {
+        $roleOptions = UserRole::options([UserRole::Pemda]);
+
+        $puskesmasOptions = User::query()
+            ->select('id', 'name')
+            ->where('role', UserRole::Puskesmas->value)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $kaderOptions = User::query()
+            ->select('id', 'name')
+            ->where('role', UserRole::Kader->value)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         return view('auth.register', [
-            'roleOptions' => UserRole::options(),
+            'roleOptions' => $roleOptions,
+            'puskesmasOptions' => $puskesmasOptions,
+            'kaderOptions' => $kaderOptions,
         ]);
     }
 
@@ -29,17 +47,49 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $selectedRole = UserRole::tryFrom($request->input('role') ?? '');
+
+        $baseRules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'role' => ['required', Rule::enum(UserRole::class)],
-            'nik' => ['nullable', 'string', 'max:30'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'organization' => ['nullable', 'string', 'max:255'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'role' => ['required', Rule::enum(UserRole::class), Rule::notIn([UserRole::Pemda->value])],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        ];
+
+        $activePuskesmasRule = Rule::exists('users', 'id')->where(function ($query) {
+            $query->where('role', UserRole::Puskesmas->value)
+                ->where('is_active', true);
+        });
+
+        $activeKaderRule = Rule::exists('users', 'id')->where(function ($query) {
+            $query->where('role', UserRole::Kader->value)
+                ->where('is_active', true);
+        });
+
+        $roleSpecificRules = match ($selectedRole) {
+            UserRole::Kelurahan => [
+                'kelurahan_name' => ['required', 'string', 'max:255'],
+                'kelurahan_address' => ['required', 'string', 'max:255'],
+                'kelurahan_phone' => ['required', 'string', 'max:30'],
+            ],
+            UserRole::Puskesmas => [
+                'puskesmas_name' => ['required', 'string', 'max:255'],
+                'puskesmas_address' => ['required', 'string', 'max:255'],
+                'puskesmas_phone' => ['required', 'string', 'max:30'],
+            ],
+            UserRole::Kader => [
+                'kader_phone' => ['required', 'string', 'max:30'],
+                'kader_puskesmas_id' => ['required', $activePuskesmasRule],
+            ],
+            UserRole::Pasien => [
+                'pasien_kk' => ['required', 'string', 'max:30'],
+                'pasien_address' => ['required', 'string', 'max:255'],
+                'pasien_kader_id' => ['required', $activeKaderRule],
+            ],
+            default => [],
+        };
+
+        $validated = $request->validate(array_merge($baseRules, $roleSpecificRules));
 
         $user = User::create([
             'name' => $validated['name'],
@@ -49,14 +99,30 @@ class RegisteredUserController extends Controller
             'is_active' => true,
         ]);
 
-        UserDetail::create([
-            'user_id' => $user->id,
-            'nik' => $validated['nik'] ?? null,
-            'phone' => $validated['phone'] ?? null,
-            'address' => $validated['address'] ?? null,
-            'organization' => $validated['organization'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-        ]);
+        $detailPayload = match ($selectedRole) {
+            UserRole::Kelurahan => [
+                'organization' => $validated['kelurahan_name'],
+                'address' => $validated['kelurahan_address'],
+                'phone' => $validated['kelurahan_phone'],
+            ],
+            UserRole::Puskesmas => [
+                'organization' => $validated['puskesmas_name'],
+                'address' => $validated['puskesmas_address'],
+                'phone' => $validated['puskesmas_phone'],
+            ],
+            UserRole::Kader => [
+                'phone' => $validated['kader_phone'],
+                'supervisor_id' => $validated['kader_puskesmas_id'],
+            ],
+            UserRole::Pasien => [
+                'family_card_number' => $validated['pasien_kk'],
+                'address' => $validated['pasien_address'],
+                'supervisor_id' => $validated['pasien_kader_id'],
+            ],
+            default => [],
+        };
+
+        UserDetail::create(array_merge(['user_id' => $user->id], $detailPayload));
 
         event(new Registered($user));
 

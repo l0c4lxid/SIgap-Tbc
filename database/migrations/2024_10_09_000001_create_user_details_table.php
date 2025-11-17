@@ -19,6 +19,11 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('organization')->nullable();
             $table->text('notes')->nullable();
+            $table->string('family_card_number', 30)->nullable();
+            $table->foreignId('supervisor_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->timestamps();
         });
     }

@@ -17,6 +17,8 @@ class UserDetailFactory extends Factory
             'address' => fake()->address(),
             'organization' => fake()->company(),
             'notes' => fake()->sentence(),
+            'family_card_number' => fake()->numerify('################'),
+            'supervisor_id' => null,
         ];
     }
 }

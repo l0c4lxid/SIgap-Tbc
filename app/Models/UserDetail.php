@@ -17,10 +17,17 @@ class UserDetail extends Model
         'address',
         'organization',
         'notes',
+        'family_card_number',
+        'supervisor_id',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'supervisor_id');
     }
 }

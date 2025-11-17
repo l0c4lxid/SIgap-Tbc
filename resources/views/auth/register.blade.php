@@ -28,19 +28,19 @@
                 <div class="container">
                     <div class="row justify-content-center">
                         <div class="col-lg-6 text-center mx-auto">
-                            <h1 class="text-white mb-2 mt-5">Buat Akun SIGAP TBC</h1>
-                            <p class="text-lead text-white">Daftar sebagai pasien, kader TBC, puskesmas, kelurahan, atau pemda untuk mulai melakukan skrining.</p>
+                            <h1 class="text-white mb-2 mt-5">Registrasi Pengguna</h1>
+                            <p class="text-lead text-white">Pilih jenis pengguna terlebih dahulu lalu isi form sesuai kebutuhan peran.</p>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="container">
                 <div class="row mt-lg-n10 mt-md-n11 mt-n10 justify-content-center">
-                    <div class="col-xl-8 col-lg-9 col-md-10 mx-auto">
+                    <div class="col-xl-9 col-lg-10 col-md-11">
                         <div class="card z-index-0">
                             <div class="card-header text-center pt-4">
-                                <h5>Form Registrasi Pengguna</h5>
-                                <p class="text-sm mb-0">Isi data dengan benar untuk proses verifikasi internal.</p>
+                                <h5>Form Registrasi SIGAP TBC</h5>
+                                <p class="text-sm mb-0">Akun Pemda dibuat oleh admin. Silakan pilih peran lain jika ingin mendaftar.</p>
                             </div>
                             <div class="card-body">
                                 @if ($errors->any())
@@ -55,17 +55,9 @@
                                 <form method="POST" action="{{ route('register') }}">
                                     @csrf
                                     <div class="row g-3">
-                                        <div class="col-md-12">
-                                            <label for="name" class="form-label">Nama Lengkap</label>
-                                            <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required autofocus>
-                                        </div>
                                         <div class="col-md-6">
-                                            <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="role" class="form-label">Peran</label>
-                                            @php($roleOptions = $roleOptions ?? \App\Enums\UserRole::options())
+                                            <label for="role" class="form-label">Daftar sebagai</label>
+                                            @php($roleOptions = $roleOptions ?? \App\Enums\UserRole::options([ \App\Enums\UserRole::Pemda ]))
                                             <select id="role" name="role" class="form-select" required>
                                                 <option value="">Pilih peran</option>
                                                 @foreach ($roleOptions as $role)
@@ -74,24 +66,105 @@
                                             </select>
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="nik" class="form-label">NIK / Nomor Identitas</label>
-                                            <input type="text" class="form-control" id="nik" name="nik" value="{{ old('nik') }}">
+                                            <label for="name" id="name-label" data-default="Nama Penanggung Jawab / Pasien" class="form-label">Nama Penanggung Jawab / Pasien</label>
+                                            <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required autofocus>
                                         </div>
+                                    </div>
+
+                                    <div class="role-section mt-4 d-none" data-role-section="kelurahan">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="kelurahan_name" class="form-label">Kelurahan</label>
+                                                <input type="text" class="form-control" id="kelurahan_name" name="kelurahan_name" value="{{ old('kelurahan_name') }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="kelurahan_phone" class="form-label">Nomor Telepon Kelurahan</label>
+                                                <input type="text" class="form-control" id="kelurahan_phone" name="kelurahan_phone" value="{{ old('kelurahan_phone') }}">
+                                            </div>
+                                            <div class="col-12">
+                                                <label for="kelurahan_address" class="form-label">Alamat Kelurahan</label>
+                                                <input type="text" class="form-control" id="kelurahan_address" name="kelurahan_address" value="{{ old('kelurahan_address') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="role-section mt-4 d-none" data-role-section="puskesmas">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="puskesmas_name" class="form-label">Puskesmas</label>
+                                                <input type="text" class="form-control" id="puskesmas_name" name="puskesmas_name" value="{{ old('puskesmas_name') }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="puskesmas_phone" class="form-label">Nomor Telepon</label>
+                                                <input type="text" class="form-control" id="puskesmas_phone" name="puskesmas_phone" value="{{ old('puskesmas_phone') }}">
+                                            </div>
+                                            <div class="col-12">
+                                                <label for="puskesmas_address" class="form-label">Alamat Puskesmas</label>
+                                                <input type="text" class="form-control" id="puskesmas_address" name="puskesmas_address" value="{{ old('puskesmas_address') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="role-section mt-4 d-none" data-role-section="kader">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="kader_phone" class="form-label">Nomor Telepon Kader</label>
+                                                <input type="text" class="form-control" id="kader_phone" name="kader_phone" value="{{ old('kader_phone') }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="kader_puskesmas_id" class="form-label">Puskesmas Induk</label>
+                                                @if (($puskesmasOptions ?? collect())->isEmpty())
+                                                    <div class="alert alert-warning mb-0">
+                                                        Belum ada Puskesmas aktif. Hubungi admin untuk menambah data.
+                                                    </div>
+                                                @else
+                                                    <select id="kader_puskesmas_id" name="kader_puskesmas_id" class="form-select">
+                                                        <option value="">Pilih puskesmas</option>
+                                                        @foreach ($puskesmasOptions as $puskesmas)
+                                                            <option value="{{ $puskesmas->id }}" @selected(old('kader_puskesmas_id') == $puskesmas->id)>
+                                                                {{ $puskesmas->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="role-section mt-4 d-none" data-role-section="pasien">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="pasien_kk" class="form-label">Nomor KK</label>
+                                                <input type="text" class="form-control" id="pasien_kk" name="pasien_kk" value="{{ old('pasien_kk') }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="pasien_kader_id" class="form-label">Kader Penanggung Jawab</label>
+                                                @if (($kaderOptions ?? collect())->isEmpty())
+                                                    <div class="alert alert-warning mb-0">
+                                                        Belum ada Kader aktif. Hubungi admin untuk menambah data.
+                                                    </div>
+                                                @else
+                                                    <select id="pasien_kader_id" name="pasien_kader_id" class="form-select">
+                                                        <option value="">Pilih kader</option>
+                                                        @foreach ($kaderOptions as $kader)
+                                                            <option value="{{ $kader->id }}" @selected(old('pasien_kader_id') == $kader->id)>
+                                                                {{ $kader->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                @endif
+                                            </div>
+                                            <div class="col-12">
+                                                <label for="pasien_address" class="form-label">Alamat Pasien</label>
+                                                <input type="text" class="form-control" id="pasien_address" name="pasien_address" value="{{ old('pasien_address') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3 mt-4">
                                         <div class="col-md-6">
-                                            <label for="phone" class="form-label">Nomor Telepon</label>
-                                            <input type="text" class="form-control" id="phone" name="phone" value="{{ old('phone') }}">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="organization" class="form-label">Instansi / Faskes / Kelurahan</label>
-                                            <input type="text" class="form-control" id="organization" name="organization" value="{{ old('organization') }}">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="address" class="form-label">Alamat</label>
-                                            <input type="text" class="form-control" id="address" name="address" value="{{ old('address') }}">
-                                        </div>
-                                        <div class="col-12">
-                                            <label for="notes" class="form-label">Catatan Tambahan</label>
-                                            <textarea class="form-control" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
+                                            <label for="email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="password" class="form-label">Password</label>
@@ -102,6 +175,7 @@
                                             <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required autocomplete="new-password">
                                         </div>
                                     </div>
+
                                     <div class="form-check form-switch mt-4">
                                         <input class="form-check-input" type="checkbox" id="terms" checked disabled>
                                         <label class="form-check-label" for="terms">Dengan mendaftar saya menyetujui kebijakan privasi SIGAP TBC.</label>
@@ -134,6 +208,34 @@
     <script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
     <script src="{{ asset('assets/js/soft-ui-dashboard.min.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleSelect = document.getElementById('role');
+            const sections = document.querySelectorAll('[data-role-section]');
+            const nameLabel = document.getElementById('name-label');
+            const defaultLabel = nameLabel?.dataset.default ?? nameLabel?.textContent;
+            const labelMap = {
+                kelurahan: 'Nama Penanggung Jawab Kelurahan',
+                puskesmas: 'Nama Penanggung Jawab Puskesmas',
+                kader: 'Nama Penanggung Jawab Kader',
+                pasien: 'Nama Pasien',
+            };
+
+            function toggleRoleSections() {
+                const role = roleSelect.value;
+                sections.forEach(section => {
+                    section.classList.toggle('d-none', section.dataset.roleSection !== role);
+                });
+
+                if (nameLabel) {
+                    nameLabel.textContent = labelMap[role] ?? defaultLabel;
+                }
+            }
+
+            roleSelect.addEventListener('change', toggleRoleSections);
+            toggleRoleSections();
+        });
+    </script>
 </body>
 
 </html>

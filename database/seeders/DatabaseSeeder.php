@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
 use App\Models\User;
+use App\Models\UserDetail;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,11 +18,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $pemda = User::firstOrCreate(
+            ['email' => 'pemda@pemda.com'],
+            [
+                'name' => 'Pemda',
+                'password' => Hash::make('pemda123'),
+                'role' => UserRole::Pemda->value,
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        UserDetail::updateOrCreate(
+            ['user_id' => $pemda->id],
+            []
+        );
     }
 }

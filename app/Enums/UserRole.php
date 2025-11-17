@@ -24,16 +24,22 @@ enum UserRole: string
     /**
      * Useful when building dropdowns.
      *
+     * @param  array<int, self>  $except
      * @return array<int, array{value: string, label: string}>
      */
-    public static function options(): array
+    public static function options(array $except = []): array
     {
+        $cases = array_filter(
+            self::cases(),
+            fn (self $role) => ! in_array($role, $except, true),
+        );
+
         return array_map(
             fn (self $role) => [
                 'value' => $role->value,
                 'label' => $role->label(),
             ],
-            self::cases(),
+            $cases,
         );
     }
 }

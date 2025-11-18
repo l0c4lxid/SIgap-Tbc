@@ -6,7 +6,7 @@
     $navPresets = [
         UserRole::Pasien->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
-            ['label' => 'Skrining', 'url' => '#', 'icon' => 'screening'],
+            ['label' => 'Skrining', 'url' => route('patient.screening'), 'icon' => 'screening'],
             ['label' => 'Anggota Keluarga', 'url' => '#', 'icon' => 'anggota'],
         ],
         UserRole::Puskesmas->value => [

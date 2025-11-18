@@ -349,6 +349,60 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('kader.patients')->with('status', 'Skrining pasien telah dicatat.');
     })->name('kader.patients.screening.store');
 
+    Route::get('/pasien/skrining', function (Request $request) {
+        abort_if($request->user()->role !== UserRole::Pasien, 403);
+
+        $questions = [
+            'batuk_kronis' => 'Apakah Anda batuk lebih dari 2 minggu?',
+            'dahak_darah' => 'Apakah batuk Anda mengeluarkan dahak berdarah?',
+            'berat_badan' => 'Apakah berat badan Anda turun tanpa sebab jelas?',
+            'demam_malam' => 'Apakah Anda sering demam atau berkeringat di malam hari?',
+        ];
+
+        $latestScreening = $request->user()->screenings()->latest()->first();
+
+        return view('patient.screening', [
+            'questions' => $questions,
+            'screening' => $latestScreening,
+        ]);
+    })->name('patient.screening');
+
+    Route::post('/pasien/skrining', function (Request $request) {
+        abort_if($request->user()->role !== UserRole::Pasien, 403);
+
+        $user = $request->user()->loadMissing('detail');
+
+        if ($user->screenings()->exists()) {
+            return redirect()->route('patient.screening')->with('status', 'Anda sudah melakukan skrining mandiri.');
+        }
+
+        $kaderId = optional($user->detail)->supervisor_id;
+        abort_if(empty($kaderId), 422, 'Data kader pendamping belum tersedia.');
+
+        $questions = [
+            'batuk_kronis',
+            'dahak_darah',
+            'berat_badan',
+            'demam_malam',
+        ];
+
+        $rules = [];
+        foreach ($questions as $key) {
+            $rules[$key] = ['required', 'in:ya,tidak'];
+        }
+
+        $validated = $request->validate($rules);
+
+        PatientScreening::create([
+            'patient_id' => $user->id,
+            'kader_id' => $kaderId,
+            'answers' => $validated,
+            'notes' => null,
+        ]);
+
+        return redirect()->route('patient.screening')->with('status', 'Terima kasih, skrining mandiri berhasil dikirim.');
+    })->name('patient.screening.store');
+
     Route::post('/kader/pasien/{patient}/status', function (Request $request, User $patient) {
         abort_if($request->user()->role !== UserRole::Kader, 403);
         abort_if($patient->role !== UserRole::Pasien, 404);

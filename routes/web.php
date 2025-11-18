@@ -142,10 +142,78 @@ Route::middleware('auth')->group(function () {
             'nik' => $validated['nik'],
             'address' => $validated['address'],
             'supervisor_id' => $kader->id,
+            'initial_password' => $password,
         ]);
 
         return redirect()->route('kader.patients')->with('status', 'Pasien baru berhasil dibuat. Password sementara: '.$password);
     })->name('kader.patients.store');
+
+    Route::get('/kader/pasien/{patient}', function (Request $request, User $patient) {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+        abort_if($patient->role !== UserRole::Pasien, 404);
+
+        $patient->loadMissing('detail');
+        abort_if(optional($patient->detail)->supervisor_id !== $request->user()->id, 404);
+
+        return view('kader.patients-show', [
+            'patient' => $patient,
+        ]);
+    })->name('kader.patients.show');
+
+    Route::get('/kader/pasien/{patient}/screening', function (Request $request, User $patient) {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+        abort_if($patient->role !== UserRole::Pasien, 404);
+
+        $patient->loadMissing('detail');
+        abort_if(optional($patient->detail)->supervisor_id !== $request->user()->id, 404);
+
+        $questions = [
+            'batuk_kronis' => 'Apakah pasien batuk lebih dari 2 minggu?',
+            'dahak_darah' => 'Apakah batuk mengeluarkan dahak berdarah?',
+            'berat_badan' => 'Apakah berat badan turun tanpa sebab jelas?',
+            'demam_malam' => 'Apakah sering demam atau berkeringat di malam hari?',
+        ];
+
+        return view('kader.patients-screening', [
+            'patient' => $patient,
+            'questions' => $questions,
+        ]);
+    })->name('kader.patients.screening');
+
+    Route::post('/kader/pasien/{patient}/screening', function (Request $request, User $patient) {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+        abort_if($patient->role !== UserRole::Pasien, 404);
+
+        $patient->loadMissing('detail');
+        abort_if(optional($patient->detail)->supervisor_id !== $request->user()->id, 404);
+
+        $questions = [
+            'batuk_kronis' => 'Apakah pasien batuk lebih dari 2 minggu?',
+            'dahak_darah' => 'Apakah batuk mengeluarkan dahak berdarah?',
+            'berat_badan' => 'Apakah berat badan turun tanpa sebab jelas?',
+            'demam_malam' => 'Apakah sering demam atau berkeringat di malam hari?',
+        ];
+
+        $rules = [];
+        foreach ($questions as $key => $label) {
+            $rules[$key] = ['required', 'in:ya,tidak'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $detail = $patient->detail ?? UserDetail::create(['user_id' => $patient->id, 'supervisor_id' => $request->user()->id]);
+
+        $summary = "Skrining ".now()->format('d M Y H:i').":\n";
+        foreach ($questions as $key => $label) {
+            $summary .= "- {$label}: {$validated[$key]}\n";
+        }
+
+        $detail->notes = trim(($detail->notes ? $detail->notes."\n\n" : '').$summary);
+        $detail->screening_started_at = $detail->screening_started_at ?? now();
+        $detail->save();
+
+        return redirect()->route('kader.patients')->with('status', 'Skrining pasien telah dicatat.');
+    })->name('kader.patients.screening.store');
 });
 
 require __DIR__.'/auth.php';

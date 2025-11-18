@@ -27,26 +27,22 @@
                         <table class="table align-items-center mb-0">
                             <thead>
                                 <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">#</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Nama</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Kontak</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Alamat</th>
                                     <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">NIK</th>
                                     <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Didaftarkan</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($patients as $patient)
                                     <tr>
+                                        <td>{{ $loop->iteration }}</td>
                                         <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md">
-                                                    <i class="fa-solid fa-user text-white"></i>
-                                                </div>
-                                                <div>
-                                                    <h6 class="mb-0 text-sm">{{ $patient->name }}</h6>
-                                                    <p class="text-xs text-muted mb-0">{{ $patient->detail->organization ?? 'Pasien' }}</p>
-                                                </div>
-                                            </div>
+                                            <h6 class="mb-0 text-sm">{{ $patient->name }}</h6>
+                                            <p class="text-xs text-muted mb-0">{{ $patient->detail->organization ?? 'Pasien' }}</p>
                                         </td>
                                         <td>
                                             <p class="text-xs mb-0">HP utama: {{ $patient->phone }}</p>
@@ -62,6 +58,20 @@
                                         </td>
                                         <td class="text-center">
                                             <span class="text-xs text-muted">{{ $patient->created_at->format('d M Y') }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <a href="{{ route('kader.patients.show', $patient) }}" class="btn btn-light btn-sm border">
+                                                    Detail
+                                                </a>
+                                                @if (! $patient->detail?->screening_started_at)
+                                                    <a href="{{ route('kader.patients.screening', $patient) }}" class="btn btn-success btn-sm text-white">
+                                                        Skrining
+                                                    </a>
+                                                @else
+                                                    <span class="badge bg-gradient-success">Skrining dimulai {{ optional($patient->detail->screening_started_at)->format('d M Y') }}</span>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty

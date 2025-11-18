@@ -82,7 +82,7 @@ Route::middleware('auth')->group(function () {
         abort_if(auth()->user()->role !== UserRole::Kader, 403);
 
         $patients = User::query()
-            ->with('detail')
+            ->with(['detail', 'screenings' => fn ($query) => $query->latest()])
             ->where('role', UserRole::Pasien->value)
             ->whereRelation('detail', 'supervisor_id', $request->user()->id)
             ->when($request->filled('q'), function ($query) use ($request) {

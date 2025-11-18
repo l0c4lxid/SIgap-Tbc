@@ -61,12 +61,12 @@
                                                 <a href="{{ route('kader.patients.show', $patient) }}" class="btn btn-light btn-sm border">
                                                     Detail
                                                 </a>
-                                                @if (! $patient->detail?->screening_started_at)
+                                                @if ($patient->screenings->isEmpty())
                                                     <a href="{{ route('kader.patients.screening', $patient) }}" class="btn btn-success btn-sm text-white">
                                                         Skrining
                                                     </a>
                                                 @else
-                                                    <span class="badge bg-gradient-success">Skrining dimulai {{ optional($patient->detail->screening_started_at)->format('d M Y') }}</span>
+                                                    <span class="badge bg-gradient-success text-white fw-normal px-3 py-2" style="font-size: 0.75rem;">Sudah skrining</span>
                                                 @endif
                                             </div>
                                         </td>

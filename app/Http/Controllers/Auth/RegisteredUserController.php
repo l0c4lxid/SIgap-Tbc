@@ -97,7 +97,7 @@ class RegisteredUserController extends Controller
             'phone' => $validated['phone'],
             'role' => $request->enum('role', UserRole::class),
             'password' => Hash::make($validated['password']),
-            'is_active' => true,
+            'is_active' => false,
         ]);
 
         $detailPayload = match ($selectedRole) {
@@ -127,8 +127,6 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->route('login')->with('status', 'Akun berhasil dibuat. Tunggu verifikasi dari Pemda sebelum bisa login.');
     }
 }

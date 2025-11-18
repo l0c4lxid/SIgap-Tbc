@@ -183,6 +183,7 @@
                                     <div class="text-center">
                                         <button type="submit" class="btn bg-gradient-dark w-100 my-4 mb-2">Daftar Sekarang</button>
                                     </div>
+                                    <p class="text-xs text-muted text-center">Akun akan dinonaktifkan hingga diverifikasi oleh Pemda.</p>
                                     <p class="text-sm mt-3 mb-0 text-center">Sudah punya akun? <a href="{{ route('login') }}" class="text-dark font-weight-bolder">Masuk di sini</a></p>
                                 </form>
                             </div>

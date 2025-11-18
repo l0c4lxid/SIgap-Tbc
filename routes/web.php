@@ -210,9 +210,6 @@ Route::middleware('auth')->group(function () {
             'notes' => null,
         ]);
 
-        $detail->screening_started_at = $detail->screening_started_at ?? now();
-        $detail->save();
-
         return redirect()->route('kader.patients')->with('status', 'Skrining pasien telah dicatat.');
     })->name('kader.patients.screening.store');
 });

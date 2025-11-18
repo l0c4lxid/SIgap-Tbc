@@ -17,13 +17,8 @@ class UserDetail extends Model
         'organization',
         'notes',
         'initial_password',
-        'screening_started_at',
         'family_card_number',
         'supervisor_id',
-    ];
-
-    protected $casts = [
-        'screening_started_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

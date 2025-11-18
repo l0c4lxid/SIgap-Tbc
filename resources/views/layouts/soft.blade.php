@@ -33,7 +33,7 @@
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
             ['label' => 'Puskesmas Induk', 'url' => route('kader.puskesmas'), 'icon' => 'folder'],
             ['label' => 'Data Pasien', 'url' => route('kader.patients'), 'icon' => 'folder'],
-            ['label' => 'Skrining', 'url' => '#', 'icon' => 'screening'],
+            ['label' => 'Skrining', 'url' => route('kader.screening.index'), 'icon' => 'screening'],
             ['label' => 'Berobat', 'url' => '#', 'icon' => 'berobat'],
         ],
     ];

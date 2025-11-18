@@ -567,6 +567,41 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('kader.patients');
 
+    Route::get('/kader/skrining', function (Request $request) {
+        abort_if(auth()->user()->role !== UserRole::Kader, 403);
+
+        $patientsQuery = User::query()
+            ->with(['detail', 'screenings' => fn ($query) => $query->latest()->limit(1)])
+            ->where('role', UserRole::Pasien->value)
+            ->whereRelation('detail', 'supervisor_id', $request->user()->id)
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $term = '%'.$request->input('q').'%';
+                $query->where(function ($sub) use ($term) {
+                    $sub->where('name', 'like', $term)
+                        ->orWhere('phone', 'like', $term)
+                        ->orWhereHas('detail', function ($detail) use ($term) {
+                            $detail->where('address', 'like', $term)
+                                ->orWhere('nik', 'like', $term);
+                        });
+                });
+            });
+
+        $status = $request->input('status');
+        if ($status === 'belum') {
+            $patientsQuery->doesntHave('screenings');
+        } elseif ($status === 'sudah') {
+            $patientsQuery->has('screenings');
+        }
+
+        $patients = $patientsQuery->latest()->get();
+
+        return view('kader.screening-index', [
+            'patients' => $patients,
+            'search' => $request->input('q', ''),
+            'status' => $status,
+        ]);
+    })->name('kader.screening.index');
+
     Route::get('/kader/pasien/create', function (Request $request) {
         abort_if(auth()->user()->role !== UserRole::Kader, 403);
 
@@ -648,6 +683,10 @@ Route::middleware('auth')->group(function () {
         $patient->loadMissing('detail');
         abort_if(optional($patient->detail)->supervisor_id !== $request->user()->id, 404);
 
+        if ($patient->screenings()->exists()) {
+            return redirect()->route('kader.screening.index')->with('status', 'Pasien ini sudah pernah dilakukan skrining.');
+        }
+
         $questions = [
             'batuk_kronis' => 'Apakah pasien batuk lebih dari 2 minggu?',
             'dahak_darah' => 'Apakah batuk mengeluarkan dahak berdarah?',
@@ -667,6 +706,10 @@ Route::middleware('auth')->group(function () {
 
         $patient->loadMissing('detail');
         abort_if(optional($patient->detail)->supervisor_id !== $request->user()->id, 404);
+
+        if ($patient->screenings()->exists()) {
+            return redirect()->route('kader.screening.index')->with('status', 'Pasien ini sudah pernah dilakukan skrining.');
+        }
 
         $questions = [
             'batuk_kronis' => 'Apakah pasien batuk lebih dari 2 minggu?',
@@ -722,9 +765,7 @@ Route::middleware('auth')->group(function () {
 
         $user = $request->user()->loadMissing('detail');
 
-        if ($user->screenings()->exists()) {
-            return redirect()->route('patient.screening')->with('status', 'Anda sudah melakukan skrining mandiri.');
-        }
+        abort_if($user->screenings()->exists(), 403, 'Anda sudah melakukan skrining mandiri.');
 
         $kaderId = optional($user->detail)->supervisor_id;
         abort_if(empty($kaderId), 422, 'Data kader pendamping belum tersedia.');

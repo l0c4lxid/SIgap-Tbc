@@ -212,6 +212,23 @@ Route::middleware('auth')->group(function () {
 
         return redirect()->route('kader.patients')->with('status', 'Skrining pasien telah dicatat.');
     })->name('kader.patients.screening.store');
+
+    Route::post('/kader/pasien/{patient}/status', function (Request $request, User $patient) {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+        abort_if($patient->role !== UserRole::Pasien, 404);
+
+        $patient->loadMissing('detail');
+        abort_if(optional($patient->detail)->supervisor_id !== $request->user()->id, 404);
+
+        $validated = $request->validate([
+            'status' => ['required', 'in:active,inactive'],
+        ]);
+
+        $patient->is_active = $validated['status'] === 'active';
+        $patient->save();
+
+        return back()->with('status', 'Status akun pasien diperbarui.');
+    })->name('kader.patients.status');
 });
 
 require __DIR__.'/auth.php';

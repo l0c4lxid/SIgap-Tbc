@@ -60,8 +60,8 @@
                                         <td>
                                             <p class="text-xs mb-0">HP login: {{ $user->phone }}</p>
                                             <p class="text-xs text-secondary mb-0">{{ $user->detail->address ?? 'Alamat belum diisi' }}</p>
-                                            @if ($user->detail?->family_card_number)
-                                                <p class="text-xs text-secondary mb-0">No KK: {{ $user->detail->family_card_number }}</p>
+                                            @if ($user->detail?->nik)
+                                                <p class="text-xs text-secondary mb-0">NIK: {{ $user->detail->nik }}</p>
                                             @endif
                                         </td>
                                         <td class="align-middle text-center">

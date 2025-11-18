@@ -110,16 +110,16 @@
                                         </div>
                                     </div>
 
-                                    <div class="role-section mt-4 d-none" data-role-section="pasien">
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label for="pasien_kk" class="form-label">Nomor KK</label>
-                                                <input type="text" class="form-control" id="pasien_kk" name="pasien_kk" value="{{ old('pasien_kk') }}">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label for="pasien_kader_id" class="form-label">Kader Penanggung Jawab</label>
-                                                @if (($kaderOptions ?? collect())->isEmpty())
-                                                    <div class="alert alert-warning mb-0">
+            <div class="role-section mt-4 d-none" data-role-section="pasien">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="pasien_nik" class="form-label">NIK</label>
+                        <input type="text" class="form-control" id="pasien_nik" name="pasien_nik" value="{{ old('pasien_nik') }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="pasien_kader_id" class="form-label">Kader Penanggung Jawab</label>
+                        @if (($kaderOptions ?? collect())->isEmpty())
+                            <div class="alert alert-warning mb-0">
                                                         Belum ada Kader aktif. Hubungi admin untuk menambah data.
                                                     </div>
                                                 @else

@@ -14,6 +14,20 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="mb-3 d-flex align-items-center gap-2">
+                        <label class="text-xs text-muted mb-0">Status Akun:</label>
+                        <form method="POST" action="{{ route('kader.patients.status', $patient) }}" data-confirm="Ubah status akun {{ $patient->name }}?" data-confirm-text="Ya, ubah" class="d-inline-block">
+                            @csrf
+                            <input type="hidden" name="status" value="{{ $patient->is_active ? 'inactive' : 'active' }}">
+                            <div class="badge rounded-pill bg-light border d-inline-flex align-items-center gap-2 px-3 py-2">
+                                <span class="text-xs text-muted {{ $patient->is_active ? '' : 'fw-bold text-danger' }}">Nonaktif</span>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" onchange="this.form.submit()" {{ $patient->is_active ? 'checked' : '' }}>
+                                </div>
+                                <span class="text-xs text-muted {{ $patient->is_active ? 'fw-bold text-success' : '' }}">Aktif</span>
+                            </div>
+                        </form>
+                    </div>
                     <div class="mb-3">
                         <label class="text-xs text-muted">Nomor HP / Username</label>
                         <p class="mb-0 fw-semibold">{{ $patient->phone }}</p>

@@ -42,7 +42,17 @@
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
                                             <h6 class="mb-0 text-sm">{{ $patient->name }}</h6>
-                                            <p class="text-xs text-muted mb-0">{{ $patient->detail->organization ?? 'Pasien' }}</p>
+                                            <p class="text-xs text-muted mb-1">{{ $patient->detail->organization ?? 'Pasien' }}</p>
+                                            @if ($patient->is_active)
+                                                <span class="badge bg-gradient-success text-white">Akun aktif</span>
+                                            @else
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-gradient-warning text-dark">Menunggu verifikasi</span>
+                                                    <div class="form-check form-switch m-0">
+                                                        <input class="form-check-input" type="checkbox" disabled>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </td>
                                         <td>
                                             <p class="text-xs mb-0">Nomor HP: {{ $patient->phone }}</p>
@@ -57,17 +67,26 @@
                                             <span class="text-xs text-muted">{{ $patient->created_at->format('d M Y') }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-2">
-                                                <a href="{{ route('kader.patients.show', $patient) }}" class="btn btn-light btn-sm border">
-                                                    Detail
-                                                </a>
-                                                @if ($patient->screenings->isEmpty())
-                                                    <a href="{{ route('kader.patients.screening', $patient) }}" class="btn btn-success btn-sm text-white">
-                                                        Skrining
-                                                    </a>
-                                                @else
-                                                    <span class="badge bg-gradient-success text-white fw-normal px-3 py-2" style="font-size: 0.75rem;">Sudah skrining</span>
-                                                @endif
+                                            <div class="d-flex flex-column gap-2 align-items-center">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{{ route('kader.patients.show', $patient) }}" class="btn btn-outline-secondary">Detail</a>
+                                                    @if ($patient->screenings->isEmpty())
+                                                        <a href="{{ route('kader.patients.screening', $patient) }}" class="btn btn-success text-white">Skrining</a>
+                                                    @else
+                                                        <span class="btn btn-success text-white" style="pointer-events: none;">Sudah skrining</span>
+                                                    @endif
+                                                </div>
+                                                <form method="POST" action="{{ route('kader.patients.status', $patient) }}" data-confirm="Ubah status akun {{ $patient->name }}?" data-confirm-text="Ya, ubah" class="d-inline-block">
+                                                    @csrf
+                                                    <input type="hidden" name="status" value="{{ $patient->is_active ? 'inactive' : 'active' }}">
+                                                    <div class="badge rounded-pill bg-light border d-inline-flex align-items-center gap-2 px-3 py-2">
+                                                        <span class="text-xs text-muted {{ $patient->is_active ? '' : 'fw-bold text-danger' }}">Nonaktif</span>
+                                                        <div class="form-check form-switch m-0">
+                                                            <input class="form-check-input" type="checkbox" onchange="this.form.submit()" {{ $patient->is_active ? 'checked' : '' }}>
+                                                        </div>
+                                                        <span class="text-xs text-muted {{ $patient->is_active ? 'fw-bold text-success' : '' }}">Aktif</span>
+                                                    </div>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>

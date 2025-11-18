@@ -79,7 +79,7 @@ class RegisteredUserController extends Controller
                 'kader_puskesmas_id' => ['required', $activePuskesmasRule],
             ],
             UserRole::Pasien => [
-                'pasien_kk' => ['required', 'string', 'max:30'],
+                'pasien_nik' => ['required', 'string', 'max:30', Rule::unique('user_details', 'nik')],
                 'pasien_address' => ['required', 'string', 'max:255'],
                 'pasien_kader_id' => ['required', $activeKaderRule],
             ],
@@ -109,7 +109,7 @@ class RegisteredUserController extends Controller
                 'supervisor_id' => $validated['kader_puskesmas_id'],
             ],
             UserRole::Pasien => [
-                'family_card_number' => $validated['pasien_kk'],
+                'nik' => $validated['pasien_nik'],
                 'address' => $validated['pasien_address'],
                 'supervisor_id' => $validated['pasien_kader_id'],
             ],

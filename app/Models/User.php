@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\FamilyMember;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -56,5 +57,10 @@ class User extends Authenticatable
     public function screenings(): HasMany
     {
         return $this->hasMany(PatientScreening::class, 'patient_id');
+    }
+
+    public function familyMembers(): HasMany
+    {
+        return $this->hasMany(FamilyMember::class, 'patient_id');
     }
 }

@@ -33,6 +33,24 @@
         @endforeach
     </div>
 
+    @if ($user->role === \App\Enums\UserRole::Pasien && in_array($user->detail->treatment_status ?? 'none', ['contacted', 'scheduled']))
+        <div class="alert alert-warning mt-4" role="alert">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <strong>Perhatian!</strong> Anda terindikasi Suspek TBC. Segera hubungi kader dan tambahkan anggota keluarga yang mungkin terpapar.
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('patient.family') }}" class="btn btn-sm btn-outline-danger">
+                        <i class="fa-solid fa-users me-1"></i> Kelola Anggota Risiko
+                    </a>
+                    <a href="{{ route('patient.screening') }}" class="btn btn-sm btn-danger">
+                        <i class="fa-solid fa-notes-medical me-1"></i> Lakukan Skrining Mandiri
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if ($recentScreenings && $recentScreenings->count())
         <div class="row mt-4">
             <div class="col-12">

@@ -36,7 +36,7 @@
                             <div class="card card-plain mt-8">
                                 <div class="card-header pb-0 text-left bg-transparent">
                                     <h3 class="font-weight-bolder text-info text-gradient">Selamat datang kembali</h3>
-                                    <p class="mb-0">Masukkan email dan password untuk masuk ke SIGAP TBC.</p>
+                                    <p class="mb-0">Masukkan nomor HP dan password untuk masuk ke SIGAP TBC.</p>
                                 </div>
                                 <div class="card-body">
                                     <form method="POST" action="{{ route('login') }}" role="form">

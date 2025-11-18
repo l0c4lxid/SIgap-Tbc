@@ -62,52 +62,40 @@
                                         </div>
                                     </div>
 
-                                    <div class="role-section mt-4 d-none" data-role-section="kelurahan">
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label for="kelurahan_name" class="form-label">Kelurahan</label>
-                                                <input type="text" class="form-control" id="kelurahan_name" name="kelurahan_name" value="{{ old('kelurahan_name') }}">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label for="kelurahan_phone" class="form-label">Nomor Telepon Kelurahan</label>
-                                                <input type="text" class="form-control" id="kelurahan_phone" name="kelurahan_phone" value="{{ old('kelurahan_phone') }}">
-                                            </div>
-                                            <div class="col-12">
-                                                <label for="kelurahan_address" class="form-label">Alamat Kelurahan</label>
-                                                <input type="text" class="form-control" id="kelurahan_address" name="kelurahan_address" value="{{ old('kelurahan_address') }}">
-                                            </div>
-                                        </div>
-                                    </div>
+            <div class="role-section mt-4 d-none" data-role-section="kelurahan">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="kelurahan_name" class="form-label">Kelurahan</label>
+                        <input type="text" class="form-control" id="kelurahan_name" name="kelurahan_name" value="{{ old('kelurahan_name') }}">
+                    </div>
+                    <div class="col-12">
+                        <label for="kelurahan_address" class="form-label">Alamat Kelurahan</label>
+                        <input type="text" class="form-control" id="kelurahan_address" name="kelurahan_address" value="{{ old('kelurahan_address') }}">
+                    </div>
+                </div>
+            </div>
 
-                                    <div class="role-section mt-4 d-none" data-role-section="puskesmas">
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label for="puskesmas_name" class="form-label">Puskesmas</label>
-                                                <input type="text" class="form-control" id="puskesmas_name" name="puskesmas_name" value="{{ old('puskesmas_name') }}">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label for="puskesmas_phone" class="form-label">Nomor Telepon</label>
-                                                <input type="text" class="form-control" id="puskesmas_phone" name="puskesmas_phone" value="{{ old('puskesmas_phone') }}">
-                                            </div>
-                                            <div class="col-12">
-                                                <label for="puskesmas_address" class="form-label">Alamat Puskesmas</label>
-                                                <input type="text" class="form-control" id="puskesmas_address" name="puskesmas_address" value="{{ old('puskesmas_address') }}">
-                                            </div>
-                                        </div>
-                                    </div>
+            <div class="role-section mt-4 d-none" data-role-section="puskesmas">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="puskesmas_name" class="form-label">Puskesmas</label>
+                        <input type="text" class="form-control" id="puskesmas_name" name="puskesmas_name" value="{{ old('puskesmas_name') }}">
+                    </div>
+                    <div class="col-12">
+                        <label for="puskesmas_address" class="form-label">Alamat Puskesmas</label>
+                        <input type="text" class="form-control" id="puskesmas_address" name="puskesmas_address" value="{{ old('puskesmas_address') }}">
+                    </div>
+                </div>
+            </div>
 
-                                    <div class="role-section mt-4 d-none" data-role-section="kader">
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label for="kader_phone" class="form-label">Nomor Telepon Kader</label>
-                                                <input type="text" class="form-control" id="kader_phone" name="kader_phone" value="{{ old('kader_phone') }}">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label for="kader_puskesmas_id" class="form-label">Puskesmas Induk</label>
-                                                @if (($puskesmasOptions ?? collect())->isEmpty())
-                                                    <div class="alert alert-warning mb-0">
-                                                        Belum ada Puskesmas aktif. Hubungi admin untuk menambah data.
-                                                    </div>
+            <div class="role-section mt-4 d-none" data-role-section="kader">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label for="kader_puskesmas_id" class="form-label">Puskesmas Induk</label>
+                        @if (($puskesmasOptions ?? collect())->isEmpty())
+                            <div class="alert alert-warning mb-0">
+                                Belum ada Puskesmas aktif. Hubungi admin untuk menambah data.
+                            </div>
                                                 @else
                                                     <select id="kader_puskesmas_id" name="kader_puskesmas_id" class="form-select">
                                                         <option value="">Pilih puskesmas</option>

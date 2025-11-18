@@ -26,7 +26,6 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'organization' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
-            'detail_phone' => ['nullable', 'string', 'max:30'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'password' => ['nullable', 'confirmed', Password::min(8)],
         ];

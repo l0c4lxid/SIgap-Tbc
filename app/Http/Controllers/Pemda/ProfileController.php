@@ -40,14 +40,12 @@ class ProfileController extends Controller
             'phone' => ['required', 'string', 'max:25', Rule::unique('users', 'phone')->ignore($user->id)],
             'organization' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
-            'detail_phone' => ['nullable', 'string', 'max:30'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'password' => ['nullable', 'confirmed', 'min:8'],
         ]);
 
         $user->name = $validated['name'];
         $user->phone = $validated['phone'];
-        $user->email = $validated['phone'].'@sigap-tbc.local';
         $user->save();
 
         UserDetail::updateOrCreate(
@@ -55,7 +53,6 @@ class ProfileController extends Controller
             [
                 'organization' => $validated['organization'] ?? null,
                 'address' => $validated['address'] ?? null,
-                'phone' => $validated['detail_phone'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ],
         );

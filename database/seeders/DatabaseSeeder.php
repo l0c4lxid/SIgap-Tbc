@@ -19,20 +19,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $pemda = User::firstOrCreate(
-            ['email' => 'pemda@pemda.com'],
+            ['phone' => '081234567890'],
             [
                 'name' => 'Pemda',
-                'phone' => '081234567890',
                 'password' => Hash::make('pemda123'),
                 'role' => UserRole::Pemda->value,
                 'is_active' => true,
-                'email_verified_at' => now(),
             ]
         );
-
-        if (! $pemda->phone) {
-            $pemda->update(['phone' => '081234567890']);
-        }
 
         UserDetail::updateOrCreate(
             ['user_id' => $pemda->id],

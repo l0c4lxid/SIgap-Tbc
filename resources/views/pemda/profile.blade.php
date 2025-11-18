@@ -28,10 +28,6 @@
                                 <input type="text" name="organization" class="form-control" value="{{ old('organization', $user->detail->organization ?? '') }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Kontak Alternatif</label>
-                                <input type="text" name="detail_phone" class="form-control" value="{{ old('detail_phone', $user->detail->phone ?? '') }}">
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label">Alamat Lengkap</label>
                                 <input type="text" name="address" class="form-control" value="{{ old('address', $user->detail->address ?? '') }}">
                             </div>

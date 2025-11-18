@@ -31,7 +31,7 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
 
             throw ValidationException::withMessages([
-                'email' => __('Akun Anda belum aktif. Silakan hubungi admin.'),
+                'phone' => __('Akun Anda belum aktif. Silakan hubungi admin.'),
             ]);
         }
 

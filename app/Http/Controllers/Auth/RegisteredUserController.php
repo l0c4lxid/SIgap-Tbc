@@ -70,15 +70,12 @@ class RegisteredUserController extends Controller
             UserRole::Kelurahan => [
                 'kelurahan_name' => ['required', 'string', 'max:255'],
                 'kelurahan_address' => ['required', 'string', 'max:255'],
-                'kelurahan_phone' => ['required', 'string', 'max:30'],
             ],
             UserRole::Puskesmas => [
                 'puskesmas_name' => ['required', 'string', 'max:255'],
                 'puskesmas_address' => ['required', 'string', 'max:255'],
-                'puskesmas_phone' => ['required', 'string', 'max:30'],
             ],
             UserRole::Kader => [
-                'kader_phone' => ['required', 'string', 'max:30'],
                 'kader_puskesmas_id' => ['required', $activePuskesmasRule],
             ],
             UserRole::Pasien => [
@@ -93,7 +90,6 @@ class RegisteredUserController extends Controller
 
         $user = User::create([
             'name' => $validated['name'],
-            'email' => $validated['phone'].'@sigap-tbc.local',
             'phone' => $validated['phone'],
             'role' => $request->enum('role', UserRole::class),
             'password' => Hash::make($validated['password']),
@@ -104,15 +100,12 @@ class RegisteredUserController extends Controller
             UserRole::Kelurahan => [
                 'organization' => $validated['kelurahan_name'],
                 'address' => $validated['kelurahan_address'],
-                'phone' => $validated['kelurahan_phone'],
             ],
             UserRole::Puskesmas => [
                 'organization' => $validated['puskesmas_name'],
                 'address' => $validated['puskesmas_address'],
-                'phone' => $validated['puskesmas_phone'],
             ],
             UserRole::Kader => [
-                'phone' => $validated['kader_phone'],
                 'supervisor_id' => $validated['kader_puskesmas_id'],
             ],
             UserRole::Pasien => [

@@ -45,10 +45,7 @@
                                             <p class="text-xs text-muted mb-0">{{ $patient->detail->organization ?? 'Pasien' }}</p>
                                         </td>
                                         <td>
-                                            <p class="text-xs mb-0">HP utama: {{ $patient->phone }}</p>
-                                            @if ($patient->detail?->phone)
-                                                <p class="text-xs text-muted mb-0">Alternatif: {{ $patient->detail->phone }}</p>
-                                            @endif
+                                            <p class="text-xs mb-0">Nomor HP: {{ $patient->phone }}</p>
                                         </td>
                                         <td>
                                             <p class="text-xs mb-0">{{ $patient->detail->address ?? '-' }}</p>

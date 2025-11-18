@@ -4,6 +4,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\ProfileController;
 use App\Models\User;
 use App\Models\UserDetail;
+use App\Models\PatientScreening;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -130,7 +131,6 @@ Route::middleware('auth')->group(function () {
 
         $user = User::create([
             'name' => $validated['name'],
-            'email' => $validated['phone'].'@sigap-tbc.local',
             'phone' => $validated['phone'],
             'role' => UserRole::Pasien,
             'password' => Hash::make($password),
@@ -203,12 +203,13 @@ Route::middleware('auth')->group(function () {
 
         $detail = $patient->detail ?? UserDetail::create(['user_id' => $patient->id, 'supervisor_id' => $request->user()->id]);
 
-        $summary = "Skrining ".now()->format('d M Y H:i').":\n";
-        foreach ($questions as $key => $label) {
-            $summary .= "- {$label}: {$validated[$key]}\n";
-        }
+        PatientScreening::create([
+            'patient_id' => $patient->id,
+            'kader_id' => $request->user()->id,
+            'answers' => $validated,
+            'notes' => null,
+        ]);
 
-        $detail->notes = trim(($detail->notes ? $detail->notes."\n\n" : '').$summary);
         $detail->screening_started_at = $detail->screening_started_at ?? now();
         $detail->save();
 

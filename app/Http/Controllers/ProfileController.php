@@ -34,7 +34,6 @@ class ProfileController extends Controller
         $user->fill([
             'name' => $validated['name'],
             'phone' => $validated['phone'],
-            'email' => $validated['phone'].'@sigap-tbc.local',
         ])->save();
 
         UserDetail::updateOrCreate(
@@ -42,7 +41,6 @@ class ProfileController extends Controller
             [
                 'organization' => $validated['organization'] ?? null,
                 'address' => $validated['address'] ?? null,
-                'phone' => $validated['detail_phone'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ],
         );

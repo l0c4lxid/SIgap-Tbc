@@ -59,9 +59,6 @@
                                         </td>
                                         <td>
                                             <p class="text-xs mb-0">HP login: {{ $user->phone }}</p>
-                                            @if ($user->detail?->phone)
-                                                <p class="text-xs text-secondary mb-0">Kontak tambahan: {{ $user->detail->phone }}</p>
-                                            @endif
                                             <p class="text-xs text-secondary mb-0">{{ $user->detail->address ?? 'Alamat belum diisi' }}</p>
                                             @if ($user->detail?->family_card_number)
                                                 <p class="text-xs text-secondary mb-0">No KK: {{ $user->detail->family_card_number }}</p>

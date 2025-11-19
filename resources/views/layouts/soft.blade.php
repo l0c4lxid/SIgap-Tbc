@@ -15,7 +15,7 @@
             ['label' => 'Data Pasien', 'url' => route('puskesmas.patients'), 'icon' => 'folder'],
             ['label' => 'Skrining', 'url' => route('puskesmas.screenings'), 'icon' => 'screening'],
             ['label' => 'Berobat', 'url' => route('puskesmas.treatment'), 'icon' => 'berobat'],
-            ['label' => 'Sembuh', 'url' => '#', 'icon' => 'sembuh'],
+            // ['label' => 'Sembuh', 'url' => '#', 'icon' => 'sembuh'],
         ],
         UserRole::Kelurahan->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],

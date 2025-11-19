@@ -294,6 +294,41 @@ Route::middleware('auth')->group(function () {
                             ->exists();
                         return $suspectFamily;
                     });
+
+                $chartMonths = collect(range(0, 11))
+                    ->map(fn($i) => now()->startOfMonth()->subMonths($i))
+                    ->sort()
+                    ->values();
+
+                $screeningsInRange = $patientIds->isEmpty()
+                    ? collect()
+                    : PatientScreening::whereIn('patient_id', $patientIds)
+                        ->where('created_at', '>=', $chartMonths->first())
+                        ->get();
+
+                $monthlyAggregates = [];
+                foreach ($screeningsInRange as $screening) {
+                    $key = $screening->created_at->format('Y-m');
+                    if (!isset($monthlyAggregates[$key])) {
+                        $monthlyAggregates[$key] = ['screening' => 0, 'suspect' => 0];
+                    }
+                    $monthlyAggregates[$key]['screening']++;
+                    $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+                    if ($positive >= 2) {
+                        $monthlyAggregates[$key]['suspect']++;
+                    }
+                }
+
+                $dashboardCharts = [
+                    'screening' => $chartMonths->map(fn($date) => [
+                        'label' => $date->format('M Y'),
+                        'value' => $monthlyAggregates[$date->format('Y-m')]['screening'] ?? 0,
+                    ])->values(),
+                    'tbc_cases' => $chartMonths->map(fn($date) => [
+                        'label' => $date->format('M Y'),
+                        'value' => $monthlyAggregates[$date->format('Y-m')]['suspect'] ?? 0,
+                    ])->values(),
+                ];
                 break;
 
             case UserRole::Kader:

@@ -62,7 +62,7 @@
         </div>
     @endif
 
-    @if (!empty($dashboardCharts))
+    @if ($dashboardCharts && count($dashboardCharts['screening'] ?? []))
         <div class="row mt-4">
             <div class="col-lg-6 mb-4">
                 <div class="card shadow-sm border-0 h-100">
@@ -202,7 +202,7 @@
 @endsection
 
 @push('scripts')
-    @if (!empty($dashboardCharts))
+    @if ($dashboardCharts && count($dashboardCharts['screening'] ?? []))
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {

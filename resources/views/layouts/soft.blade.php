@@ -1,5 +1,6 @@
 @php
     use App\Enums\UserRole;
+    use Illuminate\Support\Str;
 
     $user = auth()->user();
     $role = $user?->role;
@@ -47,6 +48,22 @@
         'url' => $role === UserRole::Pemda ? route('pemda.profile.edit') : route('profile.edit'),
         'icon' => 'profile',
     ];
+
+    $now = now();
+    $hour = (int) $now->format('H');
+    $greeting = match (true) {
+        $hour < 11 => 'Selamat pagi',
+        $hour < 15 => 'Selamat siang',
+        $hour < 19 => 'Selamat sore',
+        default => 'Selamat malam',
+    };
+    $userInitials = collect(explode(' ', trim($user?->name ?? 'Sigap TBC')))
+        ->filter()
+        ->map(fn ($segment) => Str::upper(Str::substr($segment, 0, 1)))
+        ->take(2)
+        ->implode('') ?: 'ST';
+    $roleHeadline = $role ? Str::headline($role->name) : 'Pengguna';
+    $shortName = Str::words($user?->name ?? 'Pengguna', 2, '');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -63,11 +80,11 @@
     <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}">
     <link id="pagestyle" href="{{ asset('assets/css/soft-ui-dashboard.css?v=1.1.0') }}" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
 
-<body class="g-sidenav-show bg-gray-100" style="overflow:hidden;">
-    <div class="position-absolute w-100" style="min-height: 0;"></div>
+<body class="g-sidenav-show">
     @include('layouts.partials.soft-sidebar', [
         'navItems' => $navItems,
         'profileNav' => $profileNav,
@@ -76,48 +93,55 @@
            
     <main class="main-content position-relative bg-gray-100 max-height-vh-100 h-100 border-radius-lg">
         <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur" navbar-scroll="true">
-            <div class="container-fluid py-1 px-3">
-                <nav aria-label="breadcrumb">
-                    <h6 class="font-weight-bolder mb-0">{{ $navTitle }}</h6>
-                </nav>
-                <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
-                    <div class="ms-md-auto pe-md-3 d-flex align-items-center"></div>
-                    <ul class="navbar-nav  justify-content-end">
-                        <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-                            <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
-                                <div class="sidenav-toggler-inner">
-                                    <i class="sidenav-toggler-line"></i>
-                                    <i class="sidenav-toggler-line"></i>
-                                    <i class="sidenav-toggler-line"></i>
-                                </div>
-                            </a>
-
-                                                       </li>
-                        <li class="nav-item dropdown d-none d-md-flex align-items-center">
-                            <a href="#" class="nav-link text-body font-weight-bold px-0" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="d-sm-inline d-none me-2">{{ $user?->name }}</span>
-                            <i class="fa fa-chevron-down text-sm"></i>
-
-                                                   </a>
-                            @php
-                                $profileLink = $role === \App\Enums\UserRole::Pemda ? route('pemda.profile.edit') : route('profile.edit');
-                                $profileText = $role === \App\Enums\UserRole::Pemda ? 'Profil Pemda' : 'Profil Saya';
-                            @endphp
-                            <div class="dropdown-menu dropdown-menu-end px-2 py-2 me-sm-n4" aria-labelledby="profileDropdown">
-                                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ $profileLink }}">
-
-                                                                       <i class="fa-solid fa-id-badge text-primary"></i> {{ $profileText }}
+            <div class="container-fluid py-3 px-3">
+                <div class="soft-topbar">
+                    <div class="soft-topbar__primary">
+                        <div class="soft-topbar__summary">
+                            <span class="soft-chip">
+                                <i class="ri-user-smile-line me-1"></i>{{ $greeting }}, {{ $shortName ?: 'Pengguna' }}
+                            </span>
+                            <span class="soft-chip">
+                                <i class="ri-shield-check-line me-1"></i>{{ $roleHeadline }}
+                            </span>
+                            <span class="soft-chip d-none d-md-inline-flex">
+                                <i class="ri-calendar-line me-1"></i>{{ $now->translatedFormat('l, d M Y') }}
+                            </span>
+                        </div>
+                        <div class="soft-topbar__heading">
+                            <div>
+                                <h1 class="soft-page-title mb-0">{{ $navTitle }}</h1>
+                                <p class="soft-topbar__subtitle mb-0">Data pelayanan TBC terintegrasi dan langkah tindak lanjut prioritas.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="soft-topbar__actions">
+                        <button id="iconNavbarSidenav" class="btn btn-outline-primary btn-icon d-lg-none" type="button" aria-label="Navigasi">
+                            <i class="ri-menu-3-line"></i>
+                        </button>
+                        <div class="dropdown soft-profile-dropdown ms-auto">
+                            <button class="btn border-0 bg-transparent p-0" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="soft-user-pill">
+                                    <span class="soft-user-avatar">{{ $userInitials }}</span>
+                                    <span class="d-none d-sm-flex flex-column text-start">
+                                        <span class="fw-semibold">{{ Str::limit($user?->name ?? 'Pengguna', 22) }}</span>
+                                        <small class="text-muted">{{ $roleHeadline }}</small>
+                                    </span>
+                                    <i class="ri-arrow-down-s-line text-sm"></i>
+                                </span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end px-2 py-2" aria-labelledby="profileDropdown">
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ $profileNav['url'] }}">
+                                    <i class="fa-solid fa-id-badge text-primary"></i> {{ $profileNav['label'] }}
                                 </a>
-
-                                                                       <form method="POST" action="{{ route('logout') }}" data-confirm="Keluar dari aplikasi?" data-confirm-text="Ya, keluar">
+                                <form method="POST" action="{{ route('logout') }}" data-confirm="Keluar dari aplikasi?" data-confirm-text="Ya, keluar">
                                     @csrf
-                                    <button type="submit" class="dropdown-item border-0  text-dangerd-flex align-items-center gap-2">
-                                        <i class="fa-solid fa-arrow-right-from-bracket text-danger"></i> Keluar
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger">
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
                                     </button>
                                 </form>
                             </div>
-                        </li>
-                    </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>

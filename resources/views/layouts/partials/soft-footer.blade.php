@@ -1,20 +1,19 @@
-<footer class="footer pt-3 mt-auto">
+<footer class="soft-footer footer mt-auto">
     <div class="container-fluid">
-        <div class="row align-items-center justify-content-lg-between">
-            <div class="col-lg-6 mb-lg-0 mb-4">
-                <div class="text-sm text-muted text-center text-lg-start">
-                    &copy; {{ now()->year }} {{ config('app.name', 'SIGAP TBC') }}.
-                </div>
+        <div class="row g-3 align-items-center justify-content-between">
+            <div class="col-lg-7">
+                <p class="text-sm text-muted mb-2">
+                    &copy; {{ now()->year }} {{ config('app.name', 'SIGAP TBC') }} — Menghubungkan pasien, kader, puskesmas,
+                    dan pemda dalam satu ekosistem data TBC yang presisi.
+                </p>
+                <span class="badge bg-gradient-primary text-uppercase">Data Realtime &amp; Tindak Lanjut Cepat</span>
             </div>
-            <div class="col-lg-6">
-                <ul class="nav nav-footer justify-content-center justify-content-lg-end">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-muted">Tentang SIGAP TBC</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-muted">Kontak</a>
-                    </li>
-                </ul>
+            <div class="col-lg-5 text-lg-end">
+                <div class="soft-footer__links d-flex flex-wrap justify-content-lg-end gap-3">
+                    <a href="#" class="text-sm text-muted text-decoration-none">Panduan Pengguna</a>
+                    <a href="#" class="text-sm text-muted text-decoration-none">Kritik &amp; Saran</a>
+                    <a href="mailto:support@sigap-tbc.id" class="text-sm text-muted text-decoration-none">support@sigap-tbc.id</a>
+                </div>
             </div>
         </div>
     </div>

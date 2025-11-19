@@ -44,6 +44,10 @@ Setiap akun memiliki detail profil (NIK, kontak, alamat, instansi) serta status 
    ```bash
    php artisan migrate
    ```
+   Jika ingin memulai dengan data contoh (pemda, puskesmas, kader, pasien, treatment Faskes, dll) jalankan:
+   ```bash
+   php artisan migrate:fresh --seed
+   ```
 
 4. **Build asset**
    ```bash

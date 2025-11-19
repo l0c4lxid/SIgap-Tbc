@@ -33,6 +33,35 @@
         @endforeach
     </div>
 
+    @if (!empty($treatmentReminder))
+        <div class="alert alert-warning mt-4" role="alert">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                <div>
+                    <strong>Pengingat Pengobatan:</strong>
+                    Segera datang ke {{ $treatmentReminder['puskesmas_name'] ?? 'Puskesmas rujukan' }} sesuai jadwal yang ditentukan.
+                    <div class="text-sm mt-2 mb-0">
+                        <span class="me-3"><strong>Status:</strong> {{ $treatmentReminder['status_label'] }}</span>
+                        @if (!empty($treatmentReminder['schedule']))
+                            <span class="me-3"><strong>Jadwal Kontrol:</strong> {{ $treatmentReminder['schedule']->format('d M Y') }}</span>
+                        @endif
+                        <span><strong>Kader:</strong> {{ $treatmentReminder['kader_name'] ?? '-' }} {{ $treatmentReminder['kader_phone'] ? '(' . $treatmentReminder['kader_phone'] . ')' : '' }}</span>
+                    </div>
+                    @if (!empty($treatmentReminder['notes']))
+                        <p class="text-xs text-muted mb-0 mt-2">{{ $treatmentReminder['notes'] }}</p>
+                    @endif
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ route('patient.puskesmas.info') }}" class="btn btn-sm btn-outline-warning">
+                        <i class="fa-solid fa-hospital me-1"></i> Info Puskesmas
+                    </a>
+                    <a href="{{ route('patient.family') }}" class="btn btn-sm btn-warning">
+                        <i class="fa-solid fa-users me-1"></i> Pantau Anggota
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if ($user->role === \App\Enums\UserRole::Pasien && in_array(optional($user->treatments()->latest()->first())->status ?? 'none', ['contacted', 'scheduled']))
         <div class="alert alert-warning mt-4" role="alert">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">

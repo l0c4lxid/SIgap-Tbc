@@ -60,7 +60,7 @@ Route::redirect('/', '/login')->name('home');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function (Request $request) {
-        $user = $request->user()->loadMissing(['detail', 'detail.supervisor']);
+        $user = $request->user()->loadMissing(['detail.supervisor.detail.supervisor']);
         $role = $user->role;
 
         $cards = [];
@@ -248,10 +248,45 @@ Route::middleware('auth')->group(function () {
                 break;
         }
 
+        $treatmentReminder = null;
+        if ($role === UserRole::Pasien) {
+            $activeTreatment = $user->treatments()
+                ->with(['kader.detail.supervisor'])
+                ->whereIn('status', ['contacted', 'scheduled', 'in_treatment'])
+                ->latest()
+                ->first();
+
+            if ($activeTreatment) {
+                $statusLabels = [
+                    'contacted' => 'Perlu Konfirmasi',
+                    'scheduled' => 'Terjadwal',
+                    'in_treatment' => 'Sedang Berobat',
+                    'recovered' => 'Selesai',
+                ];
+
+                $kader = $activeTreatment->kader;
+                $puskesmas = optional(optional($kader?->detail)->supervisor);
+                if (!$puskesmas) {
+                    $puskesmas = optional(optional(optional($user->detail)->supervisor)->detail)->supervisor;
+                }
+
+                $treatmentReminder = [
+                    'status' => $activeTreatment->status,
+                    'status_label' => $statusLabels[$activeTreatment->status] ?? ucfirst(str_replace('_', ' ', $activeTreatment->status)),
+                    'schedule' => $activeTreatment->next_follow_up_at,
+                    'notes' => $activeTreatment->notes,
+                    'puskesmas_name' => $puskesmas?->name,
+                    'kader_name' => $kader?->name,
+                    'kader_phone' => $kader?->phone,
+                ];
+            }
+        }
+
         return view('dashboard', [
             'user' => $user,
             'cards' => $cards,
             'recentScreenings' => $recentScreenings,
+            'treatmentReminder' => $treatmentReminder,
         ]);
     })->name('dashboard');
 
@@ -1009,6 +1044,28 @@ Route::middleware('auth')->group(function () {
 
         return redirect()->route('patient.family')->with('status', 'Hasil skrining anggota disimpan.');
     })->name('patient.family.screening.store');
+
+    Route::get('/pasien/puskesmas', function (Request $request) {
+        abort_if($request->user()->role !== UserRole::Pasien, 403);
+
+        $patient = $request->user()->loadMissing([
+            'detail.supervisor.detail.supervisor',
+            'treatments' => fn($query) => $query->latest(),
+        ]);
+
+        $kader = optional($patient->detail)->supervisor;
+        $puskesmas = optional($kader?->detail)->supervisor;
+        if (!$puskesmas) {
+            $puskesmas = optional(optional($patient->detail)->supervisor)->detail->supervisor;
+        }
+
+        return view('patient.puskesmas-info', [
+            'patient' => $patient,
+            'kader' => $kader,
+            'puskesmas' => $puskesmas,
+            'latestTreatment' => $patient->treatments->first(),
+        ]);
+    })->name('patient.puskesmas.info');
 });
 
 require __DIR__ . '/auth.php';

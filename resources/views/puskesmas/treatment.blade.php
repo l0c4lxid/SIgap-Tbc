@@ -165,6 +165,57 @@
                                             </div>
                                         </td>
                                     </tr>
+                                    @foreach ($patient->familyMembers->whereNull('converted_user_id') as $member)
+                                        @php
+                                            $memberAnswers = collect($member->last_screening_answers ?? []);
+                                            $memberPositive = $memberAnswers->filter(fn ($answer) => $answer === 'ya')->count();
+                                            $memberScreenedAt = $member->last_screened_at;
+                                            $memberStatusKey = $member->screening_status ?? 'pending';
+                                            $familyStatus = $familyStatuses[$memberStatusKey] ?? [
+                                                'label' => ucfirst(str_replace('_', ' ', $memberStatusKey)),
+                                                'badge' => 'bg-gradient-secondary',
+                                            ];
+                                            $screeningColor = $memberPositive >= 2 ? 'danger' : ($memberPositive === 1 ? 'warning text-dark' : 'success');
+                                        @endphp
+                                        <tr class="align-middle bg-light">
+                                            <td class="ps-5 border-start border-3 border-primary">
+                                                <div>
+                                                    <h6 class="mb-0 text-sm d-flex align-items-center gap-2">
+                                                        <i class="fa-solid fa-user-group text-primary"></i>
+                                                        {{ $member->name }}
+                                                        <span class="badge bg-gradient-primary">Anggota Keluarga</span>
+                                                    </h6>
+                                                    <p class="text-xs text-muted mb-0">Relasi: {{ $member->relation ?? '-' }}{{ $member->phone ? ' • ' . $member->phone : '' }}</p>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <p class="text-xs text-muted mb-0">Mengikuti {{ $patient->name }}</p>
+                                                <p class="text-xs text-muted mb-0">Kader: {{ $patient->detail->supervisor->name ?? '-' }}</p>
+                                            </td>
+                                            <td>
+                                                @if ($memberScreenedAt)
+                                                    <span class="badge bg-gradient-{{ $screeningColor }}">
+                                                        {{ $memberPositive }} indikasi "Ya"
+                                                    </span>
+                                                    <p class="text-xs text-muted mb-0">{{ $memberScreenedAt->format('d M Y H:i') }}</p>
+                                                @else
+                                                    <span class="badge bg-gradient-secondary">Belum disaring</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $familyStatus['badge'] ?? 'bg-gradient-secondary' }}">{{ $familyStatus['label'] }}</span>
+                                                @if ($member->notes)
+                                                    <p class="text-xs text-muted mb-0">{{ $member->notes }}</p>
+                                                @endif
+                                            </td>
+                                            <td><span class="text-xs text-muted">-</span></td>
+                                            <td>
+                                                <a href="{{ route('puskesmas.patient.family', $patient) }}" class="btn btn-sm btn-outline-primary">
+                                                    Kelola Anggota
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center text-muted">Belum ada pasien dalam pengobatan.</td>

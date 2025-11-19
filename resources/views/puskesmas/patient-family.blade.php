@@ -72,17 +72,10 @@
                                             </select>
                                             <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Catatan tambahan">{{ $member->notes }}</textarea>
                                             <button type="submit" class="btn btn-sm btn-primary">Simpan</button>
-                                            @if (! $member->converted_user_id)
-                                                <button form="promoteMember{{ $member->id }}" type="submit" class="btn btn-sm btn-success">Jadikan Pasien</button>
-                                            @else
+                                            @if ($member->converted_user_id)
                                                 <span class="badge bg-gradient-success">Sudah jadi pasien</span>
                                             @endif
                                         </form>
-                                        @if (! $member->converted_user_id)
-                                            <form id="promoteMember{{ $member->id }}" method="POST" action="{{ route('puskesmas.patient.family.promote', [$patient, $member]) }}">
-                                                @csrf
-                                            </form>
-                                        @endif
                                     </td>
                                     </tr>
                                 @empty

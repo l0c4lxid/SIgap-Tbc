@@ -8,7 +8,6 @@ use App\Models\PatientScreening;
 use App\Models\FamilyMember;
 use App\Models\PatientTreatment;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 if (!function_exists('ensureFamilyTreatment')) {
     function ensureFamilyTreatment(User $patient, string $status = 'contacted', ?string $nextFollowUp = null, ?string $notes = null): void
@@ -388,44 +387,6 @@ Route::middleware('auth')->group(function () {
         return back()->with('status', 'Status anggota keluarga diperbarui.');
     })->name('puskesmas.patient.family.update');
 
-    Route::post('/puskesmas/pasien/{patient}/anggota/{member}/promote', function (Request $request, User $patient, FamilyMember $member) {
-        abort_if($request->user()->role !== UserRole::Puskesmas, 403);
-        abort_if($member->patient_id !== $patient->id, 404);
-
-        $patient->loadMissing(['detail.supervisor.detail']);
-        $kader = optional($patient->detail)->supervisor;
-        abort_if(!$kader, 404);
-        abort_if(optional($kader->detail)->supervisor_id !== $request->user()->id, 403);
-        abort_if($member->converted_user_id, 422, 'Anggota sudah menjadi pasien.');
-
-        $password = Str::random(8);
-
-        $newUser = User::create([
-            'name' => $member->name,
-            'phone' => $member->phone ?? '08' . random_int(1000000000, 9999999999),
-            'role' => UserRole::Pasien,
-            'password' => Hash::make($password),
-            'is_active' => true,
-        ]);
-
-        UserDetail::create([
-            'user_id' => $newUser->id,
-            'address' => $patient->detail->address,
-            'family_card_number' => $patient->detail->family_card_number,
-            'notes' => 'Anggota keluarga ' . $patient->name . ' - ' . $member->notes,
-            'supervisor_id' => $kader->id,
-            'initial_password' => $password,
-        ]);
-
-        $member->update(['converted_user_id' => $newUser->id]);
-
-        if ($member->screening_status === 'suspect') {
-            ensureFamilyTreatment($newUser, 'contacted');
-        }
-
-        return back()->with('status', 'Anggota keluarga kini terdaftar sebagai pasien. Password sementara: ' . $password);
-    })->name('puskesmas.patient.family.promote');
-
     Route::get('/puskesmas/skrining', function (Request $request) {
         abort_if($request->user()->role !== UserRole::Puskesmas, 403);
 
@@ -479,6 +440,13 @@ Route::middleware('auth')->group(function () {
             'recovered' => 'Selesai',
         ];
 
+        $familyStatuses = [
+            'pending' => ['label' => 'Belum Ditindaklanjuti', 'badge' => 'bg-gradient-secondary'],
+            'in_progress' => ['label' => 'Dalam Pemantauan', 'badge' => 'bg-gradient-warning text-dark'],
+            'suspect' => ['label' => 'Suspek TBC', 'badge' => 'bg-gradient-danger'],
+            'clear' => ['label' => 'Tidak Ada Gejala', 'badge' => 'bg-gradient-success'],
+        ];
+
         $statusParam = $request->input('status');
 
         if ($kaderIds->isEmpty()) {
@@ -491,6 +459,7 @@ Route::middleware('auth')->group(function () {
                     'patient.detail',
                     'patient.detail.supervisor',
                     'patient.screenings' => fn($query) => $query->latest()->limit(1),
+                    'patient.familyMembers' => fn($query) => $query->orderBy('name'),
                 ])
                 ->whereHas('patient.detail', function ($detail) use ($kaderIds) {
                     $detail->whereIn('supervisor_id', $kaderIds);
@@ -526,6 +495,7 @@ Route::middleware('auth')->group(function () {
             'counts' => $counts,
             'activeStatus' => $statusParam,
             'eligiblePatients' => $eligiblePatients,
+            'familyStatuses' => $familyStatuses,
         ]);
     })->name('puskesmas.treatment');
 

@@ -62,6 +62,33 @@
         </div>
     @endif
 
+    @if ($user->role === \App\Enums\UserRole::Pemda && !empty($dashboardCharts))
+        <div class="row mt-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Skrining per Bulan</h6>
+                        <p class="text-sm text-muted mb-0">Total skrining yang tercatat dalam 12 bulan terakhir.</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="pemdaScreeningChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Kasus Suspek TBC</h6>
+                        <p class="text-sm text-muted mb-0">Jumlah pasien dengan indikasi >= 2 jawaban "Ya" per bulan.</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="pemdaTbcChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if ($user->role === \App\Enums\UserRole::Pasien && in_array(optional($user->treatments()->latest()->first())->status ?? 'none', ['contacted', 'scheduled']))
         <div class="alert alert-warning mt-4" role="alert">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -171,3 +198,63 @@
         </div>
     @endif
 @endsection
+
+@push('scripts')
+    @if ($user->role === \App\Enums\UserRole::Pemda && !empty($dashboardCharts))
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const screeningDataset = @json($dashboardCharts['screening'] ?? []);
+                const tbcDataset = @json($dashboardCharts['tbc_cases'] ?? []);
+
+                const screeningCtx = document.getElementById('pemdaScreeningChart');
+                if (screeningCtx && screeningDataset.length) {
+                    new Chart(screeningCtx, {
+                        type: 'line',
+                        data: {
+                            labels: screeningDataset.map(item => item.label),
+                            datasets: [{
+                                label: 'Skrining',
+                                data: screeningDataset.map(item => item.value),
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 2,
+                                tension: 0.3,
+                                fill: true,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true },
+                            },
+                        },
+                    });
+                }
+
+                const tbcCtx = document.getElementById('pemdaTbcChart');
+                if (tbcCtx && tbcDataset.length) {
+                    new Chart(tbcCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: tbcDataset.map(item => item.label),
+                            datasets: [{
+                                label: 'Kasus Suspek',
+                                data: tbcDataset.map(item => item.value),
+                                backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                                borderColor: 'rgba(220, 53, 69, 1)',
+                                borderWidth: 1,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true },
+                            },
+                        },
+                    });
+                }
+            });
+        </script>
+    @endif
+@endpush

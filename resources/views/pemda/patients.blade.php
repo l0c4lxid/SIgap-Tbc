@@ -26,8 +26,20 @@
                                 <option value="{{ $option->id }}" @selected(($filters['kelurahan_id'] ?? '') == $option->id)>{{ $option->name }}</option>
                             @endforeach
                         </select>
+                        <select name="month" class="form-select form-select-sm">
+                            <option value="">Bulan</option>
+                            @foreach ($months as $value => $label)
+                                <option value="{{ $value }}" @selected(($filters['month'] ?? '') == $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <select name="year" class="form-select form-select-sm">
+                            <option value="">Tahun</option>
+                            @foreach ($years as $year)
+                                <option value="{{ $year }}" @selected(($filters['year'] ?? '') == $year)>{{ $year }}</option>
+                            @endforeach
+                        </select>
                         <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
-                        @if ($search || ($filters['puskesmas_id'] ?? '') || ($filters['kelurahan_id'] ?? ''))
+                        @if ($search || ($filters['puskesmas_id'] ?? '') || ($filters['kelurahan_id'] ?? '') || ($filters['month'] ?? '') || ($filters['year'] ?? ''))
                             <a href="{{ route('pemda.patients') }}" class="btn btn-sm btn-light">Reset</a>
                         @endif
                     </form>

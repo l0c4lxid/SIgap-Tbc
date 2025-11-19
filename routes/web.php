@@ -113,6 +113,38 @@ Route::middleware('auth')->group(function () {
                 ];
 
                 $recentScreenings = $baseScreeningQuery->paginate(5);
+
+$chartMonths = collect(range(0, 11))
+                    ->map(fn($i) => now()->startOfMonth()->subMonths($i))
+                    ->sort()
+                    ->values();
+
+                $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())
+                    ->get();
+
+                $monthlyAggregates = [];
+                foreach ($screeningsInRange as $screening) {
+                    $key = $screening->created_at->format('Y-m');
+                    if (!isset($monthlyAggregates[$key])) {
+                        $monthlyAggregates[$key] = ['screening' => 0, 'suspect' => 0];
+                    }
+                    $monthlyAggregates[$key]['screening']++;
+                    $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+                    if ($positive >= 2) {
+                        $monthlyAggregates[$key]['suspect']++;
+                    }
+                }
+
+                $dashboardCharts = [
+                    'screening' => $chartMonths->map(fn($date) => [
+                        'label' => $date->format('M Y'),
+                        'value' => $monthlyAggregates[$date->format('Y-m')]['screening'] ?? 0,
+                    ])->values(),
+                    'tbc_cases' => $chartMonths->map(fn($date) => [
+                        'label' => $date->format('M Y'),
+                        'value' => $monthlyAggregates[$date->format('Y-m')]['suspect'] ?? 0,
+                    ])->values(),
+                ];
                 break;
 
             case UserRole::Puskesmas:
@@ -287,6 +319,7 @@ Route::middleware('auth')->group(function () {
             'cards' => $cards,
             'recentScreenings' => $recentScreenings,
             'treatmentReminder' => $treatmentReminder,
+            'dashboardCharts' => $dashboardCharts,
         ]);
     })->name('dashboard');
 
@@ -676,6 +709,27 @@ Route::middleware('auth')->group(function () {
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $months = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember',
+        ];
+
+        $currentYear = now()->year;
+        $years = [];
+        for ($i = 0; $i < 5; $i++) {
+            $years[] = $currentYear - $i;
+        }
+
         $patientsQuery = User::query()
             ->with([
                 'detail',
@@ -709,6 +763,12 @@ Route::middleware('auth')->group(function () {
                     $kelurahan->where('id', $kelurahanId);
                 });
             })
+            ->when($request->filled('month'), function ($query) use ($request) {
+                $query->whereMonth('created_at', $request->input('month'));
+            })
+            ->when($request->filled('year'), function ($query) use ($request) {
+                $query->whereYear('created_at', $request->input('year'));
+            })
             ->latest();
 
         $patients = $patientsQuery->get();
@@ -733,10 +793,14 @@ Route::middleware('auth')->group(function () {
             'filters' => [
                 'puskesmas_id' => $request->input('puskesmas_id', ''),
                 'kelurahan_id' => $request->input('kelurahan_id', ''),
+                'month' => $request->input('month', ''),
+                'year' => $request->input('year', ''),
             ],
             'stats' => $stats,
             'puskesmasOptions' => $puskesmasOptions,
             'kelurahanOptions' => $kelurahanOptions,
+            'months' => $months,
+            'years' => $years,
         ]);
     })->name('pemda.patients');
 

@@ -27,13 +27,30 @@
                         <table class="table align-items-center mb-0">
                             <thead>
                                 <tr>
+                                    <th class="text-center" style="width:60px;">No.</th>
                                     <th>Pasien</th>
                                     <th>Status Skrining</th>
+                                    <th>Pengobatan Puskesmas</th>
+                                    <th>Anggota Keluarga</th>
                                     <th>Terakhir Skrining</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                @php
+                                    $treatmentStatuses = [
+                                        'contacted' => ['label' => 'Perlu Konfirmasi', 'badge' => 'bg-gradient-warning text-dark'],
+                                        'scheduled' => ['label' => 'Terjadwal', 'badge' => 'bg-gradient-info'],
+                                        'in_treatment' => ['label' => 'Sedang Berobat', 'badge' => 'bg-gradient-primary'],
+                                        'recovered' => ['label' => 'Selesai', 'badge' => 'bg-gradient-success'],
+                                    ];
+                                    $familyStatusBadges = [
+                                        'pending' => 'bg-gradient-secondary',
+                                        'in_progress' => 'bg-gradient-warning text-dark',
+                                        'suspect' => 'bg-gradient-danger',
+                                        'clear' => 'bg-gradient-success',
+                                    ];
+                                @endphp
                                 @forelse ($patients as $patient)
                                     @php
                                         $latest = $patient->screenings->first();
@@ -46,12 +63,41 @@
                                         }
                                     @endphp
                                     <tr>
+                                        <td class="text-center fw-semibold">{{ $loop->iteration }}</td>
                                         <td>
                                             <h6 class="mb-0 text-sm">{{ $patient->name }}</h6>
                                             <p class="text-xs text-muted mb-0">{{ $patient->phone }}</p>
                                         </td>
                                         <td>
                                             <span class="badge {{ $statusBadge }}">{{ $label }}</span>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $latestTreatment = $patient->treatments->first();
+                                            @endphp
+                                            @if ($latestTreatment)
+                                                @php
+                                                    $treatmentStatus = $treatmentStatuses[$latestTreatment->status] ?? ['label' => ucfirst(str_replace('_', ' ', $latestTreatment->status)), 'badge' => 'bg-gradient-info'];
+                                                @endphp
+                                                <span class="badge {{ $treatmentStatus['badge'] }}">{{ $treatmentStatus['label'] }}</span>
+                                                <p class="text-xs text-muted mb-0">
+                                                    Jadwal: {{ optional($latestTreatment->next_follow_up_at)->format('d M Y') ?? 'Belum dijadwalkan' }}
+                                                </p>
+                                                @if ($latestTreatment->notes)
+                                                    <p class="text-xs text-muted mb-0">Catatan: {{ $latestTreatment->notes }}</p>
+                                                @endif
+                                            @else
+                                                <span class="text-xs text-muted">Belum masuk daftar pengobatan.</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if ($patient->familyMembers->isEmpty())
+                                                <span class="text-xs text-muted">Belum ada anggota.</span>
+                                            @else
+                                                <a href="{{ route('kader.patients.family', $patient) }}" class="btn btn-sm btn-outline-primary">
+                                                    Lihat {{ $patient->familyMembers->count() }} Anggota
+                                                </a>
+                                            @endif
                                         </td>
                                         <td>
                                             @if ($latest)
@@ -70,7 +116,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">Belum ada pasien binaan.</td>
+                                        <td colspan="7" class="text-center text-muted">Belum ada pasien binaan.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

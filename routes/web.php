@@ -725,7 +725,12 @@ Route::middleware('auth')->group(function () {
         abort_if(auth()->user()->role !== UserRole::Kader, 403);
 
         $patientsQuery = User::query()
-            ->with(['detail', 'screenings' => fn($query) => $query->latest()->limit(1)])
+            ->with([
+                'detail.supervisor.detail.supervisor',
+                'screenings' => fn($query) => $query->latest()->limit(1),
+                'treatments' => fn($query) => $query->latest()->limit(1),
+                'familyMembers' => fn($query) => $query->orderBy('name'),
+            ])
             ->where('role', UserRole::Pasien->value)
             ->whereRelation('detail', 'supervisor_id', $request->user()->id)
             ->when($request->filled('q'), function ($query) use ($request) {
@@ -830,6 +835,19 @@ Route::middleware('auth')->group(function () {
 
         return back()->with('status', 'Anggota keluarga risiko berhasil ditambahkan.');
     })->name('kader.patients.family.store');
+
+    Route::get('/kader/pasien/{patient}/keluarga', function (Request $request, User $patient) {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+        abort_if($patient->role !== UserRole::Pasien, 404);
+
+        $patient->loadMissing(['detail', 'familyMembers' => fn($query) => $query->latest()]);
+        abort_if(optional($patient->detail)->supervisor_id !== $request->user()->id, 404);
+
+        return view('kader.patient-family', [
+            'patient' => $patient,
+            'familyMembers' => $patient->familyMembers,
+        ]);
+    })->name('kader.patients.family');
 
     Route::get('/kader/pasien/{patient}/screening', function (Request $request, User $patient) {
         abort_if($request->user()->role !== UserRole::Kader, 403);

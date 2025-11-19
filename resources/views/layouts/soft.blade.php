@@ -67,8 +67,8 @@
     @stack('styles')
 </head>
 
-<body class="g-sidenav-show bg-gray-100">
-    <div class="min-height-300 position-absolute w-100"></div>
+<body class="g-sidenav-show bg-gray-100" style="overflow:hidden;">
+    <div class="position-absolute w-100" style="min-height: 0;"></div>
     @include('layouts.partials.soft-sidebar', ['navItems' => $navItems, 'profileNav' => $profileNav])
 
     <main class="main-content position-relative bg-gray-100 max-height-vh-100 h-100 border-radius-lg">

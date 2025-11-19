@@ -75,6 +75,8 @@ Route::middleware('auth')->group(function () {
             ])
             ->latest();
 
+        $dashboardCharts = null;
+
         switch ($role) {
             case UserRole::Pemda:
                 $totalUsers = User::count();
@@ -114,13 +116,101 @@ Route::middleware('auth')->group(function () {
 
                 $recentScreenings = $baseScreeningQuery->paginate(5);
 
-$chartMonths = collect(range(0, 11))
+                $chartMonths = collect(range(0, 11))
                     ->map(fn($i) => now()->startOfMonth()->subMonths($i))
                     ->sort()
                     ->values();
 
                 $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())
                     ->get();
+
+                $monthlyAggregates = [];
+                foreach ($screeningsInRange as $screening) {
+                    $key = $screening->created_at->format('Y-m');
+                    if (!isset($monthlyAggregates[$key])) {
+                        $monthlyAggregates[$key] = ['screening' => 0, 'suspect' => 0];
+                    }
+                    $monthlyAggregates[$key]['screening']++;
+                    $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+                    if ($positive >= 2) {
+                        $monthlyAggregates[$key]['suspect']++;
+                    }
+                }
+
+                $dashboardCharts = [
+                    'screening' => $chartMonths->map(fn($date) => [
+                        'label' => $date->format('M Y'),
+                        'value' => $monthlyAggregates[$date->format('Y-m')]['screening'] ?? 0,
+                    ])->values(),
+                    'tbc_cases' => $chartMonths->map(fn($date) => [
+                        'label' => $date->format('M Y'),
+                        'value' => $monthlyAggregates[$date->format('Y-m')]['suspect'] ?? 0,
+                    ])->values(),
+                ];
+                break;
+
+            case UserRole::Kelurahan:
+                $kelurahan = $user;
+                $puskesmasIds = User::query()
+                    ->where('role', UserRole::Puskesmas->value)
+                    ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $kelurahan->id))
+                    ->pluck('id');
+
+                $kaderIds = $puskesmasIds->isEmpty()
+                    ? collect()
+                    : User::query()
+                        ->where('role', UserRole::Kader->value)
+                        ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $puskesmasIds))
+                        ->pluck('id');
+
+                $patientIds = $kaderIds->isEmpty()
+                    ? collect()
+                    : User::query()
+                        ->where('role', UserRole::Pasien->value)
+                        ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $kaderIds))
+                        ->pluck('id');
+
+                $cards = [
+                    [
+                        'label' => 'Puskesmas Mitra',
+                        'value' => number_format($puskesmasIds->count()),
+                        'subtitle' => 'Terhubung ke kelurahan ini',
+                        'trend' => $kaderIds->count() . ' kader aktif',
+                        'icon' => 'fa-solid fa-house-medical',
+                        'color' => 'primary',
+                    ],
+                    [
+                        'label' => 'Pasien Terpantau',
+                        'value' => number_format($patientIds->count()),
+                        'subtitle' => 'Lewat kader lapangan',
+                        'trend' => $patientIds->isEmpty() ? 'Belum ada pasien' : 'Pantau progres skrining',
+                        'icon' => 'fa-solid fa-people-group',
+                        'color' => 'info',
+                    ],
+                    [
+                        'label' => 'Skrining Bulan Ini',
+                        'value' => number_format(PatientScreening::whereIn('patient_id', $patientIds)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count()),
+                        'subtitle' => 'Update aktivitas terbaru',
+                        'trend' => now()->format('M Y'),
+                        'icon' => 'fa-solid fa-heart-pulse',
+                        'color' => 'warning',
+                    ],
+                ];
+
+                $recentScreenings = $patientIds->isEmpty()
+                    ? null
+                    : $baseScreeningQuery->whereIn('patient_id', $patientIds)->paginate(5);
+
+                $chartMonths = collect(range(0, 11))
+                    ->map(fn($i) => now()->startOfMonth()->subMonths($i))
+                    ->sort()
+                    ->values();
+
+                $screeningsInRange = $patientIds->isEmpty()
+                    ? collect()
+                    : PatientScreening::whereIn('patient_id', $patientIds)
+                        ->where('created_at', '>=', $chartMonths->first())
+                        ->get();
 
                 $monthlyAggregates = [];
                 foreach ($screeningsInRange as $screening) {
@@ -190,16 +280,16 @@ $chartMonths = collect(range(0, 11))
                 $mutedFollowUps = User::query()
                     ->with(['detail', 'familyMembers'])
                     ->whereIn('id', $patientIds)
-                    ->whereHas('detail', fn ($detail) => $detail->where('family_card_number', '!=', null))
+                    ->whereHas('detail', fn($detail) => $detail->where('family_card_number', '!=', null))
                     ->get()
                     ->filter(function ($patient) {
                         $kk = $patient->detail->family_card_number;
-                        if (! $kk) {
+                        if (!$kk) {
                             return false;
                         }
                         $suspectFamily = User::query()
                             ->where('id', '!=', $patient->id)
-                            ->whereHas('detail', fn ($detail) => $detail->where('family_card_number', $kk))
+                            ->whereHas('detail', fn($detail) => $detail->where('family_card_number', $kk))
                             ->whereDoesntHave('treatments')
                             ->exists();
                         return $suspectFamily;
@@ -675,6 +765,123 @@ $chartMonths = collect(range(0, 11))
             'search' => $request->input('q', ''),
         ]);
     })->name('kelurahan.puskesmas');
+
+    Route::get('/kelurahan/kader', function (Request $request) {
+        abort_if($request->user()->role !== UserRole::Kelurahan, 403);
+
+        $kelurahan = $request->user();
+        $puskesmasIds = User::query()
+            ->where('role', UserRole::Puskesmas->value)
+            ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $kelurahan->id))
+            ->pluck('id');
+
+        $kaders = $puskesmasIds->isEmpty()
+            ? collect()
+            : User::query()
+                ->with(['detail.supervisor'])
+                ->where('role', UserRole::Kader->value)
+                ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $puskesmasIds))
+                ->when($request->filled('q'), function ($query) use ($request) {
+                    $term = '%' . $request->input('q') . '%';
+                    $query->where(function ($sub) use ($term) {
+                        $sub->where('name', 'like', $term)
+                            ->orWhere('phone', 'like', $term)
+                            ->orWhereHas('detail', fn($detail) => $detail->where('area', 'like', $term));
+                    });
+                })
+                ->latest()
+                ->get();
+
+        return view('kelurahan.kaders', [
+            'kaders' => $kaders,
+            'search' => $request->input('q', ''),
+        ]);
+    })->name('kelurahan.kaders');
+
+    Route::post('/kelurahan/kader/{kader}/status', function (Request $request, User $kader) {
+        abort_if($request->user()->role !== UserRole::Kelurahan, 403);
+        abort_if($kader->role !== UserRole::Kader, 404);
+
+        $kelurahan = $request->user();
+        $kader->loadMissing('detail.supervisor.detail.supervisor');
+        $kelurahanOwner = optional(optional(optional($kader->detail)->supervisor)->detail)->supervisor;
+        abort_if(optional($kelurahanOwner)->id !== $kelurahan->id, 403);
+
+        $validated = $request->validate([
+            'status' => ['required', 'in:active,inactive'],
+        ]);
+
+        $kader->is_active = $validated['status'] === 'active';
+        $kader->save();
+
+        return back()->with('status', 'Status kader diperbarui.');
+    })->name('kelurahan.kaders.status');
+
+    Route::get('/kelurahan/pasien', function (Request $request) {
+        abort_if($request->user()->role !== UserRole::Kelurahan, 403);
+
+        $kelurahan = $request->user();
+        $puskesmasIds = User::query()
+            ->where('role', UserRole::Puskesmas->value)
+            ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $kelurahan->id))
+            ->pluck('id');
+
+        $patients = $puskesmasIds->isEmpty()
+            ? collect()
+            : User::query()
+                ->with([
+                    'detail.supervisor.detail.supervisor',
+                    'screenings' => fn($query) => $query->latest()->limit(1),
+                    'treatments' => fn($query) => $query->latest()->limit(1),
+                ])
+                ->where('role', UserRole::Pasien->value)
+                ->whereHas('detail.supervisor.detail', fn($detail) => $detail->whereIn('supervisor_id', $puskesmasIds))
+                ->when($request->filled('q'), function ($query) use ($request) {
+                    $term = '%' . $request->input('q') . '%';
+                    $query->where(function ($sub) use ($term) {
+                        $sub->where('name', 'like', $term)
+                            ->orWhere('phone', 'like', $term)
+                            ->orWhereHas('detail', fn($detail) => $detail->where('address', 'like', $term));
+                    });
+                })
+                ->latest()
+                ->get();
+
+        $stats = [
+            'total' => $patients->count(),
+            'screened' => $patients->filter(fn($patient) => $patient->screenings->isNotEmpty())->count(),
+            'unscreened' => $patients->filter(fn($patient) => $patient->screenings->isEmpty())->count(),
+        ];
+
+        return view('kelurahan.patients', [
+            'patients' => $patients,
+            'search' => $request->input('q', ''),
+            'stats' => $stats,
+        ]);
+    })->name('kelurahan.patients');
+
+    Route::get('/kelurahan/pasien/{patient}', function (Request $request, User $patient) {
+        abort_if($request->user()->role !== UserRole::Kelurahan, 403);
+        abort_if($patient->role !== UserRole::Pasien, 404);
+
+        $patient->loadMissing([
+            'detail.supervisor.detail.supervisor',
+            'screenings' => fn($query) => $query->latest()->limit(5),
+            'treatments' => fn($query) => $query->latest()->limit(5),
+            'familyMembers' => fn($query) => $query->latest(),
+        ]);
+
+        $kader = optional($patient->detail)->supervisor;
+        $puskesmas = optional($kader?->detail)->supervisor;
+        $kelurahan = optional(optional($puskesmas?->detail)->supervisor);
+
+        abort_if(optional($kelurahan)->id !== $request->user()->id, 403);
+
+        return view('kelurahan.patient-detail', [
+            'patient' => $patient,
+            'puskesmas' => $puskesmas,
+        ]);
+    })->name('kelurahan.patients.show');
 
     Route::get('/kader/puskesmas', function (Request $request) {
         abort_if($request->user()->role !== UserRole::Kader, 403);

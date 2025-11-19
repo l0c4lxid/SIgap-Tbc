@@ -62,13 +62,15 @@
         </div>
     @endif
 
-    @if ($user->role === \App\Enums\UserRole::Pemda && !empty($dashboardCharts))
+    @if (!empty($dashboardCharts))
         <div class="row mt-4">
             <div class="col-lg-6 mb-4">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header">
                         <h6 class="mb-0">Skrining per Bulan</h6>
-                        <p class="text-sm text-muted mb-0">Total skrining yang tercatat dalam 12 bulan terakhir.</p>
+                        <p class="text-sm text-muted mb-0">
+                            Total skrining 12 bulan terakhir ({{ $user->role === \App\Enums\UserRole::Pemda ? 'seluruh kota' : 'kelurahan ini' }}).
+                        </p>
                     </div>
                     <div class="card-body">
                         <canvas id="pemdaScreeningChart" height="200"></canvas>
@@ -79,7 +81,7 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header">
                         <h6 class="mb-0">Kasus Suspek TBC</h6>
-                        <p class="text-sm text-muted mb-0">Jumlah pasien dengan indikasi >= 2 jawaban "Ya" per bulan.</p>
+                        <p class="text-sm text-muted mb-0">Jumlah pasien indicasi ≥ 2 jawaban "Ya" per bulan.</p>
                     </div>
                     <div class="card-body">
                         <canvas id="pemdaTbcChart" height="200"></canvas>
@@ -200,7 +202,7 @@
 @endsection
 
 @push('scripts')
-    @if ($user->role === \App\Enums\UserRole::Pemda && !empty($dashboardCharts))
+    @if (!empty($dashboardCharts))
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {

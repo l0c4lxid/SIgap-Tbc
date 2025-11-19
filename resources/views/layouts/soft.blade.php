@@ -20,8 +20,8 @@
         UserRole::Kelurahan->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
             ['label' => 'Puskesmas Mitra', 'url' => route('kelurahan.puskesmas'), 'icon' => 'folder'],
-            ['label' => 'Skrining', 'url' => '#', 'icon' => 'screening'],
-            ['label' => 'Berobat', 'url' => '#', 'icon' => 'berobat'],
+            ['label' => 'Data Kader', 'url' => route('kelurahan.kaders'), 'icon' => 'users'],
+            ['label' => 'Data Pasien', 'url' => route('kelurahan.patients'), 'icon' => 'folder'],
             // ['label' => 'Sembuh', 'url' => '#', 'icon' => 'sembuh'],
         ],
         UserRole::Pemda->value => [

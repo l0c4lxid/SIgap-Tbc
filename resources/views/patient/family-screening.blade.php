@@ -19,14 +19,14 @@
                                 <div class="list-group-item">
                                     <p class="mb-2 fw-semibold">{{ $label }}</p>
                                     <div class="d-flex gap-4">
-                                        <label class="form-check-label">
-                                            <input type="radio" class="form-check-input me-1" name="{{ $name }}" value="ya" required>
-                                            Ya
-                                        </label>
-                                        <label class="form-check-label">
-                                            <input type="radio" class="form-check-input me-1" name="{{ $name }}" value="tidak" required>
-                                            Tidak
-                                        </label>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" name="{{ $name }}" id="{{ $name }}_ya" value="ya" required>
+                                            <label class="form-check-label" for="{{ $name }}_ya">Ya</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" name="{{ $name }}" id="{{ $name }}_tidak" value="tidak" required>
+                                            <label class="form-check-label" for="{{ $name }}_tidak">Tidak</label>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach

@@ -16,6 +16,7 @@ Setiap akun memiliki detail profil (NIK, kontak, alamat, instansi) serta status 
 - **Registrasi mandiri** untuk semua jenis pengguna dengan form yang panjang.
 - **Dashboard personal** yang menampilkan status peran, aktivitas akun, dan detail kontak.
 - **Tabel `user_details`** untuk menyimpan data tambahan pasien/kader/faskes.
+- **Portal berita/blog**: semua pengguna dapat membuat berita/testimoni, Pemda mempublikasikan; mendukung unggah gambar utama dan tampil di `/blog`.
 - **Session & queue siap pakai** dengan konfigurasi database driver.
 
 ## Persyaratan
@@ -43,6 +44,10 @@ Setiap akun memiliki detail profil (NIK, kontak, alamat, instansi) serta status 
 3. **Migrasi database**
    ```bash
    php artisan migrate
+   ```
+   Untuk fitur blog pastikan storage publik tersambung:
+   ```bash
+   php artisan storage:link
    ```
    Jika ingin memulai dengan data contoh (pemda, puskesmas, kader, pasien, treatment Faskes, dll) jalankan:
    ```bash

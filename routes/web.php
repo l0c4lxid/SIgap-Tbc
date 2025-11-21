@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Pemda\ProfileController as PemdaProfileController;
+use App\Http\Controllers\NewsController;
 
 if (!function_exists('ensureFamilyTreatment')) {
     function ensureFamilyTreatment(User $patient, string $status = 'contacted', ?string $nextFollowUp = null, ?string $notes = null): void
@@ -82,8 +83,19 @@ if (!function_exists('sigapMaterialDownloads')) {
     }
 }
 Route::redirect('/', '/login')->name('home');
+Route::get('/blog', [NewsController::class, 'publicIndex'])->name('blog.index');
+Route::get('/blog/{newsPost}', [NewsController::class, 'publicShow'])->name('blog.show');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/berita', [NewsController::class, 'index'])->name('news.index');
+    Route::get('/berita/create', [NewsController::class, 'create'])->name('news.create');
+    Route::post('/berita', [NewsController::class, 'store'])->name('news.store');
+    Route::get('/berita/{newsPost}/edit', [NewsController::class, 'edit'])->name('news.edit');
+    Route::put('/berita/{newsPost}', [NewsController::class, 'update'])->name('news.update');
+    Route::delete('/berita/{newsPost}', [NewsController::class, 'destroy'])->name('news.destroy');
+    Route::post('/berita/{newsPost}/publish', [NewsController::class, 'publish'])->name('news.publish');
+    Route::post('/berita/{newsPost}/unpublish', [NewsController::class, 'unpublish'])->name('news.unpublish');
+
     Route::get('/dashboard', function (Request $request) {
         $user = $request->user()->loadMissing(['detail.supervisor.detail.supervisor']);
         $role = $user->role;

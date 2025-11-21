@@ -35,6 +35,9 @@
     @case('materi')
         <i class="fa-solid fa-book-open {{ $stateClass }}"></i>
         @break
+    @case('news')
+        <i class="fa-solid fa-newspaper {{ $stateClass }}"></i>
+        @break
     @default
         <i class="fa-solid fa-circle-info {{ $stateClass }}"></i>
 @endswitch

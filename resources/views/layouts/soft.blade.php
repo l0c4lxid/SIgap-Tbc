@@ -10,6 +10,7 @@
             ['label' => 'Skrining', 'url' => route('patient.screening'), 'icon' => 'screening'],
             ['label' => 'Anggota Keluarga', 'url' => route('patient.family'), 'icon' => 'anggota'],
             ['label' => 'Materi', 'url' => route('patient.materi'), 'icon' => 'materi'],
+            ['label' => 'Berita', 'url' => route('news.index'), 'icon' => 'news'],
         ],
         UserRole::Puskesmas->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
@@ -17,6 +18,7 @@
             ['label' => 'Data Pasien', 'url' => route('puskesmas.patients'), 'icon' => 'folder'],
             ['label' => 'Skrining', 'url' => route('puskesmas.screenings'), 'icon' => 'screening'],
             ['label' => 'Berobat', 'url' => route('puskesmas.treatment'), 'icon' => 'berobat'],
+            ['label' => 'Berita', 'url' => route('news.index'), 'icon' => 'news'],
             // ['label' => 'Sembuh', 'url' => '#', 'icon' => 'sembuh'],
         ],
         UserRole::Kelurahan->value => [
@@ -24,12 +26,14 @@
             ['label' => 'Puskesmas Mitra', 'url' => route('kelurahan.puskesmas'), 'icon' => 'folder'],
             ['label' => 'Data Kader', 'url' => route('kelurahan.kaders'), 'icon' => 'users'],
             ['label' => 'Data Pasien', 'url' => route('kelurahan.patients'), 'icon' => 'folder'],
+            ['label' => 'Berita', 'url' => route('news.index'), 'icon' => 'news'],
             // ['label' => 'Sembuh', 'url' => '#', 'icon' => 'sembuh'],
         ],
         UserRole::Pemda->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
             ['label' => 'Verifikasi Pengguna', 'url' => route('pemda.verification'), 'icon' => 'verify'],
             ['label' => 'Data Pasien', 'url' => route('pemda.patients'), 'icon' => 'folder'],
+            ['label' => 'Semua Berita', 'url' => route('news.index'), 'icon' => 'news'],
         ],
         UserRole::Kader->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
@@ -37,6 +41,7 @@
             ['label' => 'Data Pasien', 'url' => route('kader.patients'), 'icon' => 'folder'],
             ['label' => 'Skrining', 'url' => route('kader.screening.index'), 'icon' => 'screening'],
             ['label' => 'Materi', 'url' => route('kader.materi'), 'icon' => 'materi'],
+            ['label' => 'Berita', 'url' => route('news.index'), 'icon' => 'news'],
         ],
     ];
 

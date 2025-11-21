@@ -23,6 +23,11 @@
                         <a class="navbar-brand font-weight-bolder ms-lg-0 ms-3" href="{{ url('/') }}">
                             {{ config('app.name', 'SIGAP TBC') }}
                         </a>
+                        <div class="ms-auto d-flex align-items-center gap-2">
+                            <a href="{{ route('blog.index') }}" class="btn btn-sm bg-gradient-primary mb-0">
+                                <i class="fa fa-newspaper me-1"></i> Blog
+                            </a>
+                        </div>
                     </div>
                 </nav>
             </div>

@@ -9,6 +9,8 @@
         'berobat' => 'Pendampingan pengobatan',
         'verify' => 'Validasi dan kontrol akses',
         'profile' => 'Perbarui data pribadi',
+        'materi' => 'Materi edukasi kader & pasien',
+        'news' => 'Kirim dan pantau publikasi blog',
     ];
 @endphp
 <aside id="sidenav-main"

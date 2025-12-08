@@ -13,23 +13,23 @@
         'news' => 'Kirim dan pantau publikasi blog',
     ];
 @endphp
-<aside id="sidenav-main"
-    class="soft-sidebar sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3">
-    <button class="btn btn-icon btn-outline-primary position-absolute top-0 end-0 mt-3 me-3 d-lg-none" id="iconSidenav"
-        type="button" aria-label="Tutup navigasi">
+<aside id="sidenav-main" class="soft-sidebar">
+    <button class="soft-sidebar__close d-lg-none" id="iconSidenav" type="button" aria-label="Tutup navigasi">
         <i class="ri-close-line"></i>
     </button>
-    <a class="text-decoration-none text-white" href="{{ route('dashboard') }}">
-        <div class="soft-sidebar__brand">
-            <div class="soft-sidebar__badge mb-3">
-                <i class="ri-shield-check-line"></i>
-                SITUBA Mode Aktif
-            </div>
-            <h4 class="mb-1">{{ $brandName }}</h4>
-            <p class="text-sm text-muted mb-0">Dashboard terpadu untuk pemantauan eliminasi TBC kota/kabupaten.</p>
+
+    <a class="soft-sidebar__brand" href="{{ route('dashboard') }}">
+        <div class="soft-sidebar__brand-logo">
+            <i class="ri-shield-check-line"></i>
+        </div>
+        <div>
+            <p class="soft-sidebar__brand-sub">SITUBA Mode Aktif</p>
+            <h4 class="soft-sidebar__brand-title mb-0">{{ $brandName }}</h4>
+            <p class="soft-sidebar__brand-desc mb-0">Dashboard terpadu pemantauan eliminasi TBC.</p>
         </div>
     </a>
-    <div class="soft-sidebar__nav mt-2">
+
+    <nav class="soft-sidebar__nav" aria-label="Navigasi utama">
         <p class="soft-sidebar__title">Navigasi utama</p>
         @foreach ($navItems as $item)
             @php
@@ -51,26 +51,28 @@
                 </span>
                 <span class="soft-sidebar__texts">
                     <span class="soft-sidebar__label">{{ $item['label'] }}</span>
-                    <span class="soft-sidebar__description d-none">{{ $description }}</span>
                 </span>
+                <span class="soft-sidebar__pill {{ $isActive ? 'is-active' : '' }}"></span>
             </a>
         @endforeach
+    </nav>
+
+    <div class="soft-sidebar__cta" id="soft-sidebar-cta">
+        <div class="d-flex align-items-start justify-content-between">
+            <div class="me-2">
+                <p class="soft-sidebar__cta-text mb-2">Perbarui informasi agar koordinasi pemantauan akurat.</p>
+                @if (!empty($profileNav))
+                    <a class="btn btn-sm btn-primary w-100" href="{{ $profileNav['url'] }}">
+                        <i class="ri-id-card-line me-1"></i>{{ $profileNav['label'] }}
+                    </a>
+                @endif
+            </div>
+            <button type="button" class="soft-sidebar__cta-close" id="soft-sidebar-cta-close" aria-label="Tutup">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
     </div>
 
-    <div class="soft-sidebar__cta">
-        <p class="text-sm text-muted mb-2">Perbarui informasi agar koordinasi pemantauan tetap akurat.</p>
-        @if (!empty($profileNav))
-            <a class="btn btn-sm btn-primary w-100 mb-2" href="{{ $profileNav['url'] }}">
-                <i class="ri-id-card-line me-1"></i>{{ $profileNav['label'] }}
-            </a>
-        @endif
-        <form method="POST" action="{{ route('logout') }}" data-confirm="Keluar dari aplikasi?" data-confirm-text="Ya, keluar">
-            @csrf
-            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
-                <i class="ri-logout-circle-r-line me-1"></i> Keluar
-            </button>
-        </form>
-    </div>
 </aside>
 
 <script>
@@ -120,5 +122,16 @@
 
         toggler?.addEventListener('click', toggleSidebar);
         closeBtn?.addEventListener('click', toggleSidebar);
+
+        const cta = document.getElementById('soft-sidebar-cta');
+        const ctaClose = document.getElementById('soft-sidebar-cta-close');
+        const ctaKey = 'softSidebarCtaHidden';
+        if (localStorage.getItem(ctaKey) === '1') {
+            cta?.classList.add('d-none');
+        }
+        ctaClose?.addEventListener('click', () => {
+            cta?.classList.add('d-none');
+            localStorage.setItem(ctaKey, '1');
+        });
     });
 </script>

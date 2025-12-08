@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\PatientScreening;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -144,6 +145,8 @@ class DashboardController extends Controller
                 $kelurahan->loadMissing('detail');
 
                 $puskesmasIds = collect(optional($kelurahan->detail)->supervisor_id ? [$kelurahan->detail->supervisor_id] : []);
+                $kelurahanName = optional($kelurahan->detail)->organization ?? $kelurahan->name;
+                $kelurahanKeyword = Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value() ?: Str::of($kelurahanName)->trim()->lower()->value();
 
                 $kaderIds = $puskesmasIds->isEmpty()
                     ? collect()
@@ -157,7 +160,10 @@ class DashboardController extends Controller
                     : User::query()
                         ->where('role', UserRole::Pasien->value)
                         ->where('is_active', true)
-                        ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $kaderIds))
+                        ->whereHas('detail', function ($detail) use ($kaderIds, $kelurahanKeyword) {
+                            $detail->whereIn('supervisor_id', $kaderIds)
+                                ->when($kelurahanKeyword, fn($q) => $q->whereRaw('LOWER(address) LIKE ?', ['%' . $kelurahanKeyword . '%']));
+                        })
                         ->get(['id', 'created_at']);
                 $patientIds = $activePatients instanceof \Illuminate\Support\Collection ? $activePatients->pluck('id') : collect();
                 $patientCreatedAt = $activePatients instanceof \Illuminate\Support\Collection

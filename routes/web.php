@@ -153,8 +153,12 @@ Route::middleware('auth')->group(function () {
         ->name('kelurahan.puskesmas.request');
     Route::get('/kelurahan/kader', [KelurahanMonitoringController::class, 'kaders'])
         ->name('kelurahan.kaders');
+    Route::get('/kelurahan/kader/{kader}', [KelurahanMonitoringController::class, 'showKader'])
+        ->name('kelurahan.kaders.show');
     Route::post('/kelurahan/kader/{kader}/status', [KelurahanMonitoringController::class, 'updateKaderStatus'])
         ->name('kelurahan.kaders.status');
+    Route::get('/kelurahan/kader-export/excel', [KelurahanMonitoringController::class, 'exportKadersExcel'])
+        ->name('kelurahan.kaders.export.excel');
     Route::get('/kelurahan/pasien', [KelurahanMonitoringController::class, 'patients'])
         ->name('kelurahan.patients');
     Route::get('/kelurahan/pasien/{patient}', [KelurahanMonitoringController::class, 'showPatient'])

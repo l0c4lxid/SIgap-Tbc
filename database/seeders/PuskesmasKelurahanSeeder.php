@@ -12,8 +12,14 @@ class PuskesmasKelurahanSeeder extends Seeder
 {
     public function run(): void
     {
+        // Keep phone generation reproducible while still avoiding collisions.
+        mt_srand(20240608);
+
         $puskesmasCounter = 1;
         $kelurahanCounter = 1;
+        $patientCounter = 1;
+        $kaderPhonePool = range(1, 99);
+        shuffle($kaderPhonePool);
 
         $puskesmasList = [
             [
@@ -139,10 +145,50 @@ class PuskesmasKelurahanSeeder extends Seeder
                 ]
             );
 
+            $kaderPhoneSuffix = array_pop($kaderPhonePool);
+            $primaryKelurahan = $puskesmasData['kelurahans'][0] ?? $puskesmasData['kecamatan'];
+
+            $kaderUser = $this->createUser(
+                [
+                    'name' => "Kader {$puskesmasData['name']}",
+                    'phone' => sprintf('02%02d', $kaderPhoneSuffix),
+                    'role' => UserRole::Kader,
+                ],
+                [
+                    'organization' => $puskesmasData['name'],
+                    'address' => "Kelurahan {$primaryKelurahan}, Kecamatan {$puskesmasData['kecamatan']}",
+                    'notes' => "Kader wilayah {$primaryKelurahan}",
+                    'supervisor_id' => $puskesmasUser->id,
+                    'initial_password' => 'password123',
+                ]
+            );
+
             $puskesmasCounter++;
 
             foreach ($kelurahanUsers as $kelurahanUser) {
                 $kelurahanUser->detail()->update(['supervisor_id' => $puskesmasUser->id]);
+            }
+
+            $kelurahanCount = count($puskesmasData['kelurahans']);
+            for ($i = 0; $i < 2; $i++) {
+                $kelurahanName = $puskesmasData['kelurahans'][$i % $kelurahanCount] ?? $primaryKelurahan;
+
+                $this->createUser(
+                    [
+                        'name' => "Pasien {$kelurahanName} " . ($i + 1),
+                        'phone' => sprintf('05%02d', $patientCounter),
+                        'role' => UserRole::Pasien,
+                    ],
+                    [
+                        'address' => "Kelurahan {$kelurahanName}, Kecamatan {$puskesmasData['kecamatan']}",
+                        'notes' => "Dampingan {$kaderUser->name}",
+                        'supervisor_id' => $kaderUser->id,
+                        'initial_password' => 'password123',
+                        'nik' => sprintf('337200%010d', $patientCounter),
+                    ]
+                );
+
+                $patientCounter++;
             }
         }
     }

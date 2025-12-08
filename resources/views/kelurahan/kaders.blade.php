@@ -9,13 +9,18 @@
                         <h5 class="mb-0">Kader di Wilayah Kelurahan</h5>
                         <p class="text-sm text-muted mb-0">Daftar kader yang ditugaskan oleh puskesmas mitra kelurahan ini.</p>
                     </div>
-                    <form method="GET" action="{{ route('kelurahan.kaders') }}" class="d-flex gap-2">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
-                            <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP / area" value="{{ $search ?? '' }}">
-                        </div>
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
-                    </form>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <a href="{{ route('kelurahan.kaders.export.excel', request()->only('q')) }}" class="btn btn-sm btn-success">
+                            <i class="fa fa-file-excel me-1"></i> Export Excel
+                        </a>
+                        <form method="GET" action="{{ route('kelurahan.kaders') }}" class="d-flex gap-2">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
+                                <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP / area" value="{{ $search ?? '' }}">
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
+                        </form>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -38,7 +43,11 @@
                                     <tr>
                                         <td>{{ $firstNumber ? $firstNumber + $loop->index : $loop->iteration }}</td>
                                         <td>
-                                            <h6 class="mb-0 text-sm">{{ $kader->name }}</h6>
+                                            <h6 class="mb-0 text-sm">
+                                                <a href="{{ route('kelurahan.kaders.show', $kader) }}" class="text-decoration-none">
+                                                    {{ $kader->name }}
+                                                </a>
+                                            </h6>
                                             <p class="text-xs text-muted mb-0">HP: {{ $kader->phone }}</p>
                                         </td>
                                         <td>
@@ -53,6 +62,9 @@
                                             </span>
                                         </td>
                                         <td class="text-center">
+                                            <a href="{{ route('kelurahan.kaders.show', $kader) }}" class="btn btn-sm btn-outline-secondary me-1">
+                                                Detail
+                                            </a>
                                             <form method="POST" action="{{ route('kelurahan.kaders.status', $kader) }}" class="d-inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="{{ $kader->is_active ? 'inactive' : 'active' }}">

@@ -29,7 +29,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies (NPM)
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Clean old Vite build
         run: rm -rf public/build

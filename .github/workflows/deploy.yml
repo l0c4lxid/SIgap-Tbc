@@ -92,7 +92,6 @@ jobs:
           server-dir: ./situba/
           state-name: .ftp-deploy-core-state.json
           timeout: 300000
-          passive: true
           dangerous-clean-slate: true
           exclude: |
             **/.git*
@@ -124,7 +123,6 @@ jobs:
           server-dir: ./public_html/
           state-name: .ftp-deploy-public-state.json
           timeout: 300000
-          passive: true
           dangerous-clean-slate: true
           exclude: |
             **/.git*

@@ -9,7 +9,7 @@
                         <h5 class="mb-0">Puskesmas Mitra</h5>
                         <p class="text-sm text-muted mb-0">Pilih puskesmas induk jika belum terhubung. Hubungan aktif ditandai pada kartu.</p>
                     </div>
-                    <form method="GET" action="{{ route('kelurahan.puskesmas') }}" class="d-flex gap-2">
+                    <form method="GET" action="{{ route('kelurahan.puskesmas') }}" class="d-flex gap-2" data-auto-submit>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
                             <input type="text" name="q" class="form-control" placeholder="Cari nama / alamat" value="{{ $search ?? '' }}">

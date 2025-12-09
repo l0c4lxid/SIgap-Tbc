@@ -13,7 +13,7 @@
                         <h5 class="mb-0">Monitoring Skrining Pasien</h5>
                         <p class="text-sm text-muted mb-0">Pantau status skrining pasien binaan kader mitra puskesmas.</p>
                     </div>
-                    <form method="GET" action="{{ route('puskesmas.screenings') }}" class="d-flex flex-wrap gap-3 align-items-end w-100 justify-content-between">
+                    <form method="GET" action="{{ route('puskesmas.screenings') }}" class="d-flex flex-wrap gap-3 align-items-end w-100 justify-content-between" data-auto-submit>
                         <div class="d-flex flex-wrap gap-3 align-items-end">
                             <div class="d-flex flex-column">
                                 <label class="text-xxs text-muted mb-1">Tanggal mulai</label>

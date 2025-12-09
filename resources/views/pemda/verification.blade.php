@@ -11,7 +11,7 @@
                             <p class="text-sm text-muted mb-0">Kelola status aktif pengguna sesuai kebutuhan wilayah.</p>
                         </div>
                         <div class="d-flex flex-column flex-lg-row gap-2 w-100 align-items-stretch justify-content-end">
-                            <form method="GET" action="{{ route('pemda.verification') }}" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-end">
+                            <form method="GET" action="{{ route('pemda.verification') }}" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-end" data-auto-submit>
                                 <div style="min-width: 180px; max-width: 220px;">
                                     <select name="role" class="form-select form-select-sm w-100">
                                         <option value="">Semua Peran</option>

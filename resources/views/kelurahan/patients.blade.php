@@ -9,7 +9,7 @@
                         <h5 class="mb-0">Data Pasien Skrining</h5>
                         <p class="text-sm text-muted mb-0">Monitor skrining pasien pada puskesmas mitra kelurahan ini.</p>
                     </div>
-                    <form method="GET" action="{{ route('kelurahan.patients') }}" class="d-flex gap-2">
+                    <form method="GET" action="{{ route('kelurahan.patients') }}" class="d-flex gap-2" data-auto-submit>
                         <div class="input-group input-group-sm sigap-search">
                             <span class="input-group-text"><i class="fa fa-search"></i></span>
                             <input type="text" name="q" class="form-control" placeholder="Cari nama atau nomor HP" value="{{ $search ?? '' }}">

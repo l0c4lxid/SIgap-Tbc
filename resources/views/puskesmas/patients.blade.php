@@ -9,7 +9,7 @@
                         <h5 class="mb-0">Data Pasien Skrining</h5>
                         <p class="text-sm text-muted mb-0">Pantau pasien binaan kader dan progres skrining mereka.</p>
                     </div>
-                    <form method="GET" action="{{ route('puskesmas.patients') }}" class="d-flex flex-wrap gap-2 align-items-center">
+                    <form method="GET" action="{{ route('puskesmas.patients') }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
                         <div class="input-group input-group-sm sigap-search" style="min-width: 220px;">
                             <span class="input-group-text"><i class="fa fa-search"></i></span>
                             <input type="text" name="q" class="form-control" placeholder="Cari nama, nomor HP, atau alamat" value="{{ $search ?? '' }}">

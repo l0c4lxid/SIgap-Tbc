@@ -14,7 +14,7 @@
                         <h5 class="mb-0">{{ $kelurahan->name }}</h5>
                         <p class="text-sm text-muted mb-0">Data pasien yang alamatnya berada di wilayah kelurahan ini.</p>
                     </div>
-                    <form method="GET" action="{{ route('puskesmas.kelurahan.show', $kelurahan) }}" class="d-flex flex-wrap gap-2 align-items-center">
+                    <form method="GET" action="{{ route('puskesmas.kelurahan.show', $kelurahan) }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
                         <div class="input-group input-group-sm sigap-search" style="min-width: 230px;">
                             <span class="input-group-text"><i class="fa fa-search"></i></span>
                             <input type="text" name="q" class="form-control" placeholder="Cari nama / alamat pasien" value="{{ $search ?? '' }}">

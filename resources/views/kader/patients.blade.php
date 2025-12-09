@@ -13,7 +13,7 @@
                         <a href="{{ route('kader.patients.create') }}" class="btn btn-sm btn-primary">
                             <i class="fa fa-plus me-1"></i> Tambah Pasien
                         </a>
-                        <form method="GET" action="{{ route('kader.patients') }}" class="d-flex gap-2">
+                        <form method="GET" action="{{ route('kader.patients') }}" class="d-flex gap-2" data-auto-submit>
                             <div class="input-group input-group-sm sigap-search">
                                 <span class="input-group-text"><i class="fa fa-search"></i></span>
                                 <input type="text" name="q" class="form-control" placeholder="Cari nama, nomor HP, atau alamat" value="{{ $search ?? '' }}">

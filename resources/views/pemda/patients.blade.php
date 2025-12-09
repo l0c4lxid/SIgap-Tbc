@@ -9,7 +9,7 @@
                         <h5 class="mb-0">Data Pasien Skrining</h5>
                         <p class="text-sm text-muted mb-0">Pantau progres skrining pasien beserta relasi kader dan puskesmas.</p>
                     </div>
-                    <form method="GET" action="{{ route('pemda.patients') }}" class="d-flex flex-column gap-2 w-100">
+                    <form method="GET" action="{{ route('pemda.patients') }}" class="d-flex flex-column gap-2 w-100" data-auto-submit>
                         <div class="row g-2 w-100">
                             <div class="col-md-6">
                                 <select name="puskesmas_id" class="form-select form-select-sm sigap-select">

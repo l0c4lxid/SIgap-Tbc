@@ -13,7 +13,7 @@
                         <a href="{{ route('kelurahan.kaders.export.excel', request()->only('q')) }}" class="btn btn-sm btn-success">
                             <i class="fa fa-file-excel me-1"></i> Export Excel
                         </a>
-                        <form method="GET" action="{{ route('kelurahan.kaders') }}" class="d-flex gap-2">
+                        <form method="GET" action="{{ route('kelurahan.kaders') }}" class="d-flex gap-2" data-auto-submit>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
                                 <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP / area" value="{{ $search ?? '' }}">

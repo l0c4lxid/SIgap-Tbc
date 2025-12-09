@@ -9,7 +9,7 @@
                         <h5 class="mb-0">Kelurahan Binaan</h5>
                         <p class="text-sm text-muted mb-0">Daftar kelurahan yang terhubung ke puskesmas ini.</p>
                     </div>
-                    <form method="GET" action="{{ route('puskesmas.kelurahan') }}" class="d-flex flex-wrap gap-2 align-items-center">
+                    <form method="GET" action="{{ route('puskesmas.kelurahan') }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
                         <div class="input-group input-group-sm" style="min-width: 220px;">
                             <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
                             <input type="text" name="q" class="form-control" placeholder="Cari nama / alamat" value="{{ $search ?? '' }}">

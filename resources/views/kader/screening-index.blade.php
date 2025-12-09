@@ -9,7 +9,7 @@
                         <h5 class="mb-0">Daftar Skrining Pasien</h5>
                         <p class="text-sm text-muted mb-0">Pilih pasien untuk melakukan skrining lanjutan.</p>
                     </div>
-                    <form method="GET" action="{{ route('kader.screening.index') }}" class="d-flex flex-wrap gap-2 align-items-center">
+                    <form method="GET" action="{{ route('kader.screening.index') }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
                         <div class="input-group input-group-sm" style="min-width: 240px;">
                             <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
                             <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP" value="{{ $search ?? '' }}">

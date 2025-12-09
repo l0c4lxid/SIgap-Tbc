@@ -10,7 +10,7 @@
                         <p class="text-sm text-muted mb-0">Daftar kader yang bekerja sama dengan puskesmas ini.</p>
                     </div>
                     <div class="d-flex flex-wrap gap-2 align-items-center">
-                        <form method="GET" action="{{ route('puskesmas.kaders') }}" class="d-flex flex-wrap gap-2 align-items-center">
+                        <form method="GET" action="{{ route('puskesmas.kaders') }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
                             <div class="input-group input-group-sm" style="min-width: 250px;">
                                 <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
                                 <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP / catatan" value="{{ $search ?? '' }}">

@@ -21,7 +21,7 @@
                                 @endforeach
                             </ul>
                             <div class="d-flex flex-wrap gap-2 align-items-center">
-                                <form method="GET" action="{{ route('puskesmas.treatment') }}" class="d-flex gap-2">
+                                <form method="GET" action="{{ route('puskesmas.treatment') }}" class="d-flex gap-2" data-auto-submit>
                                     @if ($activeStatus)
                                         <input type="hidden" name="status" value="{{ $activeStatus }}">
                                     @endif

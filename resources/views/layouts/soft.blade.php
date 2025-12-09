@@ -227,7 +227,24 @@
                     });
                 }
         @endif
+
+        // Auto-submit search forms with debounce
+        const autoForms = document.querySelectorAll('form[data-auto-submit]');
+        autoForms.forEach(form => {
+            const inputs = form.querySelectorAll('input[name="q"], select[name], textarea[name]');
+            let debounceTimer = null;
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (debounceTimer) {
+                        clearTimeout(debounceTimer);
+                    }
+                    debounceTimer = setTimeout(() => {
+                        form.requestSubmit();
+                    }, 450);
+                });
+            });
         });
+    });
     </script>
     @stack('scripts')
 </body>

@@ -151,6 +151,8 @@ Route::middleware('auth')->group(function () {
         ->name('kelurahan.puskesmas');
     Route::post('/kelurahan/puskesmas/{puskesmas}/request', [KelurahanMonitoringController::class, 'requestPuskesmas'])
         ->name('kelurahan.puskesmas.request');
+    Route::post('/kelurahan/puskesmas/{puskesmas}/detach', [KelurahanMonitoringController::class, 'detachPuskesmas'])
+        ->name('kelurahan.puskesmas.detach');
     Route::get('/kelurahan/kader', [KelurahanMonitoringController::class, 'kaders'])
         ->name('kelurahan.kaders');
     Route::get('/kelurahan/kader/{kader}', [KelurahanMonitoringController::class, 'showKader'])

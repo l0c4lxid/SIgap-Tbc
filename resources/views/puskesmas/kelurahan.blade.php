@@ -33,8 +33,8 @@
                         </div>
                         <div class="col-md-4">
                             <div class="border rounded p-3 h-100">
-                                <p class="text-xs text-muted mb-1">Tidak aktif</p>
-                                <h5 class="mb-0 text-warning">{{ number_format($stats['inactive']) }}</h5>
+                                <p class="text-xs text-muted mb-1">Menunggu persetujuan</p>
+                                <h5 class="mb-0 text-warning">{{ number_format($stats['pending']) }}</h5>
                             </div>
                         </div>
                     </div>
@@ -70,25 +70,36 @@
                                             <p class="text-xs mb-0">{{ optional($row->detail)->address ?? '-' }}</p>
                                         </td>
                                         <td>
-                                            @if ($row->is_active)
+                                            @php
+                                                $isActive = optional($row->detail)->supervisor_id === auth()->id();
+                                                $isPending = optional($row->detail)->pending_supervisor_id === auth()->id();
+                                            @endphp
+                                            @if ($isActive)
                                                 <span class="badge bg-gradient-success">Aktif</span>
+                                            @elseif($isPending)
+                                                <span class="badge bg-gradient-warning text-dark">Menunggu persetujuan</span>
                                             @else
-                                                <span class="badge bg-gradient-warning text-dark">Tidak aktif</span>
+                                                <span class="badge bg-gradient-secondary">Tidak aktif</span>
                                             @endif
                                         </td>
                                         <td>
                                             <span class="text-xs text-muted">{{ $row->created_at?->format('d M Y') }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <form method="POST" action="{{ route('puskesmas.kelurahan.destroy', $row) }}" class="d-inline" data-confirm="Lepas kemitraan kelurahan ini?" data-confirm-text="Ya, lepas">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-warning">Lepas</button>
-                                            </form>
-                                            <form method="POST" action="{{ route('puskesmas.kelurahan.approve', $row) }}" class="d-inline ms-1">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success">Setujui</button>
-                                            </form>
+                                            @if ($isActive)
+                                                <form method="POST" action="{{ route('puskesmas.kelurahan.destroy', $row) }}" class="d-inline" data-confirm="Lepas kemitraan kelurahan ini?" data-confirm-text="Ya, lepas">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-warning">Lepas</button>
+                                                </form>
+                                            @elseif($isPending)
+                                                <form method="POST" action="{{ route('puskesmas.kelurahan.approve', $row) }}" class="d-inline ms-1">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">Setujui</button>
+                                                </form>
+                                            @else
+                                                <span class="text-xs text-muted">Tidak terhubung</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty

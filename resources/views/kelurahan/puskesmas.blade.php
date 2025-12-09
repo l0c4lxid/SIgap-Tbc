@@ -48,15 +48,31 @@
                                             <p class="text-xs mb-0">{{ $puskesmas->detail->address ?? '-' }}</p>
                                         </td>
                                         <td>
-                                            @if ($currentPuskesmasId === $puskesmas->id)
+                                            @php
+                                                $isActive = $currentPuskesmasId === $puskesmas->id;
+                                                $isPending = optional($kelurahan->detail)->pending_supervisor_id === $puskesmas->id;
+                                            @endphp
+                                            @if ($isActive)
                                                 <span class="badge bg-gradient-success text-white">Mitra aktif</span>
+                                            @elseif($isPending)
+                                                <span class="badge bg-gradient-warning text-dark">Menunggu persetujuan</span>
                                             @else
                                                 <span class="badge bg-gradient-secondary">Belum terhubung</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            @if ($currentPuskesmasId === $puskesmas->id)
-                                                <span class="text-xs text-muted">Sudah terhubung</span>
+                                            @if ($isActive)
+                                                <form method="POST" action="{{ route('kelurahan.puskesmas.detach', $puskesmas) }}"
+                                                    data-confirm="Lepas kemitraan dengan {{ $puskesmas->name }}?"
+                                                    data-confirm-text="Lepas"
+                                                    data-cancel-text="Batal">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        Lepas mitra
+                                                    </button>
+                                                </form>
+                                            @elseif($isPending)
+                                                <span class="text-xs text-muted">Menunggu persetujuan puskesmas</span>
                                             @else
                                                 <form method="POST" action="{{ route('kelurahan.puskesmas.request', $puskesmas) }}">
                                                     @csrf

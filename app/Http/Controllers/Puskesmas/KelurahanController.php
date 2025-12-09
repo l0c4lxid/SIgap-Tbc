@@ -21,7 +21,10 @@ class KelurahanController extends Controller
         $baseQuery = User::query()
             ->with(['detail', 'detail.supervisor'])
             ->where('role', UserRole::Kelurahan->value)
-            ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $puskesmas->id))
+            ->whereHas('detail', fn($detail) => $detail->where(function ($q) use ($puskesmas) {
+                $q->where('supervisor_id', $puskesmas->id)
+                    ->orWhere('pending_supervisor_id', $puskesmas->id);
+            }))
             ->when($search !== '', function ($query) use ($search) {
                 $term = '%' . $search . '%';
                 $query->where(function ($sub) use ($term) {
@@ -35,8 +38,8 @@ class KelurahanController extends Controller
 
         $stats = [
             'total' => (clone $baseQuery)->count(),
-            'active' => (clone $baseQuery)->where('is_active', true)->count(),
-            'inactive' => (clone $baseQuery)->where('is_active', false)->count(),
+            'active' => (clone $baseQuery)->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $puskesmas->id))->count(),
+            'pending' => (clone $baseQuery)->whereHas('detail', fn($detail) => $detail->where('pending_supervisor_id', $puskesmas->id))->count(),
         ];
 
         return view('puskesmas.kelurahan', [
@@ -106,7 +109,10 @@ class KelurahanController extends Controller
         abort_if(optional($kelurahan->detail)->supervisor_id !== $request->user()->id, 403);
 
         // Lepas kemitraan tanpa menghapus akun agar kelurahan bisa memilih induk puskesmas baru.
-        $kelurahan->detail?->update(['supervisor_id' => null]);
+        $kelurahan->detail?->update([
+            'supervisor_id' => null,
+            'pending_supervisor_id' => null,
+        ]);
 
         return redirect()
             ->route('puskesmas.kelurahan')
@@ -120,7 +126,17 @@ class KelurahanController extends Controller
 
         $kelurahan->loadMissing('detail');
 
-        $kelurahan->detail?->update(['supervisor_id' => $request->user()->id]);
+        $detail = $kelurahan->detail;
+
+        // Pastikan permintaan memang ditujukan ke puskesmas ini.
+        if ($detail && $detail->pending_supervisor_id && $detail->pending_supervisor_id !== $request->user()->id) {
+            return back()->with('status', 'Permintaan tidak ditujukan ke puskesmas ini.');
+        }
+
+        $detail?->update([
+            'supervisor_id' => $request->user()->id,
+            'pending_supervisor_id' => null,
+        ]);
 
         return back()->with('status', 'Permintaan kemitraan kelurahan disetujui.');
     }

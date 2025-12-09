@@ -43,6 +43,7 @@ class MonitoringController extends Controller
             'puskesmasList' => $puskesmasList,
             'search' => $request->input('q', ''),
             'currentPuskesmasId' => $puskesmasId,
+            'kelurahan' => $kelurahan,
         ]);
     }
 
@@ -53,9 +54,37 @@ class MonitoringController extends Controller
 
         $kelurahan = $request->user()->loadMissing('detail');
 
-        $kelurahan->detail?->update(['supervisor_id' => $puskesmas->id]);
+        $detail = $kelurahan->detail;
 
-        return back()->with('status', 'Permintaan puskesmas induk dikirim. Menunggu persetujuan.');
+        // Jika sudah ada mitra aktif, minta lepas dulu.
+        if ($detail && $detail->supervisor_id) {
+            return back()->with('status', 'Lepas mitra aktif sebelum mengajukan puskesmas baru.');
+        }
+
+        $detail?->update([
+            'pending_supervisor_id' => $puskesmas->id,
+        ]);
+
+        return back()->with('status', 'Permintaan puskesmas induk dikirim. Menunggu persetujuan puskesmas.');
+    }
+
+    public function detachPuskesmas(Request $request, User $puskesmas)
+    {
+        abort_if($request->user()->role !== UserRole::Kelurahan, 403);
+        abort_if($puskesmas->role !== UserRole::Puskesmas, 404);
+
+        $kelurahan = $request->user()->loadMissing('detail');
+        $currentId = optional($kelurahan->detail)->supervisor_id;
+        if ($currentId !== $puskesmas->id) {
+            return back()->with('status', 'Tidak ada kemitraan aktif yang bisa dilepas.');
+        }
+
+        $kelurahan->detail?->update([
+            'supervisor_id' => null,
+            'pending_supervisor_id' => null,
+        ]);
+
+        return back()->with('status', 'Puskesmas mitra dilepas. Silakan ajukan mitra baru.');
     }
 
     public function kaders(Request $request)

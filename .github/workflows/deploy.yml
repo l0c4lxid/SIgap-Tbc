@@ -1,4 +1,4 @@
-name: Deploy to Shared Hosting
+name: Deploy to Shared Hosting (incremental)
 
 on:
   push:
@@ -80,7 +80,7 @@ jobs:
           rsync -a public/ deploy-public/
           sed -i "s#__DIR__.'/../#\0situba/#" deploy-public/index.php
 
-      - name: Deploy core Laravel to /home/situbamy/situba
+      - name: Deploy core Laravel to /home/situbamy/situba (delta only)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -92,7 +92,7 @@ jobs:
           server-dir: ./situba/
           state-name: .ftp-deploy-core-state.json
           timeout: 300000
-          dangerous-clean-slate: true
+          dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.github/**
@@ -111,7 +111,7 @@ jobs:
             **/.cpanel.yml
             **/.cpanel*
 
-      - name: Deploy public folder to /home/situbamy/public_html
+      - name: Deploy public folder to /home/situbamy/public_html (delta only)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -123,7 +123,7 @@ jobs:
           server-dir: ./public_html/
           state-name: .ftp-deploy-public-state.json
           timeout: 300000
-          dangerous-clean-slate: true
+          dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.github/**

@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -18,23 +20,61 @@ jobs:
           php-version: "8.2"
           extensions: mbstring, intl, pdo_mysql
 
-      - name: Install dependencies (Composer)
-        run: |
-          composer install --no-dev --optimize-autoloader
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "npm"
 
+      - name: Determine changed files
+        id: changes
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          # If the previous commit is not available (first push / forced update), fall back to HEAD~1
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            BEFORE="$(git rev-parse HEAD~1)"
+          fi
+
+          git diff --name-only "$BEFORE" "$GITHUB_SHA" > /tmp/changed_files.txt
+          echo "Changed files:"
+          cat /tmp/changed_files.txt || true
+
+          run_npm="false"
+          upload_vendor="false"
+          full_deploy="false"
+
+          if [ ! -s /tmp/changed_files.txt ]; then
+            full_deploy="true"
+          fi
+
+          if grep -E '^(resources/|package(-lock)?\\.json|vite\\.config\\.js|tailwind\\.config\\.js)' /tmp/changed_files.txt >/dev/null 2>&1; then
+            run_npm="true"
+          fi
+
+          if grep -E '^composer\\.(json|lock)' /tmp/changed_files.txt >/dev/null 2>&1; then
+            upload_vendor="true"
+          fi
+
+          echo "run_npm=$run_npm" >> "$GITHUB_OUTPUT"
+          echo "upload_vendor=$upload_vendor" >> "$GITHUB_OUTPUT"
+          echo "full_deploy=$full_deploy" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies (Composer) when needed
+        if: steps.changes.outputs.upload_vendor == 'true' || steps.changes.outputs.full_deploy == 'true'
+        run: |
+          composer install --no-dev --optimize-autoloader --prefer-dist
+
       - name: Install dependencies (NPM)
+        if: steps.changes.outputs.run_npm == 'true' || steps.changes.outputs.full_deploy == 'true'
         run: npm ci --legacy-peer-deps
 
       - name: Clean old Vite build
+        if: steps.changes.outputs.run_npm == 'true' || steps.changes.outputs.full_deploy == 'true'
         run: rm -rf public/build
 
       - name: Build assets (Vite)
+        if: steps.changes.outputs.run_npm == 'true' || steps.changes.outputs.full_deploy == 'true'
         run: npm run build
 
       - name: Clear Laravel caches (pre-deploy)
@@ -52,36 +92,87 @@ jobs:
           php artisan cache:clear --no-ansi
           php artisan event:clear --no-ansi
 
-      - name: Prepare core deploy bundle
+      - name: Prepare core deploy bundle (only changed files)
         run: |
+          set -euo pipefail
           rm -rf deploy-core
-          rsync -a ./ deploy-core/ \
-            --exclude 'node_modules' \
-            --exclude 'public' \
-            --exclude 'storage/logs' \
-            --exclude 'storage/framework/cache' \
-            --exclude 'storage/framework/sessions' \
-            --exclude 'storage/framework/views' \
-            --exclude 'bootstrap/cache/config.php' \
-            --exclude 'bootstrap/cache/routes-*.php' \
-            --exclude 'bootstrap/cache/events-*.php' \
-            --exclude 'bootstrap/cache/services.php' \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude '.cpanel*' \
-            --exclude 'resources/assets' \
-            --exclude 'resources/js' \
-            --exclude 'resources/sass' \
-            --exclude 'resources/less'
+          mkdir -p deploy-core
 
-      - name: Prepare public deploy bundle
+          if [ "${{ steps.changes.outputs.full_deploy }}" = "true" ]; then
+            rsync -a ./ deploy-core/ \
+              --exclude 'node_modules' \
+              --exclude 'public' \
+              --exclude 'storage/logs' \
+              --exclude 'storage/framework/cache' \
+              --exclude 'storage/framework/sessions' \
+              --exclude 'storage/framework/views' \
+              --exclude 'bootstrap/cache/config.php' \
+              --exclude 'bootstrap/cache/routes-*.php' \
+              --exclude 'bootstrap/cache/events-*.php' \
+              --exclude 'bootstrap/cache/services.php' \
+              --exclude '.git' \
+              --exclude '.github' \
+              --exclude '.cpanel*' \
+              --exclude 'resources/assets' \
+              --exclude 'resources/js' \
+              --exclude 'resources/sass' \
+              --exclude 'resources/less'
+          else
+            # Copy only changed files outside public and node_modules
+            grep -v '^public/' /tmp/changed_files.txt > /tmp/changed_core.txt || true
+            if [ -s /tmp/changed_core.txt ]; then
+              rsync -a --files-from=/tmp/changed_core.txt ./ deploy-core/ \
+                --exclude 'node_modules' \
+                --exclude 'storage/logs' \
+                --exclude 'storage/framework/cache' \
+                --exclude 'storage/framework/sessions' \
+                --exclude 'storage/framework/views' \
+                --exclude 'bootstrap/cache/config.php' \
+                --exclude 'bootstrap/cache/routes-*.php' \
+                --exclude 'bootstrap/cache/events-*.php' \
+                --exclude 'bootstrap/cache/services.php' \
+                --exclude '.git' \
+                --exclude '.github' \
+                --exclude '.cpanel*' \
+                --exclude 'resources/assets' \
+                --exclude 'resources/js' \
+                --exclude 'resources/sass' \
+                --exclude 'resources/less'
+            fi
+          fi
+
+          # Include vendor only when dependencies changed or full deploy
+          if [ "${{ steps.changes.outputs.upload_vendor }}" = "true" ] || [ "${{ steps.changes.outputs.full_deploy }}" = "true" ]; then
+            rsync -a vendor/ deploy-core/vendor/
+          fi
+
+      - name: Prepare public deploy bundle (only changed files)
         run: |
+          set -euo pipefail
           rm -rf deploy-public
-          rsync -a public/ deploy-public/
-          sed -i "s#__DIR__.'/../#\0situba/#" deploy-public/index.php
+          mkdir -p deploy-public
+
+          if [ "${{ steps.changes.outputs.full_deploy }}" = "true" ]; then
+            rsync -a public/ deploy-public/
+          else
+            grep '^public/' /tmp/changed_files.txt > /tmp/changed_public.txt || true
+            if [ -s /tmp/changed_public.txt ]; then
+              rsync -a --files-from=/tmp/changed_public.txt ./ deploy-public/
+            fi
+          fi
+
+          # Always include newly built assets when a build ran
+          if [ "${{ steps.changes.outputs.run_npm }}" = "true" ] || [ "${{ steps.changes.outputs.full_deploy }}" = "true" ]; then
+            rsync -a public/build/ deploy-public/build/
+          fi
+
+          # Adjust front controller path for shared hosting
+          if [ -f deploy-public/index.php ]; then
+            sed -i "s#__DIR__.'/../#\0situba/#" deploy-public/index.php
+          fi
 
       - name: Deploy core Laravel to /home/situbamy/situba (delta only)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
@@ -112,7 +203,7 @@ jobs:
             **/.cpanel*
 
       - name: Deploy public folder to /home/situbamy/public_html (delta only)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}

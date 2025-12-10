@@ -210,6 +210,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/pemda/pasien', [PemdaPatientController::class, 'index'])
         ->name('pemda.patients');
+    Route::get('/pemda/pasien-export/excel', [PemdaPatientController::class, 'exportExcel'])
+        ->name('pemda.patients.export.excel');
     Route::get('/pemda/pasien/{patient}', [PemdaPatientController::class, 'show'])
         ->name('pemda.patients.show');
 });

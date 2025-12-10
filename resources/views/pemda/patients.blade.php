@@ -55,6 +55,9 @@
                             @if ($search || ($filters['puskesmas_id'] ?? '') || ($filters['kelurahan_id'] ?? '') || ($filters['month'] ?? '') || ($filters['year'] ?? ''))
                                 <a href="{{ route('pemda.patients') }}" class="btn btn-sm btn-light">Reset</a>
                             @endif
+                            <a href="{{ route('pemda.patients.export.excel', request()->query()) }}" class="btn btn-sm btn-success">
+                                <i class="fa fa-file-excel me-1"></i> Export Excel
+                            </a>
                         </div>
                     </form>
                 </div>

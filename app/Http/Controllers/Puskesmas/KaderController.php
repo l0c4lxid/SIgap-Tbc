@@ -69,17 +69,21 @@ class KaderController extends Controller
             public function collection()
             {
                 return $this->kaders->values()->map(function ($kader, $index) {
+                    $detail = $kader->detail;
+                    $address = $detail->address ?? $detail->notes ?? $detail->organization ?? '-';
+
                     return [
                         'No' => $index + 1,
                         'Nama' => $kader->name,
                         'Nomor HP' => $kader->phone,
+                        'Alamat' => $address,
                     ];
                 });
             }
 
             public function headings(): array
             {
-                return ['No', 'Nama', 'Nomor HP'];
+                return ['No', 'Nama', 'Nomor HP', 'Alamat'];
             }
         };
 

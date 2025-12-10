@@ -172,7 +172,7 @@ jobs:
           fi
 
       - name: Deploy core Laravel to /home/situbamy/situba (delta only)
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
@@ -203,7 +203,7 @@ jobs:
             **/.cpanel*
 
       - name: Deploy public folder to /home/situbamy/public_html (delta only)
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}

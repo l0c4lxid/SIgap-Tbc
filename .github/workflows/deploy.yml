@@ -26,50 +26,82 @@ jobs:
           node-version: 20
           cache: "npm"
 
-      - name: Install dependencies (Composer)
-        run: composer install --no-dev --optimize-autoloader --prefer-dist
+      - name: Determine changed files
+        id: changes
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            BEFORE="$(git rev-parse HEAD~1)"
+          fi
+
+          git diff --name-only "$BEFORE" "$GITHUB_SHA" > /tmp/changed_files.txt
+          echo "Changed files:"
+          cat /tmp/changed_files.txt || true
+
+          run_npm="false"
+          if grep -E '^(resources/|package(-lock)?\\.json|vite\\.config\\.js|tailwind\\.config\\.js)' /tmp/changed_files.txt >/dev/null 2>&1; then
+            run_npm="true"
+          fi
+
+          core_paths_regex='^(app/|bootstrap/|config/|database/|routes/|resources/|lang/|composer\\.json|composer\\.lock|artisan|server\\.php)'
+          grep -E "$core_paths_regex" /tmp/changed_files.txt > /tmp/changed_core.txt || true
+          grep -E '^public/' /tmp/changed_files.txt > /tmp/changed_public.txt || true
+
+          echo "run_npm=$run_npm" >> "$GITHUB_OUTPUT"
+          echo "has_core_files=$( [ -s /tmp/changed_core.txt ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+          echo "has_public_files=$( [ -s /tmp/changed_public.txt ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies (NPM)
+        if: steps.changes.outputs.run_npm == 'true'
         run: npm ci --legacy-peer-deps
 
       - name: Clean old Vite build
+        if: steps.changes.outputs.run_npm == 'true'
         run: rm -rf public/build
 
       - name: Build assets (Vite)
+        if: steps.changes.outputs.run_npm == 'true'
         run: npm run build
 
-      - name: Prepare core deploy bundle
+      - name: Prepare core deploy bundle (only changed app/config/views/etc)
         run: |
           set -euo pipefail
           rm -rf deploy-core
           mkdir -p deploy-core
-          rsync -a ./ deploy-core/ \
-            --exclude 'node_modules' \
-            --exclude 'public' \
-            --exclude 'storage/logs' \
-            --exclude 'storage/framework/cache' \
-            --exclude 'storage/framework/sessions' \
-            --exclude 'storage/framework/views' \
-            --exclude 'bootstrap/cache/config.php' \
-            --exclude 'bootstrap/cache/routes-*.php' \
-            --exclude 'bootstrap/cache/events-*.php' \
-            --exclude 'bootstrap/cache/services.php' \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude '.cpanel*' \
-            --exclude 'resources/assets' \
-            --exclude 'resources/js' \
-            --exclude 'resources/sass' \
-            --exclude 'resources/less'
+          if [ -s /tmp/changed_core.txt ]; then
+            rsync -a --files-from=/tmp/changed_core.txt ./ deploy-core/ \
+              --exclude 'node_modules' \
+              --exclude 'public' \
+              --exclude 'storage/logs' \
+              --exclude 'storage/framework/cache' \
+              --exclude 'storage/framework/sessions' \
+              --exclude 'storage/framework/views' \
+              --exclude 'bootstrap/cache/config.php' \
+              --exclude 'bootstrap/cache/routes-*.php' \
+              --exclude 'bootstrap/cache/events-*.php' \
+              --exclude 'bootstrap/cache/services.php' \
+              --exclude '.git' \
+              --exclude '.github' \
+              --exclude '.cpanel*' \
+              --exclude 'resources/assets' \
+              --exclude 'resources/js' \
+              --exclude 'resources/sass' \
+              --exclude 'resources/less' \
+              --exclude 'vendor'
+          fi
 
-          rsync -a vendor/ deploy-core/vendor/
-
-      - name: Prepare public deploy bundle
+      - name: Prepare public deploy bundle (assets & public changes)
         run: |
           set -euo pipefail
           rm -rf deploy-public
           mkdir -p deploy-public
-          rsync -a public/ deploy-public/
+          if [ -s /tmp/changed_public.txt ]; then
+            rsync -a --files-from=/tmp/changed_public.txt ./ deploy-public/
+          fi
+          if [ "${{ steps.changes.outputs.run_npm }}" = "true" ]; then
+            rsync -a public/build/ deploy-public/build/
+          fi
 
           # Adjust front controller path for shared hosting
           if [ -f deploy-public/index.php ]; then

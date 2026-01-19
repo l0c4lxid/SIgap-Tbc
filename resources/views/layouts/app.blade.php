@@ -25,7 +25,7 @@
         
         @include('layouts.sidenav')
 
-        <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+        <main class="main-content position-relative min-vh-100 border-radius-lg ">
             @include('layouts.topnav')
             
             <div class="container-fluid py-4">

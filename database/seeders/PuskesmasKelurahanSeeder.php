@@ -17,7 +17,6 @@ class PuskesmasKelurahanSeeder extends Seeder
 
         $puskesmasCounter = 1;
         $kelurahanCounter = 1;
-        $patientCounter = 1;
         $kaderPhonePool = range(1, 99);
         shuffle($kaderPhonePool);
 
@@ -169,27 +168,6 @@ class PuskesmasKelurahanSeeder extends Seeder
                 $kelurahanUser->detail()->update(['supervisor_id' => $puskesmasUser->id]);
             }
 
-            $kelurahanCount = count($puskesmasData['kelurahans']);
-            for ($i = 0; $i < 2; $i++) {
-                $kelurahanName = $puskesmasData['kelurahans'][$i % $kelurahanCount] ?? $primaryKelurahan;
-
-                $this->createUser(
-                    [
-                        'name' => "Pasien {$kelurahanName} " . ($i + 1),
-                        'phone' => sprintf('05%02d', $patientCounter),
-                        'role' => UserRole::Pasien,
-                    ],
-                    [
-                        'address' => "Kelurahan {$kelurahanName}, Kecamatan {$puskesmasData['kecamatan']}",
-                        'notes' => "Dampingan {$kaderUser->name}",
-                        'supervisor_id' => $kaderUser->id,
-                        'initial_password' => 'password123',
-                        'nik' => sprintf('337200%010d', $patientCounter),
-                    ]
-                );
-
-                $patientCounter++;
-            }
         }
     }
 

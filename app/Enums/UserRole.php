@@ -4,7 +4,6 @@ namespace App\Enums;
 
 enum UserRole: string
 {
-    case Pasien = 'pasien';
     case Kader = 'kader';
     case Puskesmas = 'puskesmas';
     case Kelurahan = 'kelurahan';
@@ -13,7 +12,6 @@ enum UserRole: string
     public function label(): string
     {
         return match ($this) {
-            self::Pasien => 'Pasien',
             self::Kader => 'Kader TBC',
             self::Puskesmas => 'Puskesmas',
             self::Kelurahan => 'Kelurahan',

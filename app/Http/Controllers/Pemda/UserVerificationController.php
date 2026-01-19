@@ -20,7 +20,6 @@ class UserVerificationController extends Controller
         abort_if(auth()->user()->role !== UserRole::Pemda, 403);
 
         $availableRoles = collect([
-            UserRole::Pasien,
             UserRole::Kader,
             UserRole::Puskesmas,
             UserRole::Kelurahan,
@@ -83,7 +82,6 @@ class UserVerificationController extends Controller
             'organization' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
-            'family_card_number' => ['nullable', 'string', 'max:30'],
             'is_active' => ['nullable', 'boolean'],
             'supervisor_id' => ['nullable', 'integer'],
         ];
@@ -113,22 +111,6 @@ class UserVerificationController extends Controller
                     }),
                 ],
             ],
-            UserRole::Pasien => [
-                'nik' => [
-                    'required',
-                    'string',
-                    'max:30',
-                    Rule::unique('user_details', 'nik')->ignore($user->detail?->id),
-                ],
-                'address' => ['required', 'string', 'max:255'],
-                'supervisor_id' => [
-                    'required',
-                    Rule::exists('users', 'id')->where(function ($query) {
-                        $query->where('role', UserRole::Kader->value)
-                            ->where('is_active', true);
-                    }),
-                ],
-            ],
             default => [],
         };
 
@@ -143,9 +125,7 @@ class UserVerificationController extends Controller
             'organization',
             'address',
             'notes',
-            'family_card_number',
             'supervisor_id',
-            'nik',
         ]);
 
         $user->detail()->updateOrCreate(
@@ -211,7 +191,6 @@ class UserVerificationController extends Controller
         $validated = $request->validate([
             'status' => ['required', 'in:active,inactive'],
             'role' => ['nullable', Rule::in([
-                UserRole::Pasien->value,
                 UserRole::Kader->value,
                 UserRole::Puskesmas->value,
                 UserRole::Kelurahan->value,
@@ -248,12 +227,6 @@ class UserVerificationController extends Controller
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
-            UserRole::Pasien => User::query()
-                ->select('id', 'name')
-                ->where('role', UserRole::Kader->value)
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(),
             default => collect(),
         };
     }
@@ -263,7 +236,6 @@ class UserVerificationController extends Controller
         return match ($role) {
             UserRole::Puskesmas => 'Kelurahan Pembina',
             UserRole::Kader => 'Puskesmas Pembina',
-            UserRole::Pasien => 'Kader Pendamping',
             default => null,
         };
     }

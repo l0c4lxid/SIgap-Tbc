@@ -5,11 +5,10 @@
         'screening' => 'Kelola skrining dan suspek',
         'anggota' => 'Pantau keluarga dan kontak erat',
         'users' => 'Pembinaan kader dan petugas',
-        'folder' => 'Data pasien dan fasilitas',
-        'berobat' => 'Pendampingan pengobatan',
+        'folder' => 'Data skrining dan fasilitas',
         'verify' => 'Validasi dan kontrol akses',
         'profile' => 'Perbarui data pribadi',
-        'materi' => 'Materi edukasi kader & pasien',
+        'materi' => 'Materi edukasi kader',
         'news' => 'Kirim dan pantau publikasi blog',
     ];
 @endphp

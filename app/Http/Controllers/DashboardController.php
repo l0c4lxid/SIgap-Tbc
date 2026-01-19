@@ -17,19 +17,72 @@ class DashboardController extends Controller
 
         $cards = [];
         $recentScreenings = null;
-        $mutedFollowUps = collect();
-        $hasSelfScreening = false;
+        $dashboardCharts = null;
         $recentLimit = 3;
 
         $baseScreeningQuery = PatientScreening::query()
-            ->with([
-                'patient',
-                'patient.detail',
-                'kader',
-            ])
+            ->with('kader')
             ->latest();
 
-        $dashboardCharts = null;
+        $chartMonths = collect(range(0, 11))
+            ->map(fn($i) => now()->startOfMonth()->subMonths($i))
+            ->sort()
+            ->values();
+
+        $buildCharts = function ($screenings) use ($chartMonths) {
+            $monthlyAggregates = [];
+            foreach ($screenings as $screening) {
+                $key = $screening->created_at->format('Y-m');
+                if (!isset($monthlyAggregates[$key])) {
+                    $monthlyAggregates[$key] = ['screening' => 0, 'suspect' => 0];
+                }
+                $monthlyAggregates[$key]['screening']++;
+                $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+                if ($positive >= 1) {
+                    $monthlyAggregates[$key]['suspect']++;
+                }
+            }
+
+            return [
+                'screening' => $chartMonths->map(fn($date) => [
+                    'label' => $date->format('M Y'),
+                    'value' => $monthlyAggregates[$date->format('Y-m')]['screening'] ?? 0,
+                ])->values(),
+                'tbc_cases' => $chartMonths->map(fn($date) => [
+                    'label' => $date->format('M Y'),
+                    'value' => $monthlyAggregates[$date->format('Y-m')]['suspect'] ?? 0,
+                ])->values(),
+                'suspect_split' => $chartMonths->map(function ($date) use ($monthlyAggregates) {
+                    $key = $date->format('Y-m');
+                    $suspect = $monthlyAggregates[$key]['suspect'] ?? 0;
+                    $total = $monthlyAggregates[$key]['screening'] ?? 0;
+                    $nonSuspect = max($total - $suspect, 0);
+                    return [
+                        'label' => $date->format('M Y'),
+                        'suspect' => $suspect,
+                        'non_suspect' => $nonSuspect,
+                    ];
+                })->values(),
+            ];
+        };
+
+        $uniquePatientCount = function ($screenings) {
+            return $screenings
+                ->map(function ($screening) {
+                    if (!empty($screening->patient_nik)) {
+                        return 'nik:' . $screening->patient_nik;
+                    }
+                    if (!empty($screening->patient_phone)) {
+                        return 'phone:' . $screening->patient_phone;
+                    }
+                    $name = Str::lower(trim($screening->patient_name ?? ''));
+                    $address = Str::lower(trim($screening->patient_address ?? ''));
+                    return 'name:' . $name . '|addr:' . $address;
+                })
+                ->filter()
+                ->unique()
+                ->count();
+        };
 
         switch ($role) {
             case UserRole::Pemda:
@@ -38,14 +91,10 @@ class DashboardController extends Controller
                 $inactiveUsers = $totalUsers - $activeUsers;
                 $puskesmasCount = User::where('role', UserRole::Puskesmas->value)->count();
                 $kaderCount = User::where('role', UserRole::Kader->value)->count();
-                $patientCount = User::where('role', UserRole::Pasien->value)->count();
-                $activePatients = User::query()
-                    ->where('role', UserRole::Pasien->value)
-                    ->where('is_active', true)
-                    ->get(['id', 'created_at']);
-                $activePatientIds = $activePatients->pluck('id');
-                $patientCreatedAt = $activePatients->mapWithKeys(fn($patient) => [$patient->id => $patient->created_at]);
-                $totalScreenings = PatientScreening::count();
+
+                $screenings = PatientScreening::query()->get();
+                $totalScreenings = $screenings->count();
+                $uniquePatients = $uniquePatientCount($screenings);
 
                 $cards = [
                     [
@@ -65,79 +114,20 @@ class DashboardController extends Controller
                         'color' => 'success',
                     ],
                     [
-                        'label' => 'Pasien Terpantau',
-                        'value' => number_format($patientCount),
-                        'subtitle' => 'Seluruh kota',
-                        'trend' => $totalScreenings . ' skrining tercatat',
-                        'icon' => 'fa-solid fa-user-shield',
+                        'label' => 'Skrining Tercatat',
+                        'value' => number_format($totalScreenings),
+                        'subtitle' => number_format($uniquePatients) . ' pasien terdata',
+                        'trend' => 'Pantau laporan terbaru',
+                        'icon' => 'fa-solid fa-notes-medical',
                         'color' => 'warning',
                     ],
                 ];
 
                 $recentScreenings = $baseScreeningQuery->paginate($recentLimit);
 
-                $chartMonths = collect(range(0, 11))
-                    ->map(fn($i) => now()->startOfMonth()->subMonths($i))
-                    ->sort()
-                    ->values();
-
                 $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())
                     ->get();
-
-                $monthlyAggregates = [];
-                foreach ($screeningsInRange as $screening) {
-                    $key = $screening->created_at->format('Y-m');
-                    if (!isset($monthlyAggregates[$key])) {
-                        $monthlyAggregates[$key] = ['screening' => 0, 'suspect' => 0, 'patients' => []];
-                    }
-                    $monthlyAggregates[$key]['screening']++;
-                    $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
-                    if ($positive >= 2) {
-                        $monthlyAggregates[$key]['suspect']++;
-                    }
-                    if ($activePatientIds->contains($screening->patient_id)) {
-                        $monthlyAggregates[$key]['patients'][$screening->patient_id] = true;
-                    }
-                }
-
-                $dashboardCharts = [
-                    'screening' => $chartMonths->map(fn($date) => [
-                        'label' => $date->format('M Y'),
-                        'value' => $monthlyAggregates[$date->format('Y-m')]['screening'] ?? 0,
-                    ])->values(),
-                    'tbc_cases' => $chartMonths->map(fn($date) => [
-                        'label' => $date->format('M Y'),
-                        'value' => $monthlyAggregates[$date->format('Y-m')]['suspect'] ?? 0,
-                    ])->values(),
-                    'coverage' => $chartMonths->map(function ($date) use ($monthlyAggregates, $activePatients, $patientCreatedAt) {
-                        $key = $date->format('Y-m');
-                        $cutoff = $date->endOfMonth();
-                        $activeCount = $activePatients->filter(fn($patient) => $patient->created_at->lte($cutoff))->count();
-                        $done = isset($monthlyAggregates[$key]['patients'])
-                            ? collect(array_keys($monthlyAggregates[$key]['patients']))
-                                ->filter(fn($id) => isset($patientCreatedAt[$id]) && $patientCreatedAt[$id]->lte($cutoff))
-                                ->count()
-                            : 0;
-                        $pending = max($activeCount - $done, 0);
-
-                        return [
-                            'label' => $date->format('M Y'),
-                            'done' => $done,
-                            'pending' => $pending,
-                        ];
-                    })->values(),
-                    'suspect_split' => $chartMonths->map(function ($date) use ($monthlyAggregates) {
-                        $key = $date->format('Y-m');
-                        $suspect = $monthlyAggregates[$key]['suspect'] ?? 0;
-                        $total = $monthlyAggregates[$key]['screening'] ?? 0;
-                        $nonSuspect = max($total - $suspect, 0);
-                        return [
-                            'label' => $date->format('M Y'),
-                            'suspect' => $suspect,
-                            'non_suspect' => $nonSuspect,
-                        ];
-                    })->values(),
-                ];
+                $dashboardCharts = $buildCharts($screeningsInRange);
                 break;
 
             case UserRole::Kelurahan:
@@ -146,7 +136,8 @@ class DashboardController extends Controller
 
                 $puskesmasIds = collect(optional($kelurahan->detail)->supervisor_id ? [$kelurahan->detail->supervisor_id] : []);
                 $kelurahanName = optional($kelurahan->detail)->organization ?? $kelurahan->name;
-                $kelurahanKeyword = Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value() ?: Str::of($kelurahanName)->trim()->lower()->value();
+                $kelurahanKeyword = Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value()
+                    ?: Str::of($kelurahanName)->trim()->lower()->value();
 
                 $kaderIds = $puskesmasIds->isEmpty()
                     ? collect()
@@ -155,20 +146,27 @@ class DashboardController extends Controller
                         ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $puskesmasIds))
                         ->pluck('id');
 
-                $activePatients = $kaderIds->isEmpty()
-                    ? collect()
-                    : User::query()
-                        ->where('role', UserRole::Pasien->value)
-                        ->where('is_active', true)
-                        ->whereHas('detail', function ($detail) use ($kaderIds, $kelurahanKeyword) {
-                            $detail->whereIn('supervisor_id', $kaderIds)
-                                ->when($kelurahanKeyword, fn($q) => $q->whereRaw('LOWER(address) LIKE ?', ['%' . $kelurahanKeyword . '%']));
+                $screeningsQuery = PatientScreening::query()
+                    ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
+                    ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address) LIKE ?', ['%' . $kelurahanKeyword . '%']));
+
+                $screenings = $kaderIds->isEmpty() ? collect() : $screeningsQuery->get();
+                $totalScreenings = $screenings->count();
+                $uniquePatients = $uniquePatientCount($screenings);
+
+                $suspectThisMonth = $kaderIds->isEmpty()
+                    ? 0
+                    : PatientScreening::query()
+                        ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
+                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address) LIKE ?', ['%' . $kelurahanKeyword . '%']))
+                        ->whereMonth('created_at', now()->month)
+                        ->whereYear('created_at', now()->year)
+                        ->get()
+                        ->filter(function ($screening) {
+                            $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+                            return $positive >= 1;
                         })
-                        ->get(['id', 'created_at']);
-                $patientIds = $activePatients instanceof \Illuminate\Support\Collection ? $activePatients->pluck('id') : collect();
-                $patientCreatedAt = $activePatients instanceof \Illuminate\Support\Collection
-                    ? $activePatients->mapWithKeys(fn($patient) => [$patient->id => $patient->created_at])
-                    : collect();
+                        ->count();
 
                 $cards = [
                     [
@@ -180,90 +178,39 @@ class DashboardController extends Controller
                         'color' => 'primary',
                     ],
                     [
-                        'label' => 'Pasien Terpantau',
-                        'value' => number_format($patientIds->count()),
-                        'subtitle' => 'Lewat kader lapangan',
-                        'trend' => $patientIds->isEmpty() ? 'Belum ada pasien' : 'Pantau progres skrining',
-                        'icon' => 'fa-solid fa-people-group',
+                        'label' => 'Skrining Tercatat',
+                        'value' => number_format($totalScreenings),
+                        'subtitle' => number_format($uniquePatients) . ' pasien terdata',
+                        'trend' => 'Pantau laporan wilayah',
+                        'icon' => 'fa-solid fa-heart-pulse',
                         'color' => 'info',
                     ],
                     [
-                        'label' => 'Skrining Bulan Ini',
-                        'value' => number_format(PatientScreening::whereIn('patient_id', $patientIds)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count()),
-                        'subtitle' => 'Update aktivitas terbaru',
+                        'label' => 'Suspek Bulan Ini',
+                        'value' => number_format($suspectThisMonth),
+                        'subtitle' => 'Laporan indikasi TBC',
                         'trend' => now()->format('M Y'),
-                        'icon' => 'fa-solid fa-heart-pulse',
+                        'icon' => 'fa-solid fa-triangle-exclamation',
                         'color' => 'warning',
                     ],
                 ];
 
-                $recentScreenings = $patientIds->isEmpty()
+                $recentScreenings = $kaderIds->isEmpty()
                     ? null
-                    : $baseScreeningQuery->whereIn('patient_id', $patientIds)->paginate($recentLimit);
+                    : $baseScreeningQuery
+                        ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
+                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address) LIKE ?', ['%' . $kelurahanKeyword . '%']))
+                        ->paginate($recentLimit);
 
-                $chartMonths = collect(range(0, 11))
-                    ->map(fn($i) => now()->startOfMonth()->subMonths($i))
-                    ->sort()
-                    ->values();
-
-                $screeningsInRange = $patientIds->isEmpty()
+                $screeningsInRange = $kaderIds->isEmpty()
                     ? collect()
-                    : PatientScreening::whereIn('patient_id', $patientIds)
+                    : PatientScreening::query()
+                        ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
+                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address) LIKE ?', ['%' . $kelurahanKeyword . '%']))
                         ->where('created_at', '>=', $chartMonths->first())
                         ->get();
 
-                $monthlyAggregates = [];
-                foreach ($screeningsInRange as $screening) {
-                    $key = $screening->created_at->format('Y-m');
-                    if (!isset($monthlyAggregates[$key])) {
-                        $monthlyAggregates[$key] = ['screening' => 0, 'suspect' => 0, 'patients' => []];
-                    }
-                    $monthlyAggregates[$key]['screening']++;
-                    $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
-                    if ($positive >= 2) {
-                        $monthlyAggregates[$key]['suspect']++;
-                    }
-                    $monthlyAggregates[$key]['patients'][$screening->patient_id] = true;
-                }
-
-                $dashboardCharts = [
-                    'screening' => $chartMonths->map(fn($date) => [
-                        'label' => $date->format('M Y'),
-                        'value' => $monthlyAggregates[$date->format('Y-m')]['screening'] ?? 0,
-                    ])->values(),
-                    'tbc_cases' => $chartMonths->map(fn($date) => [
-                        'label' => $date->format('M Y'),
-                        'value' => $monthlyAggregates[$date->format('Y-m')]['suspect'] ?? 0,
-                    ])->values(),
-                    'coverage' => $chartMonths->map(function ($date) use ($monthlyAggregates, $activePatients, $patientCreatedAt) {
-                        $key = $date->format('Y-m');
-                        $cutoff = $date->endOfMonth();
-                        $activeCount = $activePatients->filter(fn($patient) => $patient->created_at->lte($cutoff))->count();
-                        $done = isset($monthlyAggregates[$key]['patients'])
-                            ? collect(array_keys($monthlyAggregates[$key]['patients']))
-                                ->filter(fn($id) => isset($patientCreatedAt[$id]) && $patientCreatedAt[$id]->lte($cutoff))
-                                ->count()
-                            : 0;
-                        $pending = max($activeCount - $done, 0);
-
-                        return [
-                            'label' => $date->format('M Y'),
-                            'done' => $done,
-                            'pending' => $pending,
-                        ];
-                    })->values(),
-                    'suspect_split' => $chartMonths->map(function ($date) use ($monthlyAggregates) {
-                        $key = $date->format('Y-m');
-                        $suspect = $monthlyAggregates[$key]['suspect'] ?? 0;
-                        $total = $monthlyAggregates[$key]['screening'] ?? 0;
-                        $nonSuspect = max($total - $suspect, 0);
-                        return [
-                            'label' => $date->format('M Y'),
-                            'suspect' => $suspect,
-                            'non_suspect' => $nonSuspect,
-                        ];
-                    })->values(),
-                ];
+                $dashboardCharts = $buildCharts($screeningsInRange);
                 break;
 
             case UserRole::Puskesmas:
@@ -272,142 +219,48 @@ class DashboardController extends Controller
                     ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $user->id))
                     ->pluck('id');
 
-                $activePatients = User::query()
-                    ->where('role', UserRole::Pasien->value)
-                    ->where('is_active', true)
-                    ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $kaderIds))
-                    ->get(['id', 'created_at']);
-                $patientIds = $activePatients->pluck('id');
-                $patientCreatedAt = $activePatients->mapWithKeys(fn($patient) => [$patient->id => $patient->created_at]);
-
-                $totalKader = $kaderIds->count();
-                $totalPatients = $patientIds->count();
-                $screeningsCount = $patientIds->isEmpty()
-                    ? 0
-                    : PatientScreening::whereIn('patient_id', $patientIds)->count();
+                $screeningsQuery = PatientScreening::query()->whereIn('kader_id', $kaderIds);
+                $screenings = $kaderIds->isEmpty() ? collect() : $screeningsQuery->get();
 
                 $cards = [
                     [
                         'label' => 'Kader Aktif',
-                        'value' => number_format($totalKader),
+                        'value' => number_format($kaderIds->count()),
                         'subtitle' => 'Terhubung ke puskesmas ini',
                         'trend' => 'Koordinasikan kegiatan lapangan',
                         'icon' => 'fa-solid fa-people-group',
                         'color' => 'info',
                     ],
                     [
-                        'label' => 'Pasien Binaan',
-                        'value' => number_format($totalPatients),
-                        'subtitle' => 'Melalui kader mitra',
-                        'trend' => $screeningsCount . ' skrining dicatat',
-                        'icon' => 'fa-solid fa-users-line',
+                        'label' => 'Skrining Tercatat',
+                        'value' => number_format($screenings->count()),
+                        'subtitle' => number_format($uniquePatientCount($screenings)) . ' pasien terdata',
+                        'trend' => 'Pantau laporan kader',
+                        'icon' => 'fa-solid fa-notes-medical',
                         'color' => 'primary',
                     ],
                 ];
 
-                $recentScreenings = $patientIds->isEmpty()
+                $recentScreenings = $kaderIds->isEmpty()
                     ? null
-                    : $baseScreeningQuery->whereIn('patient_id', $patientIds)->paginate($recentLimit);
+                    : $baseScreeningQuery->whereIn('kader_id', $kaderIds)->paginate($recentLimit);
 
-                $mutedFollowUps = User::query()
-                    ->with(['detail', 'familyMembers'])
-                    ->whereIn('id', $patientIds)
-                    ->whereHas('detail', fn($detail) => $detail->where('family_card_number', '!=', null))
-                    ->get()
-                    ->filter(function ($patient) {
-                        $kk = $patient->detail->family_card_number;
-                        if (!$kk) {
-                            return false;
-                        }
-                        $suspectFamily = User::query()
-                            ->where('id', '!=', $patient->id)
-                            ->whereHas('detail', fn($detail) => $detail->where('family_card_number', $kk))
-                            ->whereDoesntHave('treatments')
-                            ->exists();
-                        return $suspectFamily;
-                    });
-
-                $chartMonths = collect(range(0, 11))
-                    ->map(fn($i) => now()->startOfMonth()->subMonths($i))
-                    ->sort()
-                    ->values();
-
-                $screeningsInRange = $patientIds->isEmpty()
+                $screeningsInRange = $kaderIds->isEmpty()
                     ? collect()
-                    : PatientScreening::whereIn('patient_id', $patientIds)
-                        ->where('created_at', '>=', $chartMonths->first())
-                        ->get();
-
-                $monthlyAggregates = [];
-                foreach ($screeningsInRange as $screening) {
-                    $key = $screening->created_at->format('Y-m');
-                    if (!isset($monthlyAggregates[$key])) {
-                        $monthlyAggregates[$key] = ['screening' => 0, 'suspect' => 0, 'patients' => []];
-                    }
-                    $monthlyAggregates[$key]['screening']++;
-                    $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
-                    if ($positive >= 2) {
-                        $monthlyAggregates[$key]['suspect']++;
-                    }
-                    $monthlyAggregates[$key]['patients'][$screening->patient_id] = true;
-                }
-
-                $dashboardCharts = [
-                    'screening' => $chartMonths->map(fn($date) => [
-                        'label' => $date->format('M Y'),
-                        'value' => $monthlyAggregates[$date->format('Y-m')]['screening'] ?? 0,
-                    ])->values(),
-                    'tbc_cases' => $chartMonths->map(fn($date) => [
-                        'label' => $date->format('M Y'),
-                        'value' => $monthlyAggregates[$date->format('Y-m')]['suspect'] ?? 0,
-                    ])->values(),
-                    'coverage' => $chartMonths->map(function ($date) use ($monthlyAggregates, $patientIds, $activePatients, $patientCreatedAt) {
-                        $key = $date->format('Y-m');
-                        $cutoff = $date->endOfMonth();
-                        $activeCount = $activePatients->filter(fn($patient) => $patient->created_at->lte($cutoff))->count();
-                        $done = isset($monthlyAggregates[$key]['patients'])
-                            ? collect(array_keys($monthlyAggregates[$key]['patients']))
-                                ->filter(fn($id) => isset($patientCreatedAt[$id]) && $patientCreatedAt[$id]->lte($cutoff))
-                                ->count()
-                            : 0;
-                        $pending = max($activeCount - $done, 0);
-                        return [
-                            'label' => $date->format('M Y'),
-                            'done' => $done,
-                            'pending' => $pending,
-                        ];
-                    })->values(),
-                    'suspect_split' => $chartMonths->map(function ($date) use ($monthlyAggregates) {
-                        $key = $date->format('Y-m');
-                        $suspect = $monthlyAggregates[$key]['suspect'] ?? 0;
-                        $total = $monthlyAggregates[$key]['screening'] ?? 0;
-                        $nonSuspect = max($total - $suspect, 0);
-                        return [
-                            'label' => $date->format('M Y'),
-                            'suspect' => $suspect,
-                            'non_suspect' => $nonSuspect,
-                        ];
-                    })->values(),
-                ];
+                    : $screeningsQuery->where('created_at', '>=', $chartMonths->first())->get();
+                $dashboardCharts = $buildCharts($screeningsInRange);
                 break;
 
             case UserRole::Kader:
-                $patientIds = User::query()
-                    ->where('role', UserRole::Pasien->value)
-                    ->whereRelation('detail', 'supervisor_id', $user->id)
-                    ->pluck('id');
-
-                $patientsCount = $patientIds->count();
-                $screeningsCount = $patientIds->isEmpty()
-                    ? 0
-                    : PatientScreening::whereIn('patient_id', $patientIds)->count();
+                $screeningsQuery = PatientScreening::query()->where('kader_id', $user->id);
+                $screenings = $screeningsQuery->get();
 
                 $cards = [
                     [
-                        'label' => 'Pasien Binaan',
-                        'value' => number_format($patientsCount),
-                        'subtitle' => 'Terdaftar dengan Anda',
-                        'trend' => $screeningsCount . ' skrining tercatat',
+                        'label' => 'Skrining Dicatat',
+                        'value' => number_format($screenings->count()),
+                        'subtitle' => number_format($uniquePatientCount($screenings)) . ' pasien terdata',
+                        'trend' => 'Input laporan baru setiap kunjungan',
                         'icon' => 'fa-solid fa-user-nurse',
                         'color' => 'primary',
                     ],
@@ -421,34 +274,9 @@ class DashboardController extends Controller
                     ],
                 ];
 
-                $recentScreenings = $patientIds->isEmpty()
+                $recentScreenings = $screenings->isEmpty()
                     ? null
-                    : $baseScreeningQuery->whereIn('patient_id', $patientIds)->paginate($recentLimit);
-                break;
-
-            case UserRole::Pasien:
-                $latestScreening = $user->screenings()->latest()->first();
-                $hasSelfScreening = (bool) $latestScreening;
-                $cards = [
-                    [
-                        'label' => 'Status Akun',
-                        'value' => $user->is_active ? 'Aktif' : 'Tidak Aktif',
-                        'subtitle' => 'Gunakan akun untuk skrining',
-                        'trend' => $user->is_active ? 'Terhubung ke kader' : 'Tunggu verifikasi',
-                        'icon' => 'fa-solid fa-user-check',
-                        'color' => $user->is_active ? 'success' : 'warning',
-                    ],
-                    [
-                        'label' => 'Skrining Mandiri',
-                        'value' => $latestScreening ? 'Sudah' : 'Belum',
-                        'subtitle' => $latestScreening ? $latestScreening->created_at->format('d M Y') : 'Segera lakukan skrining',
-                        'trend' => $latestScreening ? 'Terima kasih telah melapor' : 'Klik menu Skrining',
-                        'icon' => 'fa-solid fa-heartbeat',
-                        'color' => $latestScreening ? 'primary' : 'danger',
-                    ],
-                ];
-
-                $recentScreenings = null;
+                    : $baseScreeningQuery->where('kader_id', $user->id)->paginate($recentLimit);
                 break;
 
             default:
@@ -463,50 +291,16 @@ class DashboardController extends Controller
                     ],
                 ];
                 $recentScreenings = $baseScreeningQuery->paginate($recentLimit);
+                $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())->get();
+                $dashboardCharts = $buildCharts($screeningsInRange);
                 break;
-        }
-
-        $treatmentReminder = null;
-        if ($role === UserRole::Pasien) {
-            $activeTreatment = $user->treatments()
-                ->with(['kader.detail.supervisor'])
-                ->whereIn('status', ['contacted', 'scheduled', 'in_treatment'])
-                ->latest()
-                ->first();
-
-            if ($activeTreatment) {
-                $statusLabels = [
-                    'contacted' => 'Perlu Konfirmasi',
-                    'scheduled' => 'Terjadwal',
-                    'in_treatment' => 'Sedang Berobat',
-                    'recovered' => 'Selesai',
-                ];
-
-                $kader = $activeTreatment->kader;
-                $puskesmas = optional(optional($kader?->detail)->supervisor);
-                if (!$puskesmas) {
-                    $puskesmas = optional(optional(optional($user->detail)->supervisor)->detail)->supervisor;
-                }
-
-                $treatmentReminder = [
-                    'status' => $activeTreatment->status,
-                    'status_label' => $statusLabels[$activeTreatment->status] ?? ucfirst(str_replace('_', ' ', $activeTreatment->status)),
-                    'schedule' => $activeTreatment->next_follow_up_at,
-                    'notes' => $activeTreatment->notes,
-                    'puskesmas_name' => $puskesmas?->name,
-                    'kader_name' => $kader?->name,
-                    'kader_phone' => $kader?->phone,
-                ];
-            }
         }
 
         return view('dashboard', [
             'user' => $user,
             'cards' => $cards,
             'recentScreenings' => $recentScreenings,
-            'treatmentReminder' => $treatmentReminder,
             'dashboardCharts' => $dashboardCharts,
-            'hasSelfScreening' => $hasSelfScreening,
         ]);
     }
 }

@@ -7,20 +7,20 @@
                 <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
                     <div>
                         <h5 class="mb-0">Daftar Skrining Pasien</h5>
-                        <p class="text-sm text-muted mb-0">Pilih pasien untuk melakukan skrining lanjutan.</p>
+                        <p class="text-sm text-muted mb-0">Kelola laporan skrining yang Anda catat di lapangan.</p>
                     </div>
-                    <form method="GET" action="{{ route('kader.screening.index') }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
-                        <div class="input-group input-group-sm" style="min-width: 240px;">
-                            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                            <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP" value="{{ $search ?? '' }}">
-                        </div>
-                        <select name="status" class="form-select form-select-sm">
-                            <option value="">Semua status</option>
-                            <option value="belum" @selected($status === 'belum')>Belum skrining</option>
-                            <option value="sudah" @selected($status === 'sudah')>Sudah skrining</option>
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Terapkan</button>
-                    </form>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <a href="{{ route('kader.screening.create') }}" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-plus me-1"></i>Tambah Skrining
+                        </a>
+                        <form method="GET" action="{{ route('kader.screening.index') }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
+                            <div class="input-group input-group-sm" style="min-width: 240px;">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" name="q" class="form-control" placeholder="Cari nama / NIK / HP / RT/RW / kelurahan" value="{{ $search ?? '' }}">
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
+                        </form>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -29,115 +29,60 @@
                                 <tr>
                                     <th class="text-center" style="width:60px;">No.</th>
                                     <th>Pasien</th>
-                                    <th>Status Skrining</th>
-                                    <th>Pengobatan Puskesmas</th>
-                                    <th>Anggota Keluarga</th>
-                                    <th>Terakhir Skrining</th>
-                                    <th>Aksi</th>
+                                    <th>NIK</th>
+                                    <th>Nomor HP</th>
+                                    <th>Alamat</th>
+                                    <th class="text-center">Jawaban Ya</th>
+                                    <th class="text-center">Waktu</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @php
-                                    $treatmentStatuses = [
-                                        'contacted' => ['label' => 'Perlu Konfirmasi', 'badge' => 'bg-gradient-warning text-dark'],
-                                        'scheduled' => ['label' => 'Terjadwal', 'badge' => 'bg-gradient-info'],
-                                        'in_treatment' => ['label' => 'Sedang Berobat', 'badge' => 'bg-gradient-primary'],
-                                        'recovered' => ['label' => 'Selesai', 'badge' => 'bg-gradient-success'],
-                                    ];
-                                    $familyStatusBadges = [
-                                        'pending' => 'bg-gradient-secondary',
-                                        'in_progress' => 'bg-gradient-warning text-dark',
-                                        'suspect' => 'bg-gradient-danger',
-                                        'clear' => 'bg-gradient-success',
-                                    ];
+                                    $firstNumber = method_exists($screenings, 'firstItem') ? $screenings->firstItem() : null;
                                 @endphp
-                                @php
-                                    $firstNumber = method_exists($patients, 'firstItem') ? $patients->firstItem() : null;
-                                @endphp
-                                @forelse ($patients as $patient)
+                                @forelse ($screenings as $screening)
                                     @php
-                                        $latest = $patient->screenings->first();
-                                        $positive = collect($latest->answers ?? [])->filter(fn ($ans) => $ans === 'ya')->count();
-                                        $statusBadge = 'bg-gradient-secondary';
-                                        $label = 'Belum skrining';
-                                        if ($latest) {
-                                            $label = $positive >= 2 ? 'Suspek TBC' : ($positive === 1 ? 'Perlu Observasi' : 'Tidak Ada Gejala');
-                                            $statusBadge = $positive >= 2 ? 'bg-gradient-danger' : ($positive === 1 ? 'bg-gradient-warning text-dark' : 'bg-gradient-success');
-                                        }
+                                        $positive = collect($screening->answers ?? [])->filter(fn ($ans) => $ans === 'ya')->count();
                                     @endphp
                                     <tr>
                                         <td class="text-center fw-semibold">{{ $firstNumber ? $firstNumber + $loop->index : $loop->iteration }}</td>
                                         <td>
-                                            <h6 class="mb-0 text-sm">{{ $patient->name }}</h6>
-                                            <p class="text-xs text-muted mb-0">{{ $patient->phone }}</p>
+                                            <h6 class="mb-0 text-sm">{{ $screening->patient_name ?? '-' }}</h6>
                                         </td>
-                                        <td>
-                                            <span class="badge {{ $statusBadge }}">{{ $label }}</span>
+                                        <td class="text-sm text-muted">{{ $screening->patient_nik ?? '-' }}</td>
+                                        <td class="text-sm text-muted">{{ $screening->patient_phone ?? '-' }}</td>
+                                        <td class="text-sm text-muted">
+                                            {{ $screening->patient_address_domisili ?? $screening->patient_address ?? '-' }}
+                                            <div class="text-xxs text-muted">RT/RW {{ $screening->patient_address_rt ?? '-' }}/{{ $screening->patient_address_rw ?? '-' }} • {{ $screening->patient_address_kelurahan ?? '-' }}</div>
                                         </td>
-                                        <td>
-                                            @php
-                                                $latestTreatment = $patient->treatments->first();
-                                            @endphp
-                                            @if ($latestTreatment)
-                                                @php
-                                                    $treatmentStatus = $treatmentStatuses[$latestTreatment->status] ?? ['label' => ucfirst(str_replace('_', ' ', $latestTreatment->status)), 'badge' => 'bg-gradient-info'];
-                                                @endphp
-                                                <span class="badge {{ $treatmentStatus['badge'] }}">{{ $treatmentStatus['label'] }}</span>
-                                                <p class="text-xs text-muted mb-0">
-                                                    Jadwal: {{ optional($latestTreatment->next_follow_up_at)->format('d M Y') ?? 'Belum dijadwalkan' }}
-                                                </p>
-                                                @if ($latestTreatment->notes)
-                                                    <p class="text-xs text-muted mb-0">Catatan: {{ $latestTreatment->notes }}</p>
-                                                @endif
-                                            @else
-                                                <span class="text-xs text-muted">Belum masuk daftar pengobatan.</span>
-                                            @endif
+                                        <td class="text-center">
+                                            <span class="badge bg-gradient-{{ $positive ? 'danger' : 'success' }}">{{ $positive }}</span>
                                         </td>
-                                        <td>
-                                            @if ($patient->familyMembers->isEmpty())
-                                                <span class="text-xs text-muted">Belum ada anggota.</span>
-                                            @else
-                                                <a href="{{ route('kader.patients.family', $patient) }}" class="btn btn-sm btn-outline-primary">
-                                                    Lihat {{ $patient->familyMembers->count() }} Anggota
-                                                </a>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if ($latest)
-                                                <span class="text-xs text-muted">{{ $latest->created_at->format('d M Y H:i') }}</span>
-                                            @else
-                                                <span class="text-xs text-muted">Belum pernah</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if ($latest)
-                                                <button class="btn btn-sm btn-secondary" disabled>Sudah Skrining</button>
-                                            @else
-                                                <a href="{{ route('kader.patients.screening', $patient) }}" class="btn btn-sm btn-success">Mulai Skrining</a>
-                                            @endif
+                                        <td class="text-center text-sm text-muted">
+                                            {{ $screening->created_at->format('d M Y H:i') }}
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">Belum ada pasien binaan.</td>
+                                        <td colspan="7" class="text-center text-muted">Belum ada skrining tercatat.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                     @php
-                        $hasPagination = method_exists($patients, 'firstItem');
-                        $from = $hasPagination ? $patients->firstItem() : ($patients->count() ? 1 : 0);
-                        $to = $hasPagination ? $patients->lastItem() : $patients->count();
-                        $total = $hasPagination ? $patients->total() : $patients->count();
+                        $hasPagination = method_exists($screenings, 'firstItem');
+                        $from = $hasPagination ? $screenings->firstItem() : ($screenings->count() ? 1 : 0);
+                        $to = $hasPagination ? $screenings->lastItem() : $screenings->count();
+                        $total = $hasPagination ? $screenings->total() : $screenings->count();
                     @endphp
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
                         <p class="text-sm text-muted mb-0">
-                            Menampilkan <span class="fw-semibold">{{ $from }}</span> - <span class="fw-semibold">{{ $to }}</span> dari <span class="fw-semibold">{{ $total }}</span> pasien
+                            Menampilkan <span class="fw-semibold">{{ $from }}</span> - <span class="fw-semibold">{{ $to }}</span> dari <span class="fw-semibold">{{ $total }}</span> skrining
                         </p>
                         @if ($hasPagination)
                             <div class="mb-0">
-                                {{ $patients->withQueryString()->onEachSide(1)->links('pagination::bootstrap-5') }}
+                                {{ $screenings->withQueryString()->onEachSide(1)->links('pagination::bootstrap-5') }}
                             </div>
                         @endif
                     </div>

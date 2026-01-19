@@ -12,7 +12,7 @@ return new class extends Migration
         if (! Schema::hasColumn('users', 'role')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->string('role', 25)
-                    ->default(UserRole::Pasien->value)
+                    ->default(UserRole::Kader->value)
                     ->after('password');
             });
         }

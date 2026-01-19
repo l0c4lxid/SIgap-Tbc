@@ -60,22 +60,6 @@
                                 <span class="text-danger text-xs">{{ $message }}</span>
                             @enderror
                         </div>
-                        @if ($user->role === \App\Enums\UserRole::Pasien)
-                            <div class="col-md-6">
-                                <label class="form-label">NIK</label>
-                                <input type="text" name="nik" class="form-control" value="{{ old('nik', $user->detail->nik ?? '') }}">
-                                @error('nik')
-                                    <span class="text-danger text-xs">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">No. KK</label>
-                                <input type="text" name="family_card_number" class="form-control" value="{{ old('family_card_number', $user->detail->family_card_number ?? '') }}">
-                                @error('family_card_number')
-                                    <span class="text-danger text-xs">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        @endif
                         @if ($supervisorLabel)
                             <div class="col-12">
                                 <label class="form-label">{{ $supervisorLabel }}</label>

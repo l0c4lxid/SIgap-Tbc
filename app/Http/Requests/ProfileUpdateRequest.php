@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -17,8 +16,6 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $detailId = optional($this->user()->detail)->id;
-
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'phone' => [
@@ -33,10 +30,6 @@ class ProfileUpdateRequest extends FormRequest
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'nik' => ['nullable', 'string', 'max:30'],
         ];
-
-        if ($this->user()?->role === UserRole::Pasien) {
-            $rules['nik'] = ['required', 'string', 'max:30', Rule::unique('user_details', 'nik')->ignore($detailId)];
-        }
 
         return $rules;
     }

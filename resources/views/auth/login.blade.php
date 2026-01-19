@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description"
-        content="SITUBA - Sistem Informasi Tuberkulosis terintegrasi. Masuk untuk mengelola pemantauan TBC: pasien, kader, puskesmas, kelurahan, hingga pemda.">
+        content="SITUBA - Sistem Informasi Tuberkulosis terintegrasi. Masuk untuk mengelola pemantauan TBC: kader, puskesmas, kelurahan, hingga pemda.">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.ico') }}">

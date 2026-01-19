@@ -36,18 +36,10 @@ class RegisteredUserController extends Controller
             ->orderBy('name')
             ->get();
 
-        $kaderOptions = User::query()
-            ->select('id', 'name')
-            ->where('role', UserRole::Kader->value)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
         return view('auth.register', [
             'roleOptions' => $roleOptions,
             'kelurahanOptions' => $kelurahanOptions,
             'puskesmasOptions' => $puskesmasOptions,
-            'kaderOptions' => $kaderOptions,
         ]);
     }
 
@@ -70,16 +62,6 @@ class RegisteredUserController extends Controller
                 ->where('is_active', true);
         });
 
-        $activeKelurahanRule = Rule::exists('users', 'id')->where(function ($query) {
-            $query->where('role', UserRole::Kelurahan->value)
-                ->where('is_active', true);
-        });
-
-        $activeKaderRule = Rule::exists('users', 'id')->where(function ($query) {
-            $query->where('role', UserRole::Kader->value)
-                ->where('is_active', true);
-        });
-
         $roleSpecificRules = match ($selectedRole) {
             UserRole::Kelurahan => [
                 'kelurahan_name' => ['required', 'string', 'max:255'],
@@ -92,11 +74,6 @@ class RegisteredUserController extends Controller
             ],
             UserRole::Kader => [
                 'kader_puskesmas_id' => ['required', $activePuskesmasRule],
-            ],
-            UserRole::Pasien => [
-                'pasien_nik' => ['required', 'string', 'max:30', Rule::unique('user_details', 'nik')],
-                'pasien_address' => ['required', 'string', 'max:255'],
-                'pasien_kader_id' => ['required', $activeKaderRule],
             ],
             default => [],
         };
@@ -123,11 +100,6 @@ class RegisteredUserController extends Controller
             ],
             UserRole::Kader => [
                 'supervisor_id' => $validated['kader_puskesmas_id'],
-            ],
-            UserRole::Pasien => [
-                'nik' => $validated['pasien_nik'],
-                'address' => $validated['pasien_address'],
-                'supervisor_id' => $validated['pasien_kader_id'],
             ],
             default => [],
         };

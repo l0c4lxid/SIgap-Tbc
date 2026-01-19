@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Kelurahan;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Models\PatientScreening;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -133,128 +134,54 @@ class MonitoringController extends Controller
         abort_if($kader->role !== UserRole::Kader, 404);
 
         $kelurahanName = optional($request->user()->detail)->organization ?? $request->user()->name;
-        $kelurahanKeyword = Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value() ?: Str::of($kelurahanName)->trim()->lower()->value();
+        $kelurahanKeyword = Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value()
+            ?: Str::of($kelurahanName)->trim()->lower()->value();
 
         $kaderRecord = $this->kaderQuery($request)?->where('id', $kader->id)->first();
         abort_if(! $kaderRecord, 403);
 
         $kaderRecord->loadMissing(['detail.supervisor.detail']);
 
-        $patientsQuery = User::query()
-            ->with([
-                'detail',
-                'screenings' => fn($q) => $q->latest()->limit(1),
-                'treatments' => fn($q) => $q->latest()->limit(1),
-            ])
-            ->where('role', UserRole::Pasien->value)
-            ->whereHas('detail', function ($detail) use ($kaderRecord, $kelurahanKeyword) {
-                $detail->where('supervisor_id', $kaderRecord->id)
-                    ->when($kelurahanKeyword, fn($q) => $q->whereRaw('LOWER(address) LIKE ?', ['%' . $kelurahanKeyword . '%']));
-            });
+        $screeningsQuery = PatientScreening::query()
+            ->where('kader_id', $kaderRecord->id)
+            ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address_kelurahan) LIKE ?', ['%' . $kelurahanKeyword . '%']))
+            ->orderBy('patient_address_kelurahan')
+            ->orderBy('patient_address_rw')
+            ->orderBy('patient_address_rt')
+            ->orderByDesc('created_at');
 
-        $patientTotal = (clone $patientsQuery)->count();
-        $patientScreened = (clone $patientsQuery)->whereHas('screenings')->count();
-        $recentPatients = (clone $patientsQuery)->latest()->take(5)->get();
+        $screenings = $screeningsQuery->get();
+        $uniquePatients = $screenings
+            ->map(function ($screening) {
+                if (!empty($screening->patient_nik)) {
+                    return 'nik:' . $screening->patient_nik;
+                }
+                if (!empty($screening->patient_phone)) {
+                    return 'phone:' . $screening->patient_phone;
+                }
+                $name = Str::lower(trim($screening->patient_name ?? ''));
+                $address = Str::lower(trim($screening->patient_address ?? ''));
+                return 'name:' . $name . '|addr:' . $address;
+            })
+            ->filter()
+            ->unique()
+            ->count();
+
+        $suspectCount = $screenings->filter(function ($screening) {
+            $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+            return $positive >= 1;
+        })->count();
+
+        $recentScreenings = $screeningsQuery->take(5)->get();
 
         return view('kelurahan.kader-show', [
             'kader' => $kaderRecord,
-            'patients' => $recentPatients,
-            'patientSummary' => [
-                'total' => $patientTotal,
-                'screened' => $patientScreened,
-                'unscreened' => max(0, $patientTotal - $patientScreened),
+            'screenings' => $recentScreenings,
+            'screeningSummary' => [
+                'total_patients' => $uniquePatients,
+                'total_screenings' => $screenings->count(),
+                'suspect' => $suspectCount,
             ],
-        ]);
-    }
-
-    public function patients(Request $request)
-    {
-        abort_if($request->user()->role !== UserRole::Kelurahan, 403);
-
-        $kelurahan = $request->user();
-        $perPage = 10;
-        $puskesmasIds = collect(optional($kelurahan->detail)->supervisor_id ? [$kelurahan->detail->supervisor_id] : []);
-        $kelurahanName = optional($kelurahan->detail)->organization ?? $kelurahan->name;
-        $kelurahanKeyword = Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value() ?: Str::of($kelurahanName)->trim()->lower()->value();
-
-        $filterPatients = function ($query) use ($puskesmasIds, $request, $kelurahanKeyword) {
-            return $query
-                ->where('role', UserRole::Pasien->value)
-                ->whereHas('detail.supervisor.detail', fn($detail) => $detail->whereIn('supervisor_id', $puskesmasIds))
-                ->when($kelurahanKeyword, fn($q) => $q->whereHas('detail', function ($detail) use ($kelurahanKeyword) {
-                    // Only show patients whose address mentions this kelurahan.
-                    $detail->whereRaw('LOWER(address) LIKE ?', ['%' . $kelurahanKeyword . '%']);
-                }))
-                ->when($request->filled('q'), function ($query) use ($request) {
-                    $term = '%' . $request->input('q') . '%';
-                    $query->where(function ($sub) use ($term) {
-                        $sub->where('name', 'like', $term)
-                            ->orWhere('phone', 'like', $term)
-                            ->orWhereHas('detail', fn($detail) => $detail->where('address', 'like', $term));
-                    });
-                });
-        };
-
-        if ($puskesmasIds->isEmpty()) {
-            $patients = new LengthAwarePaginator([], 0, $perPage, 1, [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]);
-            $stats = ['total' => 0, 'screened' => 0, 'unscreened' => 0];
-        } else {
-            $patientsQuery = $filterPatients(User::query())
-                ->with([
-                    'detail.supervisor.detail',
-                    'screenings' => fn($query) => $query->latest()->limit(1),
-                    'treatments' => fn($query) => $query->latest()->limit(1),
-                ])
-                ->latest();
-
-            $patients = $patientsQuery->paginate($perPage)->withQueryString();
-
-            $statsQuery = $filterPatients(User::query());
-            $total = (clone $statsQuery)->count();
-            $screened = (clone $statsQuery)->whereHas('screenings')->count();
-            $stats = [
-                'total' => $total,
-                'screened' => $screened,
-                'unscreened' => max(0, $total - $screened),
-            ];
-        }
-
-        return view('kelurahan.patients', [
-            'patients' => $patients,
-            'search' => $request->input('q', ''),
-            'stats' => $stats,
-        ]);
-    }
-
-    public function showPatient(Request $request, User $patient)
-    {
-        abort_if($request->user()->role !== UserRole::Kelurahan, 403);
-        abort_if($patient->role !== UserRole::Pasien, 404);
-
-        $patient->loadMissing([
-            'detail.supervisor.detail',
-            'screenings' => fn($query) => $query->latest()->limit(5),
-            'treatments' => fn($query) => $query->latest()->limit(5),
-            'familyMembers' => fn($query) => $query->latest(),
-        ]);
-
-        $kader = optional($patient->detail)->supervisor;
-        $puskesmas = optional($kader?->detail)->supervisor;
-        $allowedPuskesmasId = optional($request->user()->detail)->supervisor_id;
-        $kelurahanName = optional($request->user()->detail)->organization ?? $request->user()->name;
-        $kelurahanKeyword = Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value() ?: Str::of($kelurahanName)->trim()->lower()->value();
-        $patientAddress = Str::of(optional($patient->detail)->address)->lower()->value();
-
-        $addressMatch = $kelurahanKeyword ? Str::contains($patientAddress, $kelurahanKeyword) : true;
-
-        abort_if(!$puskesmas || $allowedPuskesmasId !== optional($puskesmas)->id || ! $addressMatch, 403);
-
-        return view('kelurahan.patient-detail', [
-            'patient' => $patient,
-            'puskesmas' => $puskesmas,
         ]);
     }
 

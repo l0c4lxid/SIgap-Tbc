@@ -5,20 +5,11 @@
     $user = auth()->user();
     $role = $user?->role;
     $navPresets = [
-        UserRole::Pasien->value => [
-            ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard', 'active_routes' => ['dashboard']],
-            ['label' => 'Skrining', 'url' => route('patient.screening'), 'icon' => 'screening', 'active_routes' => ['patient.screening', 'patient.screening.store']],
-            ['label' => 'Anggota Keluarga', 'url' => route('patient.family'), 'icon' => 'anggota', 'active_routes' => ['patient.family', 'patient.family.store', 'patient.family.screening', 'patient.family.screening.store']],
-            ['label' => 'Materi', 'url' => route('patient.materi'), 'icon' => 'materi', 'active_routes' => ['patient.materi']],
-            ['label' => 'Berita', 'url' => route('news.index'), 'icon' => 'news', 'active_routes' => ['news.index', 'news.create', 'news.edit']],
-        ],
         UserRole::Puskesmas->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
             ['label' => 'Kelurahan Binaan', 'url' => route('puskesmas.kelurahan'), 'icon' => 'folder'],
             ['label' => 'Data Kader', 'url' => route('puskesmas.kaders'), 'icon' => 'users'],
-            ['label' => 'Data Pasien Skrining', 'url' => route('puskesmas.patients'), 'icon' => 'folder'],
             ['label' => 'Skrining', 'url' => route('puskesmas.screenings'), 'icon' => 'screening'],
-            ['label' => 'Berobat', 'url' => route('puskesmas.treatment'), 'icon' => 'berobat'],
             ['label' => 'Berita', 'url' => route('news.index'), 'icon' => 'news'],
             // ['label' => 'Sembuh', 'url' => '#', 'icon' => 'sembuh'],
         ],
@@ -26,27 +17,24 @@
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
             ['label' => 'Puskesmas Mitra', 'url' => route('kelurahan.puskesmas'), 'icon' => 'folder'],
             ['label' => 'Data Kader', 'url' => route('kelurahan.kaders'), 'icon' => 'users'],
-            ['label' => 'Data Pasien Skrining', 'url' => route('kelurahan.patients'), 'icon' => 'folder'],
             ['label' => 'Berita', 'url' => route('news.index'), 'icon' => 'news'],
             // ['label' => 'Sembuh', 'url' => '#', 'icon' => 'sembuh'],
         ],
         UserRole::Pemda->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
             ['label' => 'Verifikasi Pengguna', 'url' => route('pemda.verification'), 'icon' => 'verify'],
-            ['label' => 'Data Pasien Skrining', 'url' => route('pemda.patients'), 'icon' => 'folder'],
             ['label' => 'Semua Berita', 'url' => route('news.index'), 'icon' => 'news'],
         ],
         UserRole::Kader->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
             ['label' => 'Puskesmas Induk', 'url' => route('kader.puskesmas'), 'icon' => 'folder'],
-            ['label' => 'Data Pasien Skrining', 'url' => route('kader.patients'), 'icon' => 'folder'],
             ['label' => 'Skrining', 'url' => route('kader.screening.index'), 'icon' => 'screening'],
             ['label' => 'Materi', 'url' => route('kader.materi'), 'icon' => 'materi'],
             ['label' => 'Berita', 'url' => route('news.index'), 'icon' => 'news'],
         ],
     ];
 
-    $navItems = $navPresets[$role?->value ?? UserRole::Pasien->value] ?? reset($navPresets);
+    $navItems = $navPresets[$role?->value ?? UserRole::Kader->value] ?? reset($navPresets);
     $currentUrl = url()->current();
     $activeNavItem = collect($navItems)
         ->first(function ($item) use ($currentUrl) {

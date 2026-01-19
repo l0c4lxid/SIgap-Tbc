@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('password');
-            $table->string('role', 25)->default(UserRole::Pasien->value)->index();
+            $table->string('role', 25)->default(UserRole::Kader->value)->index();
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();

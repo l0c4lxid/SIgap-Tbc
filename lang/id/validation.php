@@ -34,8 +34,5 @@ return [
         'puskesmas_address' => 'alamat puskesmas',
         'puskesmas_kelurahan_id' => 'kelurahan mitra',
         'kader_puskesmas_id' => 'puskesmas induk',
-        'pasien_nik' => 'NIK pasien',
-        'pasien_address' => 'alamat pasien',
-        'pasien_kader_id' => 'kader pendamping',
     ],
 ];

@@ -6,12 +6,11 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\PatientScreening;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ScreeningController extends Controller
 {
@@ -25,38 +24,39 @@ class ScreeningController extends Controller
             ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $request->user()->id))
             ->pluck('id');
 
-        $patients = $kaderIds->isEmpty()
+        $screenings = $kaderIds->isEmpty()
             ? new LengthAwarePaginator([], 0, $perPage, 1, [
                 'path' => $request->url(),
                 'query' => $request->query(),
             ])
-            : User::query()
-                ->with([
-                    'detail',
-                    'detail.supervisor',
-                    'screenings' => fn($query) => $query->latest()->limit(1),
-                ])
-                ->where('role', UserRole::Pasien->value)
-                ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $kaderIds))
-                ->when($request->filled('from'), fn($query) => $query->whereHas('screenings', fn($screening) => $screening->whereDate('created_at', '>=', $request->date('from'))))
-                ->when($request->filled('to'), fn($query) => $query->whereHas('screenings', fn($screening) => $screening->whereDate('created_at', '<=', $request->date('to'))))
+            : PatientScreening::query()
+                ->with('kader')
+                ->whereIn('kader_id', $kaderIds)
+                ->when($request->filled('from'), fn($query) => $query->whereDate('created_at', '>=', $request->date('from')))
+                ->when($request->filled('to'), fn($query) => $query->whereDate('created_at', '<=', $request->date('to')))
                 ->when($request->filled('q'), function ($query) use ($request) {
                     $term = '%' . $request->input('q') . '%';
                     $query->where(function ($sub) use ($term) {
-                        $sub->where('name', 'like', $term)
-                            ->orWhere('phone', 'like', $term)
-                            ->orWhereHas('detail', function ($detail) use ($term) {
-                                $detail->where('address', 'like', $term)
-                                    ->orWhere('nik', 'like', $term);
-                            });
+                        $sub->where('patient_name', 'like', $term)
+                            ->orWhere('patient_phone', 'like', $term)
+                            ->orWhere('patient_nik', 'like', $term)
+                            ->orWhere('patient_address', 'like', $term)
+                            ->orWhere('patient_address_ktp', 'like', $term)
+                            ->orWhere('patient_address_domisili', 'like', $term)
+                            ->orWhere('patient_address_kelurahan', 'like', $term)
+                            ->orWhere('patient_address_rt', 'like', $term)
+                            ->orWhere('patient_address_rw', 'like', $term);
                     });
                 })
-                ->latest()
+                ->orderBy('patient_address_kelurahan')
+                ->orderBy('patient_address_rw')
+                ->orderBy('patient_address_rt')
+                ->orderByDesc('created_at')
                 ->paginate($perPage)
                 ->withQueryString();
 
         return view('puskesmas.screenings', [
-            'patients' => $patients,
+            'screenings' => $screenings,
             'search' => $request->input('q', ''),
             'filters' => [
                 'from' => $request->input('from', ''),
@@ -65,26 +65,18 @@ class ScreeningController extends Controller
         ]);
     }
 
-    public function show(Request $request, User $patient)
+    public function show(Request $request, PatientScreening $screening)
     {
         abort_if($request->user()->role !== UserRole::Puskesmas, 403);
-        abort_if($patient->role !== UserRole::Pasien, 404);
 
-        $patient->loadMissing([
-            'detail.supervisor.detail',
-            'screenings' => fn($query) => $query->latest()->limit(1),
-        ]);
-
-        $kader = optional($patient->detail)->supervisor;
+        $screening->loadMissing('kader.detail');
+        $kader = $screening->kader;
         $puskesmasId = optional($kader?->detail)->supervisor_id;
         abort_if($puskesmasId !== $request->user()->id, 403);
 
-        $latestScreening = $patient->screenings->first();
-
         return view('puskesmas.screening-detail', [
-            'patient' => $patient,
+            'screening' => $screening,
             'kader' => $kader,
-            'latestScreening' => $latestScreening,
         ]);
     }
 
@@ -93,10 +85,21 @@ class ScreeningController extends Controller
         abort_if($request->user()->role !== UserRole::Puskesmas, 403);
 
         $questionLabels = [
-            'batuk_kronis' => 'Batuk Kronis',
-            'dahak_darah' => 'Dahak Darah',
-            'berat_badan' => 'Berat Badan',
-            'demam_malam' => 'Demam Malam',
+            'riwayat_kontak_tbc' => 'Riwayat Kontak TBC',
+            'sakit_tbc' => 'Pernah Diagnosis TBC',
+            'kekurangan_gizi' => 'Kekurangan Gizi',
+            'merokok' => 'Merokok',
+            'perokok_pasif' => 'Perokok Pasif',
+            'kencing_manis' => 'Kencing Manis',
+            'hiv' => 'HIV',
+            'lansia' => 'Lansia (>65 Tahun)',
+            'warga_binaan' => 'Warga Binaan',
+            'wilayah_miskin' => 'Wilayah Miskin/Rentan',
+            'gejala_batuk' => 'Gejala - Batuk',
+            'gejala_bb_turun' => 'Gejala - BB Turun',
+            'gejala_demam_hilang_timbul' => 'Gejala - Demam Hilang Timbul',
+            'gejala_berkeringat_malam' => 'Gejala - Berkeringat Malam',
+            'gejala_kelenjar' => 'Gejala - Pembesaran Kelenjar',
         ];
 
         $kaderIds = User::query()
@@ -107,10 +110,27 @@ class ScreeningController extends Controller
         $screenings = $kaderIds->isEmpty()
             ? collect()
             : PatientScreening::query()
-                ->with(['patient.detail', 'kader'])
-                ->whereHas('patient.detail', fn($detail) => $detail->whereIn('supervisor_id', $kaderIds))
+                ->with('kader')
+                ->whereIn('kader_id', $kaderIds)
                 ->when($request->filled('from'), fn($query) => $query->whereDate('created_at', '>=', $request->date('from')))
                 ->when($request->filled('to'), fn($query) => $query->whereDate('created_at', '<=', $request->date('to')))
+                ->when($request->filled('q'), function ($query) use ($request) {
+                    $term = '%' . $request->input('q') . '%';
+                    $query->where(function ($sub) use ($term) {
+                        $sub->where('patient_name', 'like', $term)
+                            ->orWhere('patient_phone', 'like', $term)
+                            ->orWhere('patient_nik', 'like', $term)
+                            ->orWhere('patient_address', 'like', $term)
+                            ->orWhere('patient_address_ktp', 'like', $term)
+                            ->orWhere('patient_address_domisili', 'like', $term)
+                            ->orWhere('patient_address_kelurahan', 'like', $term)
+                            ->orWhere('patient_address_rt', 'like', $term)
+                            ->orWhere('patient_address_rw', 'like', $term);
+                    });
+                })
+                ->orderBy('patient_address_kelurahan')
+                ->orderBy('patient_address_rw')
+                ->orderBy('patient_address_rt')
                 ->orderByDesc('created_at')
                 ->get();
 
@@ -130,9 +150,23 @@ class ScreeningController extends Controller
 
                     $row = [
                         'No' => $index + 1,
-                        'Nama' => $screening->patient?->name ?? '-',
-                        'NIK' => $screening->patient?->detail?->nik ?? '-',
-                        'Nomor HP' => $screening->patient?->phone ?? '-',
+                        'Nama' => $screening->patient_name ?? '-',
+                        'WNI' => $screening->patient_is_wni ? 'Ya' : 'Tidak',
+                        'NIK' => $screening->patient_nik ?? '-',
+                        'Nomor HP' => $screening->patient_phone ?? '-',
+                        'Alamat' => $screening->patient_address ?? '-',
+                        'Jenis Kelamin' => $screening->patient_gender ?? '-',
+                        'Tempat Lahir' => $screening->patient_birth_place ?? '-',
+                        'Tanggal Lahir' => optional($screening->patient_birth_date)?->format('d/m/Y') ?? '-',
+                        'Umur' => $screening->patient_age ?? '-',
+                        'Alamat KTP' => $screening->patient_address_ktp ?? '-',
+                        'Alamat Domisili' => $screening->patient_address_domisili ?? '-',
+                        'RT' => $screening->patient_address_rt ?? '-',
+                        'RW' => $screening->patient_address_rw ?? '-',
+                        'Kelurahan' => $screening->patient_address_kelurahan ?? '-',
+                        'BB (kg)' => $screening->patient_weight ?? '-',
+                        'TB (cm)' => $screening->patient_height ?? '-',
+                        'Kader' => $screening->kader?->name ?? '-',
                         'Tanggal Skrining' => optional($screening->created_at)?->format('d/m/Y H:i') ?? '-',
                     ];
 
@@ -147,7 +181,27 @@ class ScreeningController extends Controller
             public function headings(): array
             {
                 return array_merge(
-                    ['No', 'Nama', 'NIK', 'Nomor HP', 'Tanggal Skrining'],
+                    [
+                        'No',
+                        'Nama',
+                        'WNI',
+                        'NIK',
+                        'Nomor HP',
+                        'Alamat',
+                        'Jenis Kelamin',
+                        'Tempat Lahir',
+                        'Tanggal Lahir',
+                        'Umur',
+                        'Alamat KTP',
+                        'Alamat Domisili',
+                        'RT',
+                        'RW',
+                        'Kelurahan',
+                        'BB (kg)',
+                        'TB (cm)',
+                        'Kader',
+                        'Tanggal Skrining',
+                    ],
                     array_values($this->questionLabels),
                 );
             }

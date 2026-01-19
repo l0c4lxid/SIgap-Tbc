@@ -150,10 +150,9 @@ class ExampleDataSeeder extends Seeder
             ],
         ];
 
-        $kaderMap = [];
         foreach ($kaderPayloads as $payload) {
             $puskesmas = $puskesmasMap[$payload['puskesmas_key']];
-            $kaderMap[$payload['key']] = $this->createUser(
+            $this->createUser(
                 [
                     'name' => $payload['name'],
                     'phone' => $payload['phone'],
@@ -163,97 +162,6 @@ class ExampleDataSeeder extends Seeder
                 [
                     'supervisor_id' => $puskesmas->id,
                     'notes' => $payload['notes'],
-                ],
-            );
-        }
-
-        $patientPayloads = [
-            [
-                'name' => 'Budi Hartono',
-                'phone' => '081211007001',
-                'nik' => '3372010101010001',
-                'address' => 'RT 01 RW 01, Kampung Kauman',
-                'kader_key' => 'kader-larasati',
-            ],
-            [
-                'name' => 'Siti Maesaroh',
-                'phone' => '081211007002',
-                'nik' => '3372010101010002',
-                'address' => 'RT 02 RW 02, Kampung Kauman',
-                'kader_key' => 'kader-larasati',
-            ],
-            [
-                'name' => 'Fajar Nugraha',
-                'phone' => '081211007003',
-                'nik' => '3372010101010003',
-                'address' => 'RT 03 RW 02, Gajahan',
-                'kader_key' => 'kader-surya',
-            ],
-            [
-                'name' => 'Mega Lestari',
-                'phone' => '081211007004',
-                'nik' => '3372010101010004',
-                'address' => 'RT 04 RW 02, Gajahan',
-                'kader_key' => 'kader-surya',
-            ],
-            [
-                'name' => 'Rio Prasetyo',
-                'phone' => '081211007005',
-                'nik' => '3372010101010005',
-                'address' => 'RT 05 RW 03, Manahan',
-                'kader_key' => 'kader-anindita',
-            ],
-            [
-                'name' => 'Anita Pertiwi',
-                'phone' => '081211007006',
-                'nik' => '3372010101010006',
-                'address' => 'RT 06 RW 03, Manahan',
-                'kader_key' => 'kader-anindita',
-            ],
-            [
-                'name' => 'Galih Wibowo',
-                'phone' => '081211007007',
-                'nik' => '3372010101010007',
-                'address' => 'RT 07 RW 04, Manahan',
-                'kader_key' => 'kader-yusuf',
-            ],
-            [
-                'name' => 'Ratna Sari',
-                'phone' => '081211007008',
-                'nik' => '3372010101010008',
-                'address' => 'RT 08 RW 04, Manahan',
-                'kader_key' => 'kader-yusuf',
-            ],
-            [
-                'name' => 'Yoga Mahendra',
-                'phone' => '081211007009',
-                'nik' => '3372010101010009',
-                'address' => 'RT 09 RW 05, Purwosari',
-                'kader_key' => 'kader-ratri',
-            ],
-            [
-                'name' => 'Nur Aini',
-                'phone' => '081211007010',
-                'nik' => '3372010101010010',
-                'address' => 'RT 10 RW 06, Purwosari',
-                'kader_key' => 'kader-dimas',
-            ],
-        ];
-
-        foreach ($patientPayloads as $payload) {
-            $kader = $kaderMap[$payload['kader_key']];
-            $this->createUser(
-                [
-                    'name' => $payload['name'],
-                    'phone' => $payload['phone'],
-                    'role' => UserRole::Pasien,
-                    'password' => 'password123',
-                ],
-                [
-                    'nik' => $payload['nik'],
-                    'address' => $payload['address'],
-                    'supervisor_id' => $kader->id,
-                    'initial_password' => 'password123',
                 ],
             );
         }

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Daftar di SITUBA - Sistem Informasi Tuberkulosis terintegrasi untuk pemantauan TBC oleh pasien, kader, puskesmas, kelurahan, dan pemda.">
+    <meta name="description" content="Daftar di SITUBA - Sistem Informasi Tuberkulosis terintegrasi untuk pemantauan TBC oleh kader, puskesmas, kelurahan, dan pemda.">
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.ico') }}">
@@ -20,7 +20,6 @@
     \App\Enums\UserRole::Kelurahan->value => '🏘️ ',
     \App\Enums\UserRole::Puskesmas->value => '🏥 ',
     \App\Enums\UserRole::Kader->value => '🧑‍⚕️ ',
-    \App\Enums\UserRole::Pasien->value => '🫁 ',
 ])
 
 <body>
@@ -60,7 +59,7 @@
                     </div>
                     <div class="field-block">
                         <div class="label-row">
-                            <label for="name" id="name-label" data-default="Nama Penanggung Jawab / Pasien">Nama</label>
+                            <label for="name" id="name-label" data-default="Nama Penanggung Jawab">Nama</label>
                             <span class="helper">Isi sesuai identitas</span>
                         </div>
                         <div class="input-wrap">
@@ -174,54 +173,6 @@
                     </div>
                 </div>
 
-                <div class="section role-section d-none" data-role-section="pasien">
-                    <h4 class="role-chip" style="background: rgba(248,113,113,0.12);">Pasien</h4>
-                    <div class="form-grid">
-                        <div class="field-block">
-                            <div class="label-row">
-                                <label for="pasien_nik">NIK</label>
-                                <span class="helper">Isi sesuai KTP</span>
-                            </div>
-                            <div class="input-wrap">
-                                <i class="fa fa-id-card input-icon"></i>
-                                <input type="text" class="input" id="pasien_nik" name="pasien_nik"
-                                    value="{{ old('pasien_nik') }}">
-                            </div>
-                        </div>
-                        <div class="field-block">
-                            <div class="label-row">
-                                <label for="pasien_kader_id">Kader Pendamping</label>
-                                <span class="helper">Pilih kader terdekat</span>
-                            </div>
-                            @if (($kaderOptions ?? collect())->isEmpty())
-                                <div class="note" style="text-align:left;">Belum ada Kader aktif. Hubungi admin.</div>
-                            @else
-                                <div class="input-wrap with-select">
-                                    <i class="fa fa-user-nurse input-icon"></i>
-                                    <select id="pasien_kader_id" name="pasien_kader_id" class="select">
-                                        <option value="">Pilih kader</option>
-                                        @foreach ($kaderOptions as $kader)
-                                            <option value="{{ $kader->id }}" @selected(old('pasien_kader_id') == $kader->id)>
-                                                🧑‍⚕️ {{ $kader->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="field-block full">
-                            <div class="label-row">
-                                <label for="pasien_address">Alamat Pasien</label>
-                                <span class="helper">Isi domisili pasien</span>
-                            </div>
-                            <div class="input-wrap">
-                                <i class="fa fa-location-dot input-icon"></i>
-                                <input type="text" class="input" id="pasien_address" name="pasien_address"
-                                    value="{{ old('pasien_address') }}">
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="form-grid" style="margin-top: 16px;">
                     <div class="field-block">
@@ -283,7 +234,6 @@
                 kelurahan: 'Nama PJ Kelurahan',
                 puskesmas: 'Nama PJ Puskesmas',
                 kader: 'Nama Kader',
-                pasien: 'Nama Pasien',
             };
 
             function toggleRoleSections() {

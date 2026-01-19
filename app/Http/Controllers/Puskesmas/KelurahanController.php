@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Puskesmas;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Models\PatientScreening;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -64,38 +65,48 @@ class KelurahanController extends Controller
             optional($kelurahan->detail)->organization,
         ]));
 
-        $patients = empty($keywords)
+        $kaderIds = User::query()
+            ->where('role', UserRole::Kader->value)
+            ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $request->user()->id))
+            ->pluck('id');
+
+        $screenings = empty($keywords) || $kaderIds->isEmpty()
             ? new LengthAwarePaginator([], 0, $perPage, 1, [
                 'path' => $request->url(),
                 'query' => $request->query(),
             ])
-            : User::query()
-                ->with(['detail.supervisor.detail'])
-                ->where('role', UserRole::Pasien->value)
-                ->whereHas('detail.supervisor.detail', fn($detail) => $detail->where('supervisor_id', $request->user()->id))
-                ->whereHas('detail', function ($detail) use ($keywords) {
-                    $detail->where(function ($sub) use ($keywords) {
-                        foreach ($keywords as $index => $keyword) {
-                            $method = $index === 0 ? 'where' : 'orWhere';
-                            $sub->{$method}('address', 'like', '%' . $keyword . '%');
-                        }
-                    });
+            : PatientScreening::query()
+                ->with('kader')
+                ->whereIn('kader_id', $kaderIds)
+                ->where(function ($sub) use ($keywords) {
+                    foreach ($keywords as $index => $keyword) {
+                        $method = $index === 0 ? 'where' : 'orWhere';
+                        $sub->{$method}('patient_address', 'like', '%' . $keyword . '%')
+                            ->orWhere('patient_address_kelurahan', 'like', '%' . $keyword . '%');
+                    }
                 })
                 ->when($search !== '', function ($query) use ($search) {
                     $term = '%' . $search . '%';
                     $query->where(function ($sub) use ($term) {
-                        $sub->where('name', 'like', $term)
-                            ->orWhere('phone', 'like', $term)
-                            ->orWhereHas('detail', fn($detail) => $detail->where('address', 'like', $term));
+                        $sub->where('patient_name', 'like', $term)
+                            ->orWhere('patient_phone', 'like', $term)
+                            ->orWhere('patient_nik', 'like', $term)
+                            ->orWhere('patient_address', 'like', $term)
+                            ->orWhere('patient_address_kelurahan', 'like', $term)
+                            ->orWhere('patient_address_rt', 'like', $term)
+                            ->orWhere('patient_address_rw', 'like', $term);
                     });
                 })
-                ->latest()
+                ->orderBy('patient_address_kelurahan')
+                ->orderBy('patient_address_rw')
+                ->orderBy('patient_address_rt')
+                ->orderByDesc('created_at')
                 ->paginate($perPage)
                 ->withQueryString();
 
         return view('puskesmas.kelurahan-detail', [
             'kelurahan' => $kelurahan,
-            'patients' => $patients,
+            'screenings' => $screenings,
             'search' => $search,
         ]);
     }

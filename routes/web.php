@@ -2,20 +2,16 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Kader\MaterialController as KaderMaterialController;
-use App\Http\Controllers\Kader\PatientController as KaderPatientController;
+use App\Http\Controllers\Kader\ScreeningController as KaderScreeningController;
 use App\Http\Controllers\Kader\PuskesmasController as KaderPuskesmasController;
 use App\Http\Controllers\Kelurahan\MonitoringController as KelurahanMonitoringController;
 use App\Http\Controllers\NewsController;
-use App\Http\Controllers\Patient\PatientController as PatientSelfController;
-use App\Http\Controllers\Pemda\PatientController as PemdaPatientController;
 use App\Http\Controllers\Pemda\ProfileController as PemdaProfileController;
 use App\Http\Controllers\Pemda\UserVerificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Puskesmas\KaderController as PuskesmasKaderController;
 use App\Http\Controllers\Puskesmas\KelurahanController as PuskesmasKelurahanController;
-use App\Http\Controllers\Puskesmas\PatientController as PuskesmasPatientController;
 use App\Http\Controllers\Puskesmas\ScreeningController as PuskesmasScreeningController;
-use App\Http\Controllers\Puskesmas\TreatmentController as PuskesmasTreatmentController;
 use App\Models\User;
 use App\Enums\UserRole;
 use App\Models\NewsPost;
@@ -100,32 +96,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/pemda/profil', [PemdaProfileController::class, 'update'])
         ->name('pemda.profile.update');
 
-    Route::get('/puskesmas/pasien', [PuskesmasPatientController::class, 'index'])
-        ->name('puskesmas.patients');
-    Route::get('/puskesmas/pasien/{patient}/anggota', [PuskesmasPatientController::class, 'family'])
-        ->name('puskesmas.patient.family');
-    Route::post('/puskesmas/pasien/{patient}/anggota', [PuskesmasPatientController::class, 'storeFamily'])
-        ->name('puskesmas.patient.family.store');
-    Route::post('/puskesmas/pasien/{patient}/anggota/{member}', [PuskesmasPatientController::class, 'updateFamilyMember'])
-        ->name('puskesmas.patient.family.update');
-
     Route::get('/puskesmas/skrining', [PuskesmasScreeningController::class, 'index'])
         ->name('puskesmas.screenings');
-    Route::get('/puskesmas/skrining/{patient}', [PuskesmasScreeningController::class, 'show'])
+    Route::get('/puskesmas/skrining/{screening}', [PuskesmasScreeningController::class, 'show'])
         ->name('puskesmas.screenings.show');
     Route::get('/puskesmas/skrining-export/excel', [PuskesmasScreeningController::class, 'exportExcel'])
         ->name('puskesmas.screenings.export.excel');
-
-    Route::get('/puskesmas/berobat', [PuskesmasTreatmentController::class, 'index'])
-        ->name('puskesmas.treatment');
-    Route::get('/puskesmas/berobat/{patient}', [PuskesmasTreatmentController::class, 'show'])
-        ->name('puskesmas.treatment.show');
-    Route::post('/puskesmas/berobat/{patient}', [PuskesmasTreatmentController::class, 'updateStatus'])
-        ->name('puskesmas.treatment.update');
-    Route::post('/puskesmas/berobat', [PuskesmasTreatmentController::class, 'store'])
-        ->name('puskesmas.treatment.store');
-    Route::get('/puskesmas/berobat-export/excel', [PuskesmasTreatmentController::class, 'exportExcel'])
-        ->name('puskesmas.treatment.export.excel');
 
     Route::get('/puskesmas/kelurahan', [PuskesmasKelurahanController::class, 'index'])
         ->name('puskesmas.kelurahan');
@@ -161,59 +137,16 @@ Route::middleware('auth')->group(function () {
         ->name('kelurahan.kaders.status');
     Route::get('/kelurahan/kader-export/excel', [KelurahanMonitoringController::class, 'exportKadersExcel'])
         ->name('kelurahan.kaders.export.excel');
-    Route::get('/kelurahan/pasien', [KelurahanMonitoringController::class, 'patients'])
-        ->name('kelurahan.patients');
-    Route::get('/kelurahan/pasien/{patient}', [KelurahanMonitoringController::class, 'showPatient'])
-        ->name('kelurahan.patients.show');
-
     Route::get('/kader/materi', [KaderMaterialController::class, 'index'])
         ->name('kader.materi');
     Route::get('/kader/puskesmas', [KaderPuskesmasController::class, 'show'])
         ->name('kader.puskesmas');
-    Route::get('/kader/pasien', [KaderPatientController::class, 'index'])
-        ->name('kader.patients');
-    Route::get('/kader/skrining', [KaderPatientController::class, 'screeningIndex'])
+    Route::get('/kader/skrining', [KaderScreeningController::class, 'index'])
         ->name('kader.screening.index');
-    Route::get('/kader/pasien/create', [KaderPatientController::class, 'create'])
-        ->name('kader.patients.create');
-    Route::post('/kader/pasien', [KaderPatientController::class, 'store'])
-        ->name('kader.patients.store');
-    Route::get('/kader/pasien/{patient}', [KaderPatientController::class, 'show'])
-        ->name('kader.patients.show');
-    Route::post('/kader/pasien/{patient}/family', [KaderPatientController::class, 'storeFamily'])
-        ->name('kader.patients.family.store');
-    Route::get('/kader/pasien/{patient}/keluarga', [KaderPatientController::class, 'family'])
-        ->name('kader.patients.family');
-    Route::get('/kader/pasien/{patient}/screening', [KaderPatientController::class, 'screeningForm'])
-        ->name('kader.patients.screening');
-    Route::post('/kader/pasien/{patient}/screening', [KaderPatientController::class, 'storeScreening'])
-        ->name('kader.patients.screening.store');
-    Route::post('/kader/pasien/{patient}/status', [KaderPatientController::class, 'updateStatus'])
-        ->name('kader.patients.status');
-
-    Route::get('/pasien/materi', [PatientSelfController::class, 'materials'])
-        ->name('patient.materi');
-    Route::get('/pasien/skrining', [PatientSelfController::class, 'screeningForm'])
-        ->name('patient.screening');
-    Route::post('/pasien/skrining', [PatientSelfController::class, 'storeScreening'])
-        ->name('patient.screening.store');
-    Route::get('/pasien/anggota', [PatientSelfController::class, 'family'])
-        ->name('patient.family');
-    Route::post('/pasien/anggota', [PatientSelfController::class, 'storeFamily'])
-        ->name('patient.family.store');
-    Route::get('/pasien/anggota/{member}/skrining', [PatientSelfController::class, 'familyScreening'])
-        ->name('patient.family.screening');
-    Route::post('/pasien/anggota/{member}/skrining', [PatientSelfController::class, 'storeFamilyScreening'])
-        ->name('patient.family.screening.store');
-    Route::get('/pasien/puskesmas', [PatientSelfController::class, 'puskesmasInfo'])
-        ->name('patient.puskesmas.info');
-
-    Route::get('/pemda/pasien', [PemdaPatientController::class, 'index'])
-        ->name('pemda.patients');
-    Route::get('/pemda/pasien-export/excel', [PemdaPatientController::class, 'exportExcel'])
-        ->name('pemda.patients.export.excel');
-    Route::get('/pemda/pasien/{patient}', [PemdaPatientController::class, 'show'])
-        ->name('pemda.patients.show');
+    Route::get('/kader/skrining/create', [KaderScreeningController::class, 'create'])
+        ->name('kader.screening.create');
+    Route::post('/kader/skrining', [KaderScreeningController::class, 'store'])
+        ->name('kader.screening.store');
 });
 
 require __DIR__ . '/auth.php';

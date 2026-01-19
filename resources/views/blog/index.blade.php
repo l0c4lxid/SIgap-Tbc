@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog SITUBA - Sistem Informasi Tuberkulosis</title>
     <meta name="description"
-        content="Blog SITUBA berisi artikel, info kesehatan, dan testimoni seputar pemantauan Tuberkulosis oleh pasien, kader, puskesmas, kelurahan, dan pemda.">
+        content="Blog SITUBA berisi artikel, info kesehatan, dan testimoni seputar pemantauan Tuberkulosis oleh kader, puskesmas, kelurahan, dan pemda.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
@@ -48,7 +48,7 @@
         <div class="hero">
             <h2>Kasus inspiratif dan kabar terbaru eliminasi TBC.</h2>
             <p>Temukan berita yang sudah dikurasi oleh Pemda sebelum tampil ke publik. Semuanya berasal dari kontribusi
-                kader, puskesmas, dan pasien.</p>
+                kader dan puskesmas.</p>
             <form class="search-row" method="GET" action="{{ route('blog.index') }}">
                 <div class="input-wrap">
                     <i class="fa fa-search"></i>

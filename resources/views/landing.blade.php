@@ -182,7 +182,7 @@
                         </div>
                         <div class="mini-card">
                             <h4><i class="fa-solid fa-gauge-high"></i> Dashboard multi-peran</h4>
-                            <p>Tampilan disesuaikan untuk pemda, puskesmas, kelurahan, kader, dan pasien.</p>
+                            <p>Tampilan disesuaikan untuk pemda, puskesmas, kelurahan, dan kader.</p>
                         </div>
                         <div class="mini-card">
                             <h4><i class="fa-solid fa-shield-heart"></i> Data aman</h4>

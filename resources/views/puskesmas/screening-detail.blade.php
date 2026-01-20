@@ -3,7 +3,9 @@
 @section('content')
     @php
         $answers = collect($screening->answers ?? []);
-        $positiveCount = $answers->filter(fn ($answer) => $answer === 'ya')->count();
+        $positiveCount = $answers
+            ->filter(fn ($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
+            ->count();
 
         if ($positiveCount >= 1) {
             $statusBadge = ['label' => 'Suspek TBC', 'class' => 'bg-gradient-danger'];

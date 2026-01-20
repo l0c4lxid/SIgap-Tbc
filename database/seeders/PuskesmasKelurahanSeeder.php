@@ -3,171 +3,149 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole;
+use App\Models\PatientScreening;
 use App\Models\User;
 use App\Models\UserDetail;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 class PuskesmasKelurahanSeeder extends Seeder
 {
     public function run(): void
     {
-        // Keep phone generation reproducible while still avoiding collisions.
-        mt_srand(20240608);
+        $kelurahan = $this->createUser(
+            [
+                'name' => 'Kelurahan Nusukan',
+                'phone' => '0401',
+                'role' => UserRole::Kelurahan,
+            ],
+            [
+                'organization' => 'Kelurahan Nusukan',
+                'address' => 'Jl. Mangga Raya, Nusukan, Banjarsari',
+                'notes' => 'Kelurahan binaan Puskesmas Nusukan',
+                'initial_password' => 'password123',
+            ]
+        );
 
-        $puskesmasCounter = 1;
-        $kelurahanCounter = 1;
-        $kaderPhonePool = range(1, 99);
-        shuffle($kaderPhonePool);
-
-        $puskesmasList = [
-            [
-                'name' => 'Puskesmas Pajang',
-                'kecamatan' => 'Laweyan',
-                'kelurahans' => ['Pajang', 'Sondakan', 'Laweyan', 'Karangasem'],
-            ],
-            [
-                'name' => 'Puskesmas Penumping',
-                'kecamatan' => 'Laweyan',
-                'kelurahans' => ['Penumping', 'Panularan', 'Sriwedari', 'Bumi'],
-            ],
-            [
-                'name' => 'Puskesmas Purwosari',
-                'kecamatan' => 'Laweyan',
-                'kelurahans' => ['Purwosari', 'Kerten', 'Jajar'],
-            ],
-            [
-                'name' => 'Puskesmas Jayengan',
-                'kecamatan' => 'Serengan',
-                'kelurahans' => ['Kemlayan', 'Jayengan', 'Tipes', 'Serengan'],
-            ],
-            [
-                'name' => 'Puskesmas Kratonan',
-                'kecamatan' => 'Serengan',
-                'kelurahans' => ['Danukusuman', 'Kratonan', 'Joyotakan'],
-            ],
-            [
-                'name' => 'Puskesmas Gajahan',
-                'kecamatan' => 'Pasar Kliwon',
-                'kelurahans' => ['Joyosuran', 'Pasar Kliwon', 'Gajahan', 'Baluwarti', 'Kauman', 'Kampung Baru'],
-            ],
-            [
-                'name' => 'Puskesmas Sangkrah',
-                'kecamatan' => 'Pasar Kliwon',
-                'kelurahans' => ['Sangkrah', 'Semanggi', 'Kedung Lumbu', 'Mojo'],
-            ],
-            [
-                'name' => 'Puskesmas Sibela',
-                'kecamatan' => 'Jebres',
-                'kelurahans' => ['Mojosongo'],
-            ],
-            [
-                'name' => 'Puskesmas Ngoresan',
-                'kecamatan' => 'Jebres',
-                'kelurahans' => ['Jebres'],
-            ],
-            [
-                'name' => 'Puskemas Purwodiningratan',
-                'kecamatan' => 'Jebres',
-                'kelurahans' => ['Sudiroprajan', 'Gandekan', 'Tegalharjo', 'Purwodiningratan', 'Kepatihan Wetan', 'Kepatihan Kulon'],
-            ],
-            [
-                'name' => 'Puskesmas Pucangsawit',
-                'kecamatan' => 'Jebres',
-                'kelurahans' => ['Jagalan', 'Pucangsawit', 'Sewu'],
-            ],
-            [
-                'name' => 'Puskesmas Gilingan',
-                'kecamatan' => 'Banjarsari',
-                'kelurahans' => ['Gilingan', 'Ketelan', 'Punggawan'],
-            ],
-            [
-                'name' => 'Puskesmas Gambirsari',
-                'kecamatan' => 'Banjarsari',
-                'kelurahans' => ['Kadipiro', 'Banjarsari', 'Joglo'],
-            ],
-            [
-                'name' => 'Puskesmas Setabelan',
-                'kecamatan' => 'Banjarsari',
-                'kelurahans' => ['Setabelan', 'Keprabon', 'Ketalan', 'Timuran'],
-            ],
-            [
-                'name' => 'Puskesmas Banyuanyar',
-                'kecamatan' => 'Banjarsari',
-                'kelurahans' => ['Banyuanyar', 'Sumber'],
-            ],
-            [
-                'name' => 'Puskesmas Manahan',
-                'kecamatan' => 'Banjarsari',
-                'kelurahans' => ['Manahan', 'Mangkubumen'],
-            ],
+        $puskesmas = $this->createUser(
             [
                 'name' => 'Puskesmas Nusukan',
-                'kecamatan' => 'Banjarsari',
-                'kelurahans' => ['Nusukan'],
+                'phone' => '0301',
+                'role' => UserRole::Puskesmas,
             ],
+            [
+                'organization' => 'Puskesmas Nusukan',
+                'address' => 'Jl. Nusukan Raya No.12, Nusukan',
+                'notes' => 'Wilayah kerja Kelurahan Nusukan',
+                'supervisor_id' => $kelurahan->id,
+                'initial_password' => 'password123',
+            ]
+        );
+
+        $kelurahan->detail()->update(['supervisor_id' => $puskesmas->id]);
+
+        $rwConfig = [
+            1 => 5,
+            2 => 4,
+            3 => 6,
+            4 => 6,
+            5 => 5,
+            6 => 3,
+            7 => 9,
+            8 => 6,
+            9 => 7,
+            10 => 5,
+            11 => 6,
+            12 => 5,
+            13 => 8,
+            14 => 8,
+            15 => 7,
+            16 => 8,
+            17 => 5,
+            18 => 8,
+            19 => 3,
+            20 => 4,
+            21 => 7,
+            22 => 5,
+            23 => 8,
+            24 => 6,
         ];
 
-        foreach ($puskesmasList as $puskesmasData) {
-            $kelurahanUsers = [];
+        $firstNames = ['Siti', 'Budi', 'Rina', 'Agus', 'Dewi', 'Rudi', 'Nina', 'Bagus', 'Eka', 'Lilis'];
+        $lastNames = ['Santoso', 'Wulandari', 'Prasetyo', 'Utami', 'Wijaya', 'Saputra', 'Lestari', 'Hidayat'];
+        $birthPlaces = ['Surakarta', 'Boyolali', 'Klaten', 'Sukoharjo', 'Karanganyar'];
+        $phoneCounter = 1;
+        $nikCounter = 1;
 
-            foreach ($puskesmasData['kelurahans'] as $kelurahan) {
-                $kelurahanUsers[] = $this->createUser(
+        foreach ($rwConfig as $rwNumber => $rtMax) {
+            $rwCode = sprintf('%02d', $rwNumber);
+
+            for ($kaderIndex = 1; $kaderIndex <= 2; $kaderIndex++) {
+                $kader = $this->createUser(
                     [
-                        'name' => "Kelurahan {$kelurahan}",
-                        'phone' => sprintf('04%02d', $kelurahanCounter),
-                        'role' => UserRole::Kelurahan,
+                        'name' => "Kader RW {$rwCode} - {$kaderIndex}",
+                        'phone' => sprintf('02%02d%02d', $rwNumber, $kaderIndex),
+                        'role' => UserRole::Kader,
                     ],
                     [
-                        'organization' => "Kelurahan {$kelurahan}",
-                        'notes' => "Wilayah kerja {$puskesmasData['name']}",
+                        'organization' => 'Puskesmas Nusukan',
+                        'address' => "Kelurahan Nusukan RW {$rwCode}, Banjarsari",
+                        'notes' => "Kader wilayah RW {$rwCode}",
+                        'supervisor_id' => $puskesmas->id,
                         'initial_password' => 'password123',
                     ]
                 );
 
-                $kelurahanCounter++;
+                for ($i = 1; $i <= 5; $i++) {
+                    $rtNumber = ($i % $rtMax) + 1;
+                    $rtCode = sprintf('%02d', $rtNumber);
+                    $name = $firstNames[array_rand($firstNames)] . ' ' . $lastNames[array_rand($lastNames)];
+                    $birthDate = Carbon::parse(now()->subYears(rand(18, 72))->subDays(rand(0, 364))->format('Y-m-d'));
+                    $age = $birthDate->age;
+                    $gender = rand(0, 1) ? 'L' : 'P';
+                    $isWni = true;
+
+                    $answers = [
+                        'riwayat_kontak_tbc' => rand(0, 1) ? 'ya' : 'tidak',
+                        'sakit_tbc' => rand(0, 1) ? 'ya' : 'tidak',
+                        'kekurangan_gizi' => rand(0, 1) ? 'ya' : 'tidak',
+                        'merokok' => rand(0, 1) ? 'ya' : 'tidak',
+                        'perokok_pasif' => rand(0, 1) ? 'ya' : 'tidak',
+                        'kencing_manis' => rand(0, 1) ? 'ya' : 'tidak',
+                        'hiv' => rand(0, 1) ? 'ya' : 'tidak',
+                        'lansia' => $age > 65 ? 'ya' : 'tidak',
+                        'warga_binaan' => rand(0, 1) ? 'ya' : 'tidak',
+                        'wilayah_miskin' => rand(0, 1) ? 'ya' : 'tidak',
+                        'gejala_batuk' => rand(0, 1) ? 'ya' : 'tidak',
+                        'gejala_bb_turun' => rand(0, 1) ? 'ya' : 'tidak',
+                        'gejala_demam_hilang_timbul' => rand(0, 1) ? 'ya' : 'tidak',
+                        'gejala_berkeringat_malam' => rand(0, 1) ? 'ya' : 'tidak',
+                        'gejala_kelenjar' => rand(0, 1) ? 'ya' : 'tidak',
+                    ];
+
+                    PatientScreening::create([
+                        'kader_id' => $kader->id,
+                        'patient_is_wni' => $isWni,
+                        'patient_name' => $name,
+                        'patient_nik' => sprintf('337201%010d', $nikCounter++),
+                        'patient_phone' => sprintf('08121001%04d', $phoneCounter++),
+                        'patient_address' => "RT {$rtCode} / RW {$rwCode}, Nusukan",
+                        'patient_gender' => $gender,
+                        'patient_birth_place' => $birthPlaces[array_rand($birthPlaces)],
+                        'patient_birth_date' => $birthDate->format('Y-m-d'),
+                        'patient_age' => $age,
+                        'patient_address_ktp' => "RT {$rtCode} / RW {$rwCode}, Nusukan, Banjarsari",
+                        'patient_address_domisili' => "RT {$rtCode} / RW {$rwCode}, Nusukan, Banjarsari",
+                        'patient_address_rt' => $rtCode,
+                        'patient_address_rw' => $rwCode,
+                        'patient_address_kelurahan' => 'Nusukan',
+                        'patient_weight' => rand(45, 80),
+                        'patient_height' => rand(150, 180),
+                        'answers' => $answers,
+                    ]);
+                }
             }
-
-            $pembinaKelurahanId = $kelurahanUsers[0]->id ?? null;
-
-            $puskesmasUser = $this->createUser(
-                [
-                    'name' => $puskesmasData['name'],
-                    'phone' => sprintf('03%02d', $puskesmasCounter),
-                    'role' => UserRole::Puskesmas,
-                ],
-                [
-                    'organization' => $puskesmasData['name'],
-                    'notes' => "Kecamatan {$puskesmasData['kecamatan']}",
-                    'supervisor_id' => $pembinaKelurahanId,
-                    'initial_password' => 'password123',
-                ]
-            );
-
-            $kaderPhoneSuffix = array_pop($kaderPhonePool);
-            $primaryKelurahan = $puskesmasData['kelurahans'][0] ?? $puskesmasData['kecamatan'];
-
-            $kaderUser = $this->createUser(
-                [
-                    'name' => "Kader {$puskesmasData['name']}",
-                    'phone' => sprintf('02%02d', $kaderPhoneSuffix),
-                    'role' => UserRole::Kader,
-                ],
-                [
-                    'organization' => $puskesmasData['name'],
-                    'address' => "Kelurahan {$primaryKelurahan}, Kecamatan {$puskesmasData['kecamatan']}",
-                    'notes' => "Kader wilayah {$primaryKelurahan}",
-                    'supervisor_id' => $puskesmasUser->id,
-                    'initial_password' => 'password123',
-                ]
-            );
-
-            $puskesmasCounter++;
-
-            foreach ($kelurahanUsers as $kelurahanUser) {
-                $kelurahanUser->detail()->update(['supervisor_id' => $puskesmasUser->id]);
-            }
-
         }
     }
 

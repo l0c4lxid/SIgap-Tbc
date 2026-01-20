@@ -13,6 +13,9 @@
                         <a href="{{ route('kader.screening.create') }}" class="btn btn-sm btn-primary">
                             <i class="fa-solid fa-plus me-1"></i>Tambah Skrining
                         </a>
+                        <a href="{{ route('kader.screening.export.excel') }}" class="btn btn-sm btn-outline-success">
+                            <i class="fa-solid fa-file-excel me-1"></i>Export Excel
+                        </a>
                         <form method="GET" action="{{ route('kader.screening.index') }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
                             <div class="input-group input-group-sm" style="min-width: 240px;">
                                 <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
@@ -30,10 +33,9 @@
                                     <th class="text-center" style="width:60px;">No.</th>
                                     <th>Pasien</th>
                                     <th>NIK</th>
-                                    <th>Nomor HP</th>
-                                    <th>Alamat</th>
                                     <th class="text-center">Jawaban Ya</th>
                                     <th class="text-center">Waktu</th>
+                                    <th class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -42,29 +44,35 @@
                                 @endphp
                                 @forelse ($screenings as $screening)
                                     @php
-                                        $positive = collect($screening->answers ?? [])->filter(fn ($ans) => $ans === 'ya')->count();
+                                        $positive = collect($screening->answers ?? [])
+                                            ->filter(fn ($ans, $key) => str_starts_with((string) $key, 'gejala_') && $ans === 'ya')
+                                            ->count();
                                     @endphp
                                     <tr>
                                         <td class="text-center fw-semibold">{{ $firstNumber ? $firstNumber + $loop->index : $loop->iteration }}</td>
                                         <td>
-                                            <h6 class="mb-0 text-sm">{{ $screening->patient_name ?? '-' }}</h6>
+                                            <h6 class="mb-0 text-sm">
+                                                <a href="{{ route('kader.screening.show', $screening) }}" class="text-decoration-none">
+                                                    {{ $screening->patient_name ?? '-' }}
+                                                </a>
+                                            </h6>
                                         </td>
                                         <td class="text-sm text-muted">{{ $screening->patient_nik ?? '-' }}</td>
-                                        <td class="text-sm text-muted">{{ $screening->patient_phone ?? '-' }}</td>
-                                        <td class="text-sm text-muted">
-                                            {{ $screening->patient_address_domisili ?? $screening->patient_address ?? '-' }}
-                                            <div class="text-xxs text-muted">RT/RW {{ $screening->patient_address_rt ?? '-' }}/{{ $screening->patient_address_rw ?? '-' }} • {{ $screening->patient_address_kelurahan ?? '-' }}</div>
-                                        </td>
                                         <td class="text-center">
                                             <span class="badge bg-gradient-{{ $positive ? 'danger' : 'success' }}">{{ $positive }}</span>
                                         </td>
                                         <td class="text-center text-sm text-muted">
                                             {{ $screening->created_at->format('d M Y H:i') }}
                                         </td>
+                                        <td class="text-center">
+                                            <a href="{{ route('kader.screening.show', $screening) }}" class="btn btn-sm btn-outline-primary">
+                                                Detail
+                                            </a>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">Belum ada skrining tercatat.</td>
+                                        <td colspan="8" class="text-center text-muted">Belum ada skrining tercatat.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

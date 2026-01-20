@@ -98,6 +98,17 @@ body {
         flex-wrap: wrap;
         gap: 0.5rem;
     }
+
+    .g-sidenav-show .main-content .container-fluid {
+        padding: 0.85rem !important;
+    }
+
+    .soft-content-shell {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.98));
+        border-radius: 20px;
+        padding: 1rem;
+        box-shadow: var(--sigap-shadow-soft);
+    }
 }
 
 @media (max-width: 767.98px) {
@@ -130,6 +141,101 @@ body {
 .container-fluid {
     position: relative;
     z-index: 2;
+}
+
+.soft-content-shell {
+    flex: 1;
+}
+
+.rw-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(79, 70, 229, 0.08));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.rw-filter .form-select {
+    min-width: 140px;
+    border: none;
+    background-color: transparent;
+    padding-left: 0.4rem;
+    padding-right: 1.6rem;
+    font-weight: 600;
+    color: var(--sigap-heading);
+    box-shadow: none;
+}
+
+.rw-filter .form-select:focus {
+    box-shadow: none;
+}
+
+.rw-filter label {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 14px;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.detail-item--wide {
+    grid-column: span 2;
+}
+
+.detail-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--sigap-muted);
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--sigap-heading);
+}
+
+@media (max-width: 991.98px) {
+    .detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0.85rem;
+    }
+
+    .detail-item--wide {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .detail-grid {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 0.75rem;
+    }
+
+    .detail-item--wide {
+        grid-column: span 1;
+    }
 }
 
 .card {

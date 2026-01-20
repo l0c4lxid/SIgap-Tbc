@@ -50,7 +50,55 @@
         @endforeach
     </div>
 
-    @if ($dashboardCharts && count($dashboardCharts['screening'] ?? []))
+    @if ($user->role === \App\Enums\UserRole::Kelurahan && $dashboardCharts && count($dashboardCharts['daily_screening'] ?? []))
+        <div class="row g-4">
+            <div class="col-12 col-xl-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Skrining Harian</h6>
+                        <p class="text-sm text-muted mb-0">Rincian per hari bulan {{ $dashboardCharts['period_label'] ?? now()->format('M Y') }}.</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="dailyScreeningChart" height="260"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Kader dengan Skrining Terbanyak</h6>
+                        <p class="text-sm text-muted mb-0">Urutan kader berdasarkan jumlah input bulan ini.</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="kaderScreeningChart" height="260"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @if (count($dashboardCharts['rw_split'] ?? []))
+            <div class="row g-4 mt-1">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Persebaran Skrining per RW</h6>
+                                <p class="text-sm text-muted mb-0">Suspek vs tidak suspek per RW bulan {{ $dashboardCharts['period_label'] ?? now()->format('M Y') }}.</p>
+                            </div>
+                            <div class="rw-filter align-items-center gap-2">
+                                <label class="text-xs text-muted mb-0" for="rwSelect">Filter RW</label>
+                                <select id="rwSelect" class="form-select form-select-sm">
+                                    <option value="all">Semua RW</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="kaderRtRwChart" height="420"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @elseif ($dashboardCharts && count($dashboardCharts['screening'] ?? []))
         <div class="row g-4">
             <div class="col-12 col-xl-6">
                 <div class="card shadow-sm border-0 h-100">
@@ -70,7 +118,7 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header">
                         <h6 class="mb-0">Kasus Suspek TBC</h6>
-                        <p class="text-sm text-muted mb-0">Jumlah pasien indicasi ≥ 1 jawaban "Ya" per bulan.</p>
+                        <p class="text-sm text-muted mb-0">Perbandingan suspek vs tidak suspek per bulan.</p>
                     </div>
                     <div class="card-body">
                         <canvas id="pemdaTbcChart" height="260"></canvas>
@@ -78,20 +126,11 @@
                 </div>
             </div>
         </div>
-        <div class="row g-4">
-            <div class="col-12 col-xl-6">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header">
-                        <h6 class="mb-0">Suspek vs Non Suspek</h6>
-                        <p class="text-sm text-muted mb-0">Distribusi hasil skrining (≥1 "Ya" dianggap suspek).</p>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="suspectSplitChart" height="260"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
     @endif
+
+    @php
+        $recentIsPaginator = $recentScreenings instanceof \Illuminate\Contracts\Pagination\Paginator;
+    @endphp
 
     @if ($recentScreenings && $recentScreenings->count())
         <div class="row mt-4">
@@ -99,62 +138,105 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-header d-flex flex-wrap justify-content-between align-items-center pb-0">
                         <div>
-                            <h6 class="mb-0">Aktivitas Skrining Terbaru</h6>
-                            <p class="text-sm text-muted mb-0">Pantau laporan skrining yang masuk dari kader.</p>
+                            <h6 class="mb-0">
+                                {{ $user->role === \App\Enums\UserRole::Kelurahan ? 'Kader Terakhir Input' : 'Aktivitas Skrining Terbaru' }}
+                            </h6>
+                            <p class="text-sm text-muted mb-0">
+                                {{ $user->role === \App\Enums\UserRole::Kelurahan ? '3 kader terakhir yang menginput skrining.' : 'Pantau laporan skrining yang masuk dari kader.' }}
+                            </p>
                         </div>
-                        <span class="badge bg-gradient-primary text-white">{{ $recentScreenings->total() }} total</span>
+                        <span class="badge bg-gradient-primary text-white">
+                            {{ $recentIsPaginator ? $recentScreenings->total() : $recentScreenings->count() }} total
+                        </span>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table align-items-center mb-0">
+                            <table class="table align-items-center table-hover mb-0">
                                 <thead>
                                     <tr>
+                                        @if ($user->role === \App\Enums\UserRole::Kelurahan)
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Kader</th>
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Kontak</th>
+                                            <th
+                                                class="text-end text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                Waktu</th>
+                                        @else
                                             <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Pasien</th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Kader</th>
-                                        <th
-                                            class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                                            Jawaban Ya</th>
-                                        <th
-                                            class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                                            Waktu</th>
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Kader</th>
+                                            <th
+                                                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                Jawaban Ya</th>
+                                            <th
+                                                class="text-end text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                                Waktu</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($recentScreenings as $screening)
                                         @php
-                                            $positiveCount = collect($screening->answers ?? [])->filter(fn($answer) => $answer === 'ya')->count();
+                                            $positiveCount = collect($screening->answers ?? [])
+                                                ->filter(fn($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
+                                                ->count();
                                         @endphp
                                         <tr>
-                                            <td>
+                                            @if ($user->role === \App\Enums\UserRole::Kelurahan)
+                                                <td>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="text-sm fw-semibold">{{ $screening->kader->name ?? 'Mandiri' }}</span>
+                                                        <span class="text-xs text-muted">{{ $screening->kader->detail->organization ?? '-' }}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="text-sm">{{ $screening->kader->phone ?? '-' }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="text-xs text-muted">{{ $screening->created_at->format('d M Y') }}</span>
+                                                    <div class="text-xs text-muted">{{ $screening->created_at->format('H:i') }}</div>
+                                                </td>
+                                            @else
+                                                <td>
                                                 <div class="d-flex flex-column">
-                                                    <span class="text-sm fw-semibold">{{ $screening->patient_name }}</span>
+                                                    @if ($user->role === \App\Enums\UserRole::Kader)
+                                                        <a href="{{ route('kader.screening.show', $screening) }}" class="text-sm fw-semibold text-decoration-none">
+                                                            {{ $screening->patient_name }}
+                                                        </a>
+                                                    @else
+                                                        <span class="text-sm fw-semibold">{{ $screening->patient_name }}</span>
+                                                    @endif
                                                     <span
                                                         class="text-xs text-muted">{{ $screening->patient_address_domisili ?? $screening->patient_address ?? '-' }}</span>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-sm">{{ $screening->kader->name ?? 'Mandiri' }}</span>
-                                                    <span class="text-xs text-muted">{{ $screening->kader->phone ?? '-' }}</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <span
-                                                    class="badge bg-gradient-{{ $positiveCount ? 'danger' : 'success' }}">{{ $positiveCount }}</span>
-                                            </td>
-                                            <td class="text-center">
-                                                <span
-                                                    class="text-xs text-muted">{{ $screening->created_at->format('d M Y H:i') }}</span>
-                                            </td>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="text-sm">{{ $screening->kader->name ?? 'Mandiri' }}</span>
+                                                        <span class="text-xs text-muted">{{ $screening->kader->phone ?? '-' }}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span
+                                                        class="badge bg-gradient-{{ $positiveCount ? 'danger' : 'success' }}">{{ $positiveCount }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="text-xs text-muted">{{ $screening->created_at->format('d M Y') }}</span>
+                                                    <div class="text-xs text-muted">{{ $screening->created_at->format('H:i') }}</div>
+                                                </td>
+                                            @endif
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">
-                            {{ $recentScreenings->links() }}
-                        </div>
+                        @if ($recentIsPaginator)
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                                <span class="text-xs text-muted">
+                                    Menampilkan {{ $recentScreenings->firstItem() ?? 0 }}-{{ $recentScreenings->lastItem() ?? 0 }}
+                                    dari {{ $recentScreenings->total() }} data
+                                </span>
+                                {{ $recentScreenings->onEachSide(1)->links('pagination::bootstrap-5') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -174,7 +256,187 @@
 @endsection
 
 @push('scripts')
-    @if ($dashboardCharts && count($dashboardCharts['screening'] ?? []))
+    @if ($user->role === \App\Enums\UserRole::Kelurahan && $dashboardCharts && count($dashboardCharts['daily_screening'] ?? []))
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const dailyDataset = @json($dashboardCharts['daily_screening'] ?? []);
+                const kaderDataset = @json($dashboardCharts['kader_screening'] ?? []);
+                const rwDataset = @json($dashboardCharts['rw_split'] ?? []);
+                const rtDatasetByRw = @json($dashboardCharts['rt_split'] ?? []);
+
+                const dailyCtx = document.getElementById('dailyScreeningChart');
+                if (dailyCtx && dailyDataset.length) {
+                    const dailyValues = dailyDataset.map(item => item.value);
+                    const dailyMax = Math.max(...dailyValues, 0);
+                    const dailyStep = dailyMax <= 10 ? 1 : (dailyMax <= 50 ? 5 : (dailyMax <= 100 ? 10 : 50));
+                    const dailySuggestedMax = dailyStep ? Math.ceil(dailyMax / dailyStep) * dailyStep : dailyMax;
+
+                    new Chart(dailyCtx, {
+                        type: 'line',
+                        data: {
+                            labels: dailyDataset.map(item => item.label),
+                            datasets: [{
+                                label: 'Jumlah Skrining',
+                                data: dailyDataset.map(item => item.value),
+                                backgroundColor: 'rgba(25, 135, 84, 0.2)',
+                                borderColor: 'rgba(25, 135, 84, 0.85)',
+                                borderWidth: 2,
+                                tension: 0.3,
+                                fill: true,
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                            }],
+                        },
+                        plugins: [ChartDataLabels],
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    suggestedMax: dailySuggestedMax || undefined,
+                                    title: {
+                                        display: true,
+                                        text: 'Jumlah Skrining',
+                                    },
+                                    ticks: {
+                                        stepSize: dailyStep || undefined,
+                                        precision: 0,
+                                    },
+                                },
+                            },
+                            plugins: {
+                                datalabels: {
+                                    align: 'left',
+                                    anchor: 'center',
+                                    offset: 6,
+                                    color: '#198754',
+                                    font: { weight: '600', size: 10 },
+                                    formatter: (value) => (value ? value : ''),
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => `Jumlah: ${context.parsed.y}`,
+                                    },
+                                },
+                            },
+                        },
+                    });
+                }
+
+                const kaderCtx = document.getElementById('kaderScreeningChart');
+                if (kaderCtx && kaderDataset.length) {
+                    new Chart(kaderCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: kaderDataset.map(item => item.label),
+                            datasets: [{
+                                label: 'Jumlah Skrining',
+                                data: kaderDataset.map(item => item.value),
+                                backgroundColor: 'rgba(13, 110, 253, 0.65)',
+                                borderRadius: 6,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { boxWidth: 12 },
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => `${context.dataset.label}: ${context.parsed.y ?? context.parsed}`,
+                                    },
+                                },
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { precision: 0 },
+                                },
+                            },
+                        },
+                    });
+                }
+
+                const kaderRtRwCtx = document.getElementById('kaderRtRwChart');
+                if (kaderRtRwCtx && rwDataset.length) {
+                    const rwSelect = document.getElementById('rwSelect');
+                    if (rwSelect) {
+                        rwDataset.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.rw;
+                            option.textContent = item.label;
+                            rwSelect.appendChild(option);
+                        });
+                    }
+
+                    const buildChartData = (data) => ({
+                        labels: data.map(item => item.label),
+                        datasets: [
+                            {
+                                label: 'Suspek',
+                                data: data.map(item => item.suspect),
+                                backgroundColor: 'rgba(220, 53, 69, 0.75)',
+                            },
+                            {
+                                label: 'Tidak Suspek',
+                                data: data.map(item => item.non_suspect),
+                                backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                            },
+                        ],
+                    });
+
+                    const rwChart = new Chart(kaderRtRwCtx, {
+                        type: 'bar',
+                        data: buildChartData(rwDataset),
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: {
+                                x: { beginAtZero: true, stacked: true, ticks: { precision: 0 } },
+                                y: {
+                                    stacked: true,
+                                    ticks: { autoSkip: false },
+                                },
+                            },
+                            plugins: {
+                                legend: { position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => `${context.dataset.label}: ${context.parsed.x}`,
+                                    },
+                                },
+                            },
+                            datasets: {
+                                bar: {
+                                    barThickness: 12,
+                                    maxBarThickness: 14,
+                                    categoryPercentage: 0.7,
+                                    barPercentage: 0.8,
+                                },
+                            },
+                        },
+                    });
+
+                    if (rwSelect) {
+                        rwSelect.addEventListener('change', (event) => {
+                            const selected = event.target.value;
+                            const nextData = selected === 'all'
+                                ? rwDataset
+                                : (rtDatasetByRw[selected] ?? []);
+                            rwChart.data = buildChartData(nextData);
+                            rwChart.options.scales.y = { stacked: true };
+                            rwChart.update();
+                        });
+                    }
+                }
+            });
+        </script>
+    @elseif ($dashboardCharts && count($dashboardCharts['screening'] ?? []))
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -208,31 +470,8 @@
                 }
 
                 const tbcCtx = document.getElementById('pemdaTbcChart');
-                if (tbcCtx && tbcDataset.length) {
+                if (tbcCtx && suspectSplitDataset.length) {
                     new Chart(tbcCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: tbcDataset.map(item => item.label),
-                            datasets: [{
-                                label: 'Kasus Suspek',
-                                data: tbcDataset.map(item => item.value),
-                                backgroundColor: 'rgba(220, 53, 69, 0.6)',
-                                borderColor: 'rgba(220, 53, 69, 1)',
-                                borderWidth: 1,
-                            }],
-                        },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                y: { beginAtZero: true },
-                            },
-                        },
-                    });
-                }
-
-                const suspectCtx = document.getElementById('suspectSplitChart');
-                if (suspectCtx && suspectSplitDataset.length) {
-                    new Chart(suspectCtx, {
                         type: 'bar',
                         data: {
                             labels: suspectSplitDataset.map(item => item.label),
@@ -243,7 +482,7 @@
                                     backgroundColor: 'rgba(220, 53, 69, 0.75)',
                                 },
                                 {
-                                    label: 'Non Suspek',
+                                    label: 'Tidak Suspek',
                                     data: suspectSplitDataset.map(item => item.non_suspect),
                                     backgroundColor: 'rgba(54, 162, 235, 0.75)',
                                 },
@@ -258,6 +497,7 @@
                         },
                     });
                 }
+
             });
         </script>
     @endif

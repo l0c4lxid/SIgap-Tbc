@@ -168,7 +168,9 @@ class MonitoringController extends Controller
             ->count();
 
         $suspectCount = $screenings->filter(function ($screening) {
-            $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+            $positive = collect($screening->answers ?? [])
+                ->filter(fn($ans, $key) => str_starts_with((string) $key, 'gejala_') && $ans === 'ya')
+                ->count();
             return $positive >= 1;
         })->count();
 

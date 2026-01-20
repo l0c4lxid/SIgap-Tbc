@@ -6,6 +6,11 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\PatientScreening;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class ScreeningController extends Controller
 {
@@ -44,26 +49,11 @@ class ScreeningController extends Controller
     {
         abort_if($request->user()->role !== UserRole::Kader, 403);
 
-        $questions = [
-            'riwayat_kontak_tbc' => 'Apakah pernah kontak erat dengan pasien TBC?',
-            'sakit_tbc' => 'Apakah pernah didiagnosis TBC sebelumnya?',
-            'kekurangan_gizi' => 'Apakah memiliki riwayat kekurangan gizi?',
-            'merokok' => 'Apakah saat ini merokok?',
-            'perokok_pasif' => 'Apakah sering terpapar asap rokok (perokok pasif)?',
-            'kencing_manis' => 'Apakah memiliki riwayat diabetes/kencing manis?',
-            'hiv' => 'Apakah memiliki riwayat HIV?',
-            'lansia' => 'Apakah berusia > 65 tahun (lansia)?',
-            'warga_binaan' => 'Apakah termasuk warga binaan?',
-            'wilayah_miskin' => 'Apakah tinggal di wilayah miskin/rentan?',
-            'gejala_batuk' => 'Apakah mengalami batuk?',
-            'gejala_bb_turun' => 'Apakah mengalami penurunan berat badan?',
-            'gejala_demam_hilang_timbul' => 'Apakah mengalami demam hilang timbul?',
-            'gejala_berkeringat_malam' => 'Apakah berkeringat pada malam hari?',
-            'gejala_kelenjar' => 'Apakah ada pembesaran kelenjar getah bening?',
-        ];
+        [$riskQuestions, $symptomQuestions] = $this->questionSets();
 
         return view('kader.screening-create', [
-            'questions' => $questions,
+            'riskQuestions' => $riskQuestions,
+            'symptomQuestions' => $symptomQuestions,
         ]);
     }
 
@@ -71,53 +61,14 @@ class ScreeningController extends Controller
     {
         abort_if($request->user()->role !== UserRole::Kader, 403);
 
-        $questions = [
-            'riwayat_kontak_tbc' => 'Apakah pernah kontak erat dengan pasien TBC?',
-            'sakit_tbc' => 'Apakah pernah didiagnosis TBC sebelumnya?',
-            'kekurangan_gizi' => 'Apakah memiliki riwayat kekurangan gizi?',
-            'merokok' => 'Apakah saat ini merokok?',
-            'perokok_pasif' => 'Apakah sering terpapar asap rokok (perokok pasif)?',
-            'kencing_manis' => 'Apakah memiliki riwayat diabetes/kencing manis?',
-            'hiv' => 'Apakah memiliki riwayat HIV?',
-            'lansia' => 'Apakah berusia > 65 tahun (lansia)?',
-            'warga_binaan' => 'Apakah termasuk warga binaan?',
-            'wilayah_miskin' => 'Apakah tinggal di wilayah miskin/rentan?',
-            'gejala_batuk' => 'Apakah mengalami batuk?',
-            'gejala_bb_turun' => 'Apakah mengalami penurunan berat badan?',
-            'gejala_demam_hilang_timbul' => 'Apakah mengalami demam hilang timbul?',
-            'gejala_berkeringat_malam' => 'Apakah berkeringat pada malam hari?',
-            'gejala_kelenjar' => 'Apakah ada pembesaran kelenjar getah bening?',
-        ];
+        [$riskQuestions, $symptomQuestions] = $this->questionSets();
+        $questions = $riskQuestions + $symptomQuestions;
 
-        $rules = [
-            'patient_is_wni' => ['required', 'boolean'],
-            'patient_name' => ['required', 'string', 'max:255'],
-            'patient_nik' => ['nullable', 'string', 'max:30', 'required_if:patient_is_wni,1'],
-            'patient_phone' => ['nullable', 'string', 'max:25'],
-            'patient_gender' => ['required', 'string', 'max:20'],
-            'patient_birth_place' => ['required', 'string', 'max:255'],
-            'patient_birth_date' => ['required', 'date'],
-            'patient_age' => ['required', 'integer', 'min:0', 'max:150'],
-            'patient_address_ktp' => ['required', 'string', 'max:255'],
-            'patient_address_domisili' => ['required', 'string', 'max:255'],
-            'patient_address_rt' => ['required', 'string', 'max:5'],
-            'patient_address_rw' => ['required', 'string', 'max:5'],
-            'patient_address_kelurahan' => ['required', 'string', 'max:100'],
-            'patient_weight' => ['required', 'numeric', 'min:0'],
-            'patient_height' => ['required', 'numeric', 'min:0'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ];
-
-        foreach ($questions as $key => $label) {
-            $rules[$key] = ['required', 'in:ya,tidak'];
-        }
+        $rules = $this->buildRules($questions);
 
         $validated = $request->validate($rules);
 
-        $answers = collect($questions)
-            ->keys()
-            ->mapWithKeys(fn($key) => [$key => $validated[$key]])
-            ->toArray();
+        $answers = $this->buildAnswers($questions, $validated);
 
         PatientScreening::create([
             'kader_id' => $request->user()->id,
@@ -138,9 +89,248 @@ class ScreeningController extends Controller
             'patient_weight' => $validated['patient_weight'],
             'patient_height' => $validated['patient_height'],
             'answers' => $answers,
-            'notes' => $validated['notes'] ?? null,
         ]);
 
         return redirect()->route('kader.screening.index')->with('status', 'Skrining pasien telah dicatat.');
+    }
+
+    public function show(Request $request, PatientScreening $screening)
+    {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+        abort_if($screening->kader_id !== $request->user()->id, 403);
+
+        [$riskQuestions, $symptomQuestions] = $this->questionSets();
+
+        return view('kader.screening-detail', [
+            'screening' => $screening,
+            'riskQuestions' => $riskQuestions,
+            'symptomQuestions' => $symptomQuestions,
+            'isEdit' => $request->boolean('edit'),
+        ]);
+    }
+
+    public function update(Request $request, PatientScreening $screening)
+    {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+        abort_if($screening->kader_id !== $request->user()->id, 403);
+
+        [$riskQuestions, $symptomQuestions] = $this->questionSets();
+        $questions = $riskQuestions + $symptomQuestions;
+
+        $validated = $request->validate($this->buildRules($questions));
+        $answers = $this->buildAnswers($questions, $validated);
+
+        $screening->update([
+            'patient_is_wni' => (bool) $validated['patient_is_wni'],
+            'patient_name' => $validated['patient_name'],
+            'patient_nik' => $validated['patient_nik'] ?? null,
+            'patient_phone' => $validated['patient_phone'] ?? null,
+            'patient_address' => $validated['patient_address_domisili'],
+            'patient_gender' => $validated['patient_gender'],
+            'patient_birth_place' => $validated['patient_birth_place'],
+            'patient_birth_date' => $validated['patient_birth_date'],
+            'patient_age' => $validated['patient_age'],
+            'patient_address_ktp' => $validated['patient_address_ktp'],
+            'patient_address_domisili' => $validated['patient_address_domisili'],
+            'patient_address_rt' => $validated['patient_address_rt'],
+            'patient_address_rw' => $validated['patient_address_rw'],
+            'patient_address_kelurahan' => $validated['patient_address_kelurahan'],
+            'patient_weight' => $validated['patient_weight'],
+            'patient_height' => $validated['patient_height'],
+            'answers' => $answers,
+        ]);
+
+        return redirect()
+            ->route('kader.screening.show', $screening)
+            ->with('status', 'Skrining pasien telah diperbarui.');
+    }
+
+    public function destroy(Request $request, PatientScreening $screening)
+    {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+        abort_if($screening->kader_id !== $request->user()->id, 403);
+
+        $screening->delete();
+
+        return redirect()->route('kader.screening.index')->with('status', 'Skrining pasien telah dihapus.');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        abort_if($request->user()->role !== UserRole::Kader, 403);
+
+        $questionLabels = [
+            'riwayat_kontak_tbc' => 'Riwayat Kontak TBC',
+            'sakit_tbc' => 'Pernah Diagnosis TBC',
+            'kekurangan_gizi' => 'Kekurangan Gizi',
+            'merokok' => 'Merokok',
+            'perokok_pasif' => 'Perokok Pasif',
+            'kencing_manis' => 'Kencing Manis',
+            'hiv' => 'HIV',
+            'lansia' => 'Lansia (>65 Tahun)',
+            'warga_binaan' => 'Warga Binaan',
+            'wilayah_miskin' => 'Wilayah Miskin/Rentan',
+            'gejala_batuk' => 'Gejala - Batuk',
+            'gejala_bb_turun' => 'Gejala - BB Turun',
+            'gejala_demam_hilang_timbul' => 'Gejala - Demam Hilang Timbul',
+            'gejala_berkeringat_malam' => 'Gejala - Berkeringat Malam',
+            'gejala_kelenjar' => 'Gejala - Pembesaran Kelenjar',
+        ];
+
+        $screenings = PatientScreening::query()
+            ->where('kader_id', $request->user()->id)
+            ->orderBy('patient_address_kelurahan')
+            ->orderBy('patient_address_rw')
+            ->orderBy('patient_address_rt')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $export = new class($screenings, $questionLabels, $request->user()->name) implements FromCollection, WithHeadings, WithColumnFormatting {
+            public function __construct(private $screenings, private $questionLabels, private $kaderName)
+            {
+            }
+
+            public function collection()
+            {
+                return $this->screenings->values()->map(function ($screening, $index) {
+                    $answers = $screening->answers ?? [];
+                    $getAnswer = function ($key) use ($answers) {
+                        $value = $answers[$key] ?? null;
+                        return $value === 'ya' ? 'Ya' : ($value === 'tidak' ? 'Tidak' : ($value ?? '-'));
+                    };
+
+                    $asText = fn($value) => ($value === null || $value === '') ? '-' : "'" . $value;
+
+                    $row = [
+                        'No' => $index + 1,
+                        'Nama' => $screening->patient_name ?? '-',
+                        'WNI' => $screening->patient_is_wni ? 'Ya' : 'Tidak',
+                        'NIK' => $asText($screening->patient_nik),
+                        'Nomor HP' => $asText($screening->patient_phone),
+                        'Alamat' => $screening->patient_address ?? '-',
+                        'Jenis Kelamin' => $screening->patient_gender ?? '-',
+                        'Tempat Lahir' => $screening->patient_birth_place ?? '-',
+                        'Tanggal Lahir' => optional($screening->patient_birth_date)?->format('d/m/Y') ?? '-',
+                        'Umur' => $screening->patient_age ?? '-',
+                        'Alamat KTP' => $screening->patient_address_ktp ?? '-',
+                        'Alamat Domisili' => $screening->patient_address_domisili ?? '-',
+                        'RT' => $asText($screening->patient_address_rt),
+                        'RW' => $asText($screening->patient_address_rw),
+                        'Kelurahan' => $screening->patient_address_kelurahan ?? '-',
+                        'BB (kg)' => $screening->patient_weight ?? '-',
+                        'TB (cm)' => $screening->patient_height ?? '-',
+                        'Kader' => $this->kaderName ?? '-',
+                        'Tanggal Skrining' => optional($screening->created_at)?->format('d/m/Y H:i') ?? '-',
+                    ];
+
+                    foreach ($this->questionLabels as $key => $label) {
+                        $row[$label] = $getAnswer($key);
+                    }
+
+                    return $row;
+                });
+            }
+
+            public function headings(): array
+            {
+                return array_merge(
+                    [
+                        'No',
+                        'Nama',
+                        'WNI',
+                        'NIK',
+                        'Nomor HP',
+                        'Alamat',
+                        'Jenis Kelamin',
+                        'Tempat Lahir',
+                        'Tanggal Lahir',
+                        'Umur',
+                        'Alamat KTP',
+                        'Alamat Domisili',
+                        'RT',
+                        'RW',
+                        'Kelurahan',
+                        'BB (kg)',
+                        'TB (cm)',
+                        'Kader',
+                        'Tanggal Skrining',
+                    ],
+                    array_values($this->questionLabels),
+                );
+            }
+
+            public function columnFormats(): array
+            {
+                return [
+                    'D' => NumberFormat::FORMAT_TEXT,
+                    'E' => NumberFormat::FORMAT_TEXT,
+                    'M' => NumberFormat::FORMAT_TEXT,
+                    'N' => NumberFormat::FORMAT_TEXT,
+                ];
+            }
+        };
+
+        return Excel::download($export, 'skrining-kader.xlsx');
+    }
+
+    private function questionSets(): array
+    {
+        $riskQuestions = [
+            'riwayat_kontak_tbc' => 'Apakah pernah kontak erat dengan pasien TBC?',
+            'sakit_tbc' => 'Apakah pernah didiagnosis TBC sebelumnya?',
+            'kekurangan_gizi' => 'Apakah pernah mengalami kekurangan gizi?',
+            'merokok' => 'Apakah saat ini merokok?',
+            'perokok_pasif' => 'Apakah sering terpapar asap rokok (perokok pasif)?',
+            'kencing_manis' => 'Apakah memiliki riwayat diabetes/kencing manis?',
+            'hiv' => 'Apakah memiliki riwayat HIV?',
+            'lansia' => 'Apakah berusia lebih dari 65 tahun (lansia)?',
+            'warga_binaan' => 'Apakah termasuk warga binaan?',
+            'wilayah_miskin' => 'Apakah tinggal di wilayah miskin atau rentan?',
+        ];
+
+        $symptomQuestions = [
+            'gejala_batuk' => 'Apakah saat ini mengalami batuk?',
+            'gejala_bb_turun' => 'Apakah mengalami penurunan berat badan tanpa sebab jelas?',
+            'gejala_demam_hilang_timbul' => 'Apakah mengalami demam yang hilang timbul?',
+            'gejala_berkeringat_malam' => 'Apakah berkeringat pada malam hari?',
+            'gejala_kelenjar' => 'Apakah ada pembesaran kelenjar getah bening?',
+        ];
+
+        return [$riskQuestions, $symptomQuestions];
+    }
+
+    private function buildRules(array $questions): array
+    {
+        $rules = [
+            'patient_is_wni' => ['required', 'boolean'],
+            'patient_name' => ['required', 'string', 'max:255'],
+            'patient_nik' => ['nullable', 'string', 'max:30', 'required_if:patient_is_wni,1'],
+            'patient_phone' => ['nullable', 'string', 'max:25'],
+            'patient_gender' => ['required', 'string', 'max:20'],
+            'patient_birth_place' => ['required', 'string', 'max:255'],
+            'patient_birth_date' => ['required', 'date'],
+            'patient_age' => ['required', 'integer', 'min:0', 'max:150'],
+            'patient_address_ktp' => ['required', 'string', 'max:255'],
+            'patient_address_domisili' => ['required', 'string', 'max:255'],
+            'patient_address_rt' => ['required', 'string', 'max:5'],
+            'patient_address_rw' => ['required', 'string', 'max:5'],
+            'patient_address_kelurahan' => ['required', 'string', 'max:100'],
+            'patient_weight' => ['required', 'numeric', 'min:0'],
+            'patient_height' => ['required', 'numeric', 'min:0'],
+        ];
+
+        foreach ($questions as $key => $label) {
+            $rules[$key] = ['required', 'in:ya,tidak'];
+        }
+
+        return $rules;
+    }
+
+    private function buildAnswers(array $questions, array $validated): array
+    {
+        return collect($questions)
+            ->keys()
+            ->mapWithKeys(fn($key) => [$key => $validated[$key]])
+            ->toArray();
     }
 }

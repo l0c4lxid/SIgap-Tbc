@@ -147,6 +147,14 @@ Route::middleware('auth')->group(function () {
         ->name('kader.screening.create');
     Route::post('/kader/skrining', [KaderScreeningController::class, 'store'])
         ->name('kader.screening.store');
+    Route::get('/kader/skrining-export/excel', [KaderScreeningController::class, 'exportExcel'])
+        ->name('kader.screening.export.excel');
+    Route::get('/kader/skrining/{screening}', [KaderScreeningController::class, 'show'])
+        ->name('kader.screening.show');
+    Route::put('/kader/skrining/{screening}', [KaderScreeningController::class, 'update'])
+        ->name('kader.screening.update');
+    Route::delete('/kader/skrining/{screening}', [KaderScreeningController::class, 'destroy'])
+        ->name('kader.screening.destroy');
 });
 
 require __DIR__ . '/auth.php';

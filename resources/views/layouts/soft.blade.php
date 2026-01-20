@@ -154,8 +154,10 @@
         </nav>
 
         <div class="container-fluid py-4 d-flex flex-column min-vh-100">
-            @yield('content')
-            @include('layouts.partials.soft-footer')
+            <div class="soft-content-shell d-flex flex-column flex-grow-1">
+                @yield('content')
+                @include('layouts.partials.soft-footer')
+            </div>
         </div>
     </main>
 

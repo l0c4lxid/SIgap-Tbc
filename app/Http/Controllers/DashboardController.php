@@ -37,7 +37,9 @@ class DashboardController extends Controller
                     $monthlyAggregates[$key] = ['screening' => 0, 'suspect' => 0];
                 }
                 $monthlyAggregates[$key]['screening']++;
-                $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+                $positive = collect($screening->answers ?? [])
+                    ->filter(fn($ans, $key) => str_starts_with((string) $key, 'gejala_') && $ans === 'ya')
+                    ->count();
                 if ($positive >= 1) {
                     $monthlyAggregates[$key]['suspect']++;
                 }
@@ -148,22 +150,26 @@ class DashboardController extends Controller
 
                 $screeningsQuery = PatientScreening::query()
                     ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
-                    ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address) LIKE ?', ['%' . $kelurahanKeyword . '%']));
+                    ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address_kelurahan) LIKE ?', ['%' . $kelurahanKeyword . '%']));
 
                 $screenings = $kaderIds->isEmpty() ? collect() : $screeningsQuery->get();
                 $totalScreenings = $screenings->count();
                 $uniquePatients = $uniquePatientCount($screenings);
 
+                $monthStart = now()->startOfMonth();
+                $monthEnd = now()->endOfMonth();
+
                 $suspectThisMonth = $kaderIds->isEmpty()
                     ? 0
                     : PatientScreening::query()
                         ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
-                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address) LIKE ?', ['%' . $kelurahanKeyword . '%']))
-                        ->whereMonth('created_at', now()->month)
-                        ->whereYear('created_at', now()->year)
+                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address_kelurahan) LIKE ?', ['%' . $kelurahanKeyword . '%']))
+                        ->whereBetween('created_at', [$monthStart, $monthEnd])
                         ->get()
                         ->filter(function ($screening) {
-                            $positive = collect($screening->answers ?? [])->filter(fn($ans) => $ans === 'ya')->count();
+                            $positive = collect($screening->answers ?? [])
+                                ->filter(fn($ans, $key) => str_starts_with((string) $key, 'gejala_') && $ans === 'ya')
+                                ->count();
                             return $positive >= 1;
                         })
                         ->count();
@@ -196,21 +202,113 @@ class DashboardController extends Controller
                 ];
 
                 $recentScreenings = $kaderIds->isEmpty()
-                    ? null
+                    ? collect()
                     : $baseScreeningQuery
                         ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
-                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address) LIKE ?', ['%' . $kelurahanKeyword . '%']))
-                        ->paginate($recentLimit);
+                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address_kelurahan) LIKE ?', ['%' . $kelurahanKeyword . '%']))
+                        ->orderByDesc('created_at')
+                        ->limit(50)
+                        ->get()
+                        ->unique('kader_id')
+                        ->take(3)
+                        ->values();
 
-                $screeningsInRange = $kaderIds->isEmpty()
+                $screeningsThisMonth = $kaderIds->isEmpty()
                     ? collect()
                     : PatientScreening::query()
+                        ->with('kader')
                         ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
-                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address) LIKE ?', ['%' . $kelurahanKeyword . '%']))
-                        ->where('created_at', '>=', $chartMonths->first())
+                        ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address_kelurahan) LIKE ?', ['%' . $kelurahanKeyword . '%']))
+                        ->whereBetween('created_at', [$monthStart, $monthEnd])
                         ->get();
 
-                $dashboardCharts = $buildCharts($screeningsInRange);
+                $dailyChartSeed = collect();
+                for ($cursor = $monthStart->copy(); $cursor->lte($monthEnd); $cursor->addDay()) {
+                    $key = $cursor->toDateString();
+                    $dailyChartSeed[$key] = [
+                        'label' => $cursor->format('d M'),
+                        'value' => 0,
+                    ];
+                }
+
+                $dailyChart = $screeningsThisMonth
+                    ->groupBy(fn($screening) => $screening->created_at->toDateString())
+                    ->reduce(function ($carry, $items, $dateKey) {
+                        if (!$carry->has($dateKey)) {
+                            return $carry;
+                        }
+                        $carry->put($dateKey, [
+                            'label' => $carry[$dateKey]['label'],
+                            'value' => $items->count(),
+                        ]);
+                        return $carry;
+                    }, $dailyChartSeed)
+                    ->values();
+
+                $extractNumber = static fn(?string $value) => (int) preg_replace('/\D+/', '', (string) $value);
+                $rwChart = $screeningsThisMonth
+                    ->groupBy(fn($screening) => $screening->patient_address_rw ?? '-')
+                    ->map(function ($items, $rw) {
+                        $suspectCount = $items->filter(function ($screening) {
+                            $positive = collect($screening->answers ?? [])
+                                ->filter(fn($ans, $answerKey) => str_starts_with((string) $answerKey, 'gejala_') && $ans === 'ya')
+                                ->count();
+                            return $positive >= 1;
+                        })->count();
+
+                        return [
+                            'label' => 'RW ' . $rw,
+                            'rw' => $rw,
+                            'suspect' => $suspectCount,
+                            'non_suspect' => $items->count() - $suspectCount,
+                        ];
+                    })
+                    ->values()
+                    ->sortBy(function ($row) use ($extractNumber) {
+                        return $extractNumber($row['rw']);
+                    })
+                    ->values();
+
+                $rtChartByRw = $screeningsThisMonth
+                    ->groupBy(fn($screening) => $screening->patient_address_rw ?? '-')
+                    ->map(function ($items, $rw) use ($extractNumber) {
+                        return $items
+                            ->groupBy(fn($screening) => $screening->patient_address_rt ?? '-')
+                            ->map(function ($rtItems, $rt) {
+                                $suspectCount = $rtItems->filter(function ($screening) {
+                                    $positive = collect($screening->answers ?? [])
+                                        ->filter(fn($ans, $answerKey) => str_starts_with((string) $answerKey, 'gejala_') && $ans === 'ya')
+                                        ->count();
+                                    return $positive >= 1;
+                                })->count();
+
+                                return [
+                                    'label' => 'RT ' . $rt,
+                                    'rt' => $rt,
+                                    'suspect' => $suspectCount,
+                                    'non_suspect' => $rtItems->count() - $suspectCount,
+                                ];
+                            })
+                            ->values()
+                            ->sortBy(fn($row) => $extractNumber($row['rt']))
+                            ->values();
+                    })
+                    ->toArray();
+
+                $kaderChart = $screeningsThisMonth
+                    ->groupBy(fn($screening) => $screening->kader?->name ?? 'Tidak diketahui')
+                    ->map(fn($items) => $items->count())
+                    ->sortDesc()
+                    ->map(fn($count, $label) => ['label' => $label, 'value' => $count])
+                    ->values();
+
+                $dashboardCharts = [
+                    'daily_screening' => $dailyChart,
+                    'rw_split' => $rwChart,
+                    'rt_split' => $rtChartByRw,
+                    'kader_screening' => $kaderChart,
+                    'period_label' => now()->format('M Y'),
+                ];
                 break;
 
             case UserRole::Puskesmas:
@@ -275,8 +373,13 @@ class DashboardController extends Controller
                 ];
 
                 $recentScreenings = $screenings->isEmpty()
-                    ? null
-                    : $baseScreeningQuery->where('kader_id', $user->id)->paginate($recentLimit);
+                    ? collect()
+                    : $baseScreeningQuery->where('kader_id', $user->id)->limit(3)->get();
+
+                $screeningsInRange = (clone $screeningsQuery)
+                    ->where('created_at', '>=', $chartMonths->first())
+                    ->get();
+                $dashboardCharts = $buildCharts($screeningsInRange);
                 break;
 
             default:

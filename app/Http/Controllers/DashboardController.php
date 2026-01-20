@@ -106,6 +106,7 @@ class DashboardController extends Controller
                         'trend' => $inactiveUsers . ' menunggu verifikasi',
                         'icon' => 'fa-solid fa-users',
                         'color' => 'primary',
+                        'url' => route('pemda.verification'),
                     ],
                     [
                         'label' => 'Puskesmas',
@@ -114,6 +115,7 @@ class DashboardController extends Controller
                         'trend' => $kaderCount . ' kader aktif',
                         'icon' => 'fa-solid fa-hospital',
                         'color' => 'success',
+                        'url' => route('pemda.verification', ['role' => UserRole::Puskesmas->value]),
                     ],
                     [
                         'label' => 'Skrining Tercatat',
@@ -122,14 +124,34 @@ class DashboardController extends Controller
                         'trend' => 'Pantau laporan terbaru',
                         'icon' => 'fa-solid fa-notes-medical',
                         'color' => 'warning',
+                        'url' => route('pemda.screenings'),
                     ],
                 ];
 
-                $recentScreenings = $baseScreeningQuery->paginate($recentLimit);
+                $recentScreenings = $baseScreeningQuery->limit($recentLimit)->get();
 
                 $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())
                     ->get();
-                $dashboardCharts = $buildCharts($screeningsInRange);
+
+                $monthStart = now()->startOfMonth();
+                $monthEnd = now()->endOfMonth();
+                $screeningsThisMonth = PatientScreening::query()
+                    ->whereBetween('created_at', [$monthStart, $monthEnd])
+                    ->get();
+
+                $kelurahanGroups = $screeningsThisMonth
+                    ->groupBy(fn($screening) => $screening->patient_address_kelurahan ?: 'Tidak diketahui');
+                $kelurahanTotals = $kelurahanGroups
+                    ->map(fn($items) => $items->count())
+                    ->sortDesc();
+                $kelurahanLabels = $kelurahanTotals->keys()->values();
+                $kelurahanValues = $kelurahanTotals->values();
+
+                $dashboardCharts = array_merge($buildCharts($screeningsInRange), [
+                    'kelurahan_labels' => $kelurahanLabels->values(),
+                    'kelurahan_values' => $kelurahanValues,
+                    'period_label' => now()->format('M Y'),
+                ]);
                 break;
 
             case UserRole::Kelurahan:
@@ -328,6 +350,7 @@ class DashboardController extends Controller
                         'trend' => 'Koordinasikan kegiatan lapangan',
                         'icon' => 'fa-solid fa-people-group',
                         'color' => 'info',
+                        'url' => route('puskesmas.kaders'),
                     ],
                     [
                         'label' => 'Skrining Tercatat',
@@ -336,12 +359,13 @@ class DashboardController extends Controller
                         'trend' => 'Pantau laporan kader',
                         'icon' => 'fa-solid fa-notes-medical',
                         'color' => 'primary',
+                        'url' => route('puskesmas.screenings'),
                     ],
                 ];
 
                 $recentScreenings = $kaderIds->isEmpty()
                     ? null
-                    : $baseScreeningQuery->whereIn('kader_id', $kaderIds)->paginate($recentLimit);
+                    : $baseScreeningQuery->whereIn('kader_id', $kaderIds)->limit($recentLimit)->get();
 
                 $screeningsInRange = $kaderIds->isEmpty()
                     ? collect()
@@ -393,7 +417,7 @@ class DashboardController extends Controller
                         'color' => 'primary',
                     ],
                 ];
-                $recentScreenings = $baseScreeningQuery->paginate($recentLimit);
+                $recentScreenings = $baseScreeningQuery->limit($recentLimit)->get();
                 $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())->get();
                 $dashboardCharts = $buildCharts($screeningsInRange);
                 break;

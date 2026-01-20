@@ -3,16 +3,16 @@
 @section('content')
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
+            <div class="card pemda-verification">
+                <div class="card-header pemda-verification__header">
                     <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-0">Verifikasi Pengguna SITUBA</h5>
+                        <div class="pemda-verification__title">
+                            <h5 class="mb-1">Verifikasi Pengguna SITUBA</h5>
                             <p class="text-sm text-muted mb-0">Kelola status aktif pengguna sesuai kebutuhan wilayah.</p>
                         </div>
-                        <div class="d-flex flex-column flex-lg-row gap-2 w-100 align-items-stretch justify-content-end">
-                            <form method="GET" action="{{ route('pemda.verification') }}" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-end" data-auto-submit>
-                                <div style="min-width: 180px; max-width: 220px;">
+                        <div class="d-flex flex-column flex-lg-row gap-2 w-100 align-items-stretch justify-content-end pemda-verification__actions">
+                            <form method="GET" action="{{ route('pemda.verification') }}" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1 justify-content-end pemda-verification__filters" data-auto-submit>
+                                <div class="pemda-verification__role">
                                     <select name="role" class="form-select form-select-sm w-100">
                                         <option value="">Semua Peran</option>
                                         @foreach ($roleOptions as $option)
@@ -22,30 +22,31 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="input-group input-group-sm flex-grow-1" style="min-width: 260px; max-width: 460px;">
+                                <div class="input-group input-group-sm flex-grow-1 pemda-verification__search">
                                     <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
                                     <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP / instansi" value="{{ $search ?? '' }}">
                                 </div>
-                                <button type="submit" class="btn btn-group-lg btn-primary d-flex align-items-center ms-2 mt-3" style="padding:.375rem .75rem;">
-                                    {{-- <i class="fa fa-search"></i> --}}
-                                    <span class="ms-1">Cari</span>
+                                <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1 pemda-verification__search-btn">
+                                    <span>Cari</span>
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('pemda.verification.bulk-status') }}" class="d-flex align-items-center gap-2" data-confirm="Terapkan perubahan status massal?" data-confirm-text="Ya, terapkan">
+                            <form method="POST" action="{{ route('pemda.verification.bulk-status') }}" class="d-flex align-items-center gap-2 pemda-verification__bulk" data-confirm="Terapkan perubahan status massal?" data-confirm-text="Ya, terapkan">
                                 @csrf
                                 <input type="hidden" name="role" value="{{ $selectedRole }}">
-                                <select name="status" class="form-select form-select-sm" style="min-width: 160px;">
+                                <select name="status" class="form-select form-select-sm pemda-verification__bulk-select">
                                     <option value="active">Aktifkan Semua</option>
                                     <option value="inactive">Nonaktifkan Semua</option>
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-dark mt-3 px-3 d-flex align-items-center gap-1"><i class="fa fa-bolt"></i><span>Terapkan</span></button>
+                                <button type="submit" class="btn btn-sm btn-dark px-3 d-flex align-items-center gap-1 pemda-verification__bulk-btn">
+                                    <i class="fa fa-bolt"></i><span>Terapkan</span>
+                                </button>
                             </form>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-items-center mb-0">
+                    <div class="table-responsive pemda-verification__table-wrap">
+                        <table class="table table-hover align-items-center mb-0 pemda-verification__table">
                             <thead>
                                 <tr>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
@@ -114,13 +115,54 @@
                         $to = $hasPagination ? $records->lastItem() : $records->count();
                         $total = $hasPagination ? $records->total() : $records->count();
                     @endphp
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pemda-verification__pager">
                         <p class="text-sm text-muted mb-0">
                             Menampilkan <span class="fw-semibold">{{ $from }}</span> - <span class="fw-semibold">{{ $to }}</span> dari <span class="fw-semibold">{{ $total }}</span> pengguna
                         </p>
-                        @if ($hasPagination)
-                            <div class="mb-0">
-                                {{ $records->withQueryString()->onEachSide(1)->links('pagination::bootstrap-5') }}
+                        @if ($hasPagination && $records->lastPage() > 1)
+                            <div class="mb-0 pemda-verification__pagination">
+                                @php
+                                    $currentPage = $records->currentPage();
+                                    $lastPage = $records->lastPage();
+                                    $window = 2;
+                                    $startPage = max(1, $currentPage - $window);
+                                    $endPage = min($lastPage, $currentPage + $window);
+                                @endphp
+                                <nav aria-label="Pagination">
+                                    <ul class="pagination pemda-verification__pagination-list">
+                                        <li class="page-item {{ $records->onFirstPage() ? 'disabled' : '' }}">
+                                            <a class="page-link" href="{{ $records->previousPageUrl() ?? '#' }}" rel="prev" aria-label="Previous">&laquo;</a>
+                                        </li>
+                                        @if ($startPage > 1)
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $records->url(1) }}">1</a>
+                                            </li>
+                                            @if ($startPage > 2)
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">&hellip;</span>
+                                                </li>
+                                            @endif
+                                        @endif
+                                        @for ($page = $startPage; $page <= $endPage; $page++)
+                                            <li class="page-item {{ $page === $currentPage ? 'active' : '' }}">
+                                                <a class="page-link" href="{{ $records->url($page) }}">{{ $page }}</a>
+                                            </li>
+                                        @endfor
+                                        @if ($endPage < $lastPage)
+                                            @if ($endPage < $lastPage - 1)
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">&hellip;</span>
+                                                </li>
+                                            @endif
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $records->url($lastPage) }}">{{ $lastPage }}</a>
+                                            </li>
+                                        @endif
+                                        <li class="page-item {{ $records->hasMorePages() ? '' : 'disabled' }}">
+                                            <a class="page-link" href="{{ $records->nextPageUrl() ?? '#' }}" rel="next" aria-label="Next">&raquo;</a>
+                                        </li>
+                                    </ul>
+                                </nav>
                             </div>
                         @endif
                     </div>

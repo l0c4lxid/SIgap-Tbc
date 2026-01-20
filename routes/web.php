@@ -7,6 +7,7 @@ use App\Http\Controllers\Kader\PuskesmasController as KaderPuskesmasController;
 use App\Http\Controllers\Kelurahan\MonitoringController as KelurahanMonitoringController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Pemda\ProfileController as PemdaProfileController;
+use App\Http\Controllers\Pemda\ScreeningController as PemdaScreeningController;
 use App\Http\Controllers\Pemda\UserVerificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Puskesmas\KaderController as PuskesmasKaderController;
@@ -90,6 +91,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/pemda/verifikasi/{user}/status', [UserVerificationController::class, 'updateStatus'])
         ->whereNumber('user')
         ->name('pemda.verification.status');
+    Route::get('/pemda/skrining', [PemdaScreeningController::class, 'index'])
+        ->name('pemda.screenings');
+    Route::get('/pemda/skrining/export/excel', [PemdaScreeningController::class, 'exportExcel'])
+        ->name('pemda.screenings.export.excel');
+    Route::get('/pemda/skrining/{screening}', [PemdaScreeningController::class, 'show'])
+        ->name('pemda.screenings.show');
 
     Route::get('/pemda/profil', [PemdaProfileController::class, 'edit'])
         ->name('pemda.profile.edit');

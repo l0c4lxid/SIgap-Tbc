@@ -4,25 +4,35 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm border-0">
-                <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">Daftar Skrining Pasien</h5>
-                        <p class="text-sm text-muted mb-0">Kelola laporan skrining yang Anda catat di lapangan.</p>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2 align-items-center">
-                        <a href="{{ route('kader.screening.create') }}" class="btn btn-sm btn-primary">
-                            <i class="fa-solid fa-plus me-1"></i>Tambah Skrining
-                        </a>
-                        <a href="{{ route('kader.screening.export.excel') }}" class="btn btn-sm btn-outline-success">
-                            <i class="fa-solid fa-file-excel me-1"></i>Export Excel
-                        </a>
-                        <form method="GET" action="{{ route('kader.screening.index') }}" class="d-flex flex-wrap gap-2 align-items-center" data-auto-submit>
-                            <div class="input-group input-group-sm" style="min-width: 240px;">
-                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                                <input type="text" name="q" class="form-control" placeholder="Cari nama / NIK / HP / RT/RW / kelurahan" value="{{ $search ?? '' }}">
+                <div class="card-header">
+                    <div class="row g-3 align-items-start">
+                        <div class="col-12 col-md">
+                            <div class="d-flex flex-column gap-2">
+                                <div>
+                                    <h5 class="mb-1">Daftar Skrining Pasien</h5>
+                                    <p class="text-sm text-muted mb-0">Kelola laporan skrining yang Anda catat di lapangan.</p>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{{ route('kader.screening.create') }}" class="btn btn-sm btn-primary">
+                                        <i class="fa-solid fa-plus me-1"></i>Tambah Skrining
+                                    </a>
+                                    <a href="{{ route('kader.screening.export.excel') }}" class="btn btn-sm btn-outline-success">
+                                        <i class="fa-solid fa-file-excel me-1"></i>Export Excel
+                                    </a>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
-                        </form>
+                        </div>
+                        <div class="col-12 col-md-5 col-lg-4">
+                            <form method="GET" action="{{ route('kader.screening.index') }}" class="d-flex flex-column gap-2" data-auto-submit>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                                    <input type="text" name="q" class="form-control" placeholder="Cari nama / NIK / HP / RT/RW / kelurahan" value="{{ $search ?? '' }}">
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">

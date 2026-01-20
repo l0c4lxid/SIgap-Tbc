@@ -9,7 +9,7 @@
                         <h5 class="mb-0">Detail Skrining Pasien</h5>
                         <p class="text-sm text-muted mb-0">Lihat detail skrining yang tercatat oleh kader.</p>
                     </div>
-                    <a href="{{ route('puskesmas.screenings') }}" class="btn btn-sm btn-outline-secondary">
+                    <a href="{{ route('pemda.screenings') }}" class="btn btn-sm btn-outline-secondary">
                         <i class="fa fa-arrow-left me-1"></i>Kembali
                     </a>
                 </div>
@@ -34,16 +34,7 @@
                             {{ $suspectCount ? 'Suspek TBC' : 'Non Suspek' }}
                         </span>
                         <span class="text-sm text-muted">Diinput {{ $screening->created_at->format('d M Y H:i') }}</span>
-                        <span class="text-sm text-muted">
-                            Kader PJ:
-                            @if ($kader?->id)
-                                <a href="{{ route('puskesmas.kaders.show', $kader) }}" class="text-decoration-none">
-                                    {{ $kader->name }}
-                                </a>
-                            @else
-                                -
-                            @endif
-                        </span>
+                        <span class="text-sm text-muted">Kader PJ: {{ $screening->kader?->name ?? '-' }}</span>
                     </div>
 
                     <div class="row g-4">

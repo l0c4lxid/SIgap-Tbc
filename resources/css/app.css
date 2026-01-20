@@ -1,9 +1,5 @@
 @import "remixicon/fonts/remixicon.css";
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
 
 :root {
     --sigap-primary: #0f766e;
@@ -112,6 +108,74 @@ body {
 }
 
 @media (max-width: 767.98px) {
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .g-sidenav-show {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .g-sidenav-show .main-content {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        margin-left: 0;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .g-sidenav-show .main-content .container-fluid {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        max-width: 100% !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+
+    .soft-content-shell {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .navbar-main {
+        margin: 0.35rem 0.5rem 0.6rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 14px;
+    }
+
+    .pemda-verification.card,
+    .pemda-verification {
+        width: 100%;
+    }
+
+    .card {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    body {
+        background: #f8fafc;
+    }
+
+    body::before {
+        display: none;
+    }
+
     .navbar-main {
         margin: 0.65rem 0.8rem 1.1rem;
         padding: 0.45rem 0.85rem;
@@ -135,6 +199,258 @@ body {
     .soft-topbar__summary {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .soft-content-shell {
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    .mobile-flat-card {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .g-sidenav-show .main-content .container-fluid {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+
+    .g-sidenav-show .main-content {
+        background: transparent;
+        border-radius: 0;
+    }
+
+    .pemda-verification.card {
+        border-radius: 18px;
+        padding: 0.75rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: var(--sigap-shadow-soft);
+        overflow: hidden;
+    }
+
+    .pemda-verification .card-body {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .pemda-verification .card-header {
+        padding: 0;
+        background: transparent;
+        border: none;
+    }
+
+    .pemda-verification__title {
+        padding: 0.85rem 1rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    }
+
+    .pemda-verification__title h5 {
+        font-size: 1.05rem;
+    }
+
+    .pemda-verification__actions {
+        gap: 0.75rem;
+    }
+
+    .pemda-verification__filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        padding: 0.85rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .pemda-verification__role,
+    .pemda-verification__search {
+        min-width: 100%;
+        max-width: none;
+        width: 100%;
+    }
+
+    .pemda-verification__search-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .pemda-verification__bulk {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.85rem;
+        border-radius: 16px;
+        background: rgba(15, 118, 110, 0.08);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .pemda-verification__bulk-select,
+    .pemda-verification__bulk-btn {
+        width: 100%;
+    }
+
+    .pemda-verification__table-wrap {
+        overflow-x: visible;
+    }
+
+    .pemda-verification__table thead {
+        display: none;
+    }
+
+    .pemda-verification__table tbody tr {
+        display: block;
+        padding: 0.85rem 0.9rem;
+        margin-bottom: 0.75rem;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .pemda-verification__table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0;
+        border: none;
+    }
+
+    .pemda-verification__table tbody td:first-child {
+        display: none;
+    }
+
+    .pemda-verification__table tbody td:nth-child(2)::before {
+        content: "Nama";
+    }
+
+    .pemda-verification__table tbody td:nth-child(3)::before {
+        content: "Peran";
+    }
+
+    .pemda-verification__table tbody td:nth-child(4)::before {
+        content: "Dibuat";
+    }
+
+    .pemda-verification__table tbody td:nth-child(5)::before {
+        content: "Status";
+    }
+
+    .pemda-verification__table tbody td:nth-child(6)::before {
+        content: "Aksi";
+    }
+
+    .pemda-verification__table tbody td::before {
+        flex: 0 0 76px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--sigap-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .pemda-verification__table tbody td:last-child form {
+        margin-left: auto;
+    }
+
+    .pemda-verification__pagination {
+        width: 100%;
+    }
+
+    .pemda-verification__pagination .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.4rem;
+        width: 100%;
+        margin: 0;
+    }
+
+    .pemda-verification__pagination-list {
+        padding-left: 0;
+    }
+
+    .pemda-verification__pagination .page-item {
+        margin: 0;
+        display: inline-flex;
+        opacity: 1;
+    }
+
+    .pemda-verification__pagination .page-link {
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        line-height: 1;
+        min-width: 2.4rem;
+        text-align: center;
+        color: var(--sigap-text);
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    .pemda-verification__pagination .page-item:first-child,
+    .pemda-verification__pagination .page-item:last-child {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+
+    .pemda-verification__pagination .page-item:first-child .page-link,
+    .pemda-verification__pagination .page-item:last-child .page-link {
+        min-width: 0;
+        padding: 0.35rem 0.9rem;
+    }
+
+    .pemda-verification__pagination .page-item:first-child {
+        order: -1;
+    }
+
+    .pemda-verification__pagination .page-item:last-child {
+        order: 2;
+    }
+
+    .pemda-verification__pagination .page-item.active .page-link {
+        background: rgba(14, 165, 160, 0.18);
+        border-color: rgba(14, 165, 160, 0.6);
+        color: var(--sigap-primary-strong);
+    }
+
+    .pemda-verification__pagination .page-item.disabled .page-link {
+        opacity: 0.6;
+    }
+
+    .pemda-verification__pager {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .pemda-verification__pager p {
+        margin-bottom: 0;
+        font-size: 0.8rem;
+    }
+
+    .ps--active-y > .ps__rail-y,
+    .ps--active-x > .ps__rail-x {
+        display: block;
+        opacity: 1;
     }
 }
 
@@ -926,6 +1242,27 @@ body.sidebar-open {
     color: var(--sigap-primary-strong);
 }
 
+.pagination {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+@media (max-width: 575.98px) {
+    .pagination {
+        justify-content: center;
+    }
+
+    .pagination .page-link {
+        padding: 0.35rem 0.6rem;
+        min-width: 2.25rem;
+        text-align: center;
+        font-size: 0.8rem;
+        line-height: 1;
+        white-space: nowrap;
+    }
+}
+
 .empty-state {
     padding: 3rem 1rem;
     border-radius: 22px;
@@ -939,9 +1276,4 @@ body.sidebar-open {
 
 .chart-container canvas {
     max-height: 320px;
-}
-
-@theme {
-    --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-        "Segoe UI Symbol", "Noto Color Emoji";
 }

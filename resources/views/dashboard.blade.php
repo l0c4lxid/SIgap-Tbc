@@ -19,6 +19,9 @@
         @foreach ($cards as $card)
             @php $colClass = $cardColumns[$loop->index] ?? 'col-lg-3 col-md-6 col-12 mb-4'; @endphp
             <div class="{{ $colClass }}">
+                @if (!empty($card['url']))
+                    <a href="{{ $card['url'] }}" class="text-decoration-none text-reset d-block">
+                @endif
                 <div class="card">
                     <div class="card-body p-3">
                         <div class="row">
@@ -46,6 +49,9 @@
                         </div>
                     </div>
                 </div>
+                @if (!empty($card['url']))
+                    </a>
+                @endif
             </div>
         @endforeach
     </div>
@@ -98,6 +104,31 @@
                 </div>
             </div>
         @endif
+    @elseif ($user->role === \App\Enums\UserRole::Pemda && $dashboardCharts && count($dashboardCharts['kelurahan_values'] ?? []))
+        <div class="row g-4">
+            <div class="col-12 col-xl-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Persebaran Skrining per Kelurahan</h6>
+                        <p class="text-sm text-muted mb-0">Kelurahan dengan skrining terbanyak bulan {{ $dashboardCharts['period_label'] ?? now()->format('M Y') }}.</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="pemdaKelurahanChart" height="260"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">Kasus Suspek TBC</h6>
+                        <p class="text-sm text-muted mb-0">Perbandingan suspek vs tidak suspek per bulan.</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="pemdaTbcChart" height="260"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     @elseif ($dashboardCharts && count($dashboardCharts['screening'] ?? []))
         <div class="row g-4">
             <div class="col-12 col-xl-6">
@@ -130,6 +161,14 @@
 
     @php
         $recentIsPaginator = $recentScreenings instanceof \Illuminate\Contracts\Pagination\Paginator;
+        $recentSuspectCount = $recentScreenings
+            ? $recentScreenings->filter(function ($screening) {
+                $positive = collect($screening->answers ?? [])
+                    ->filter(fn ($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
+                    ->count();
+                return $positive >= 1;
+            })->count()
+            : 0;
     @endphp
 
     @if ($recentScreenings && $recentScreenings->count())
@@ -146,7 +185,11 @@
                             </p>
                         </div>
                         <span class="badge bg-gradient-primary text-white">
-                            {{ $recentIsPaginator ? $recentScreenings->total() : $recentScreenings->count() }} total
+                            @if ($user->role === \App\Enums\UserRole::Kelurahan)
+                                {{ $recentIsPaginator ? $recentScreenings->total() : $recentScreenings->count() }} total
+                            @else
+                                {{ $recentSuspectCount }} suspek
+                            @endif
                         </span>
                     </div>
                     <div class="card-body">
@@ -196,17 +239,25 @@
                                                 </td>
                                             @else
                                                 <td>
-                                                <div class="d-flex flex-column">
-                                                    @if ($user->role === \App\Enums\UserRole::Kader)
-                                                        <a href="{{ route('kader.screening.show', $screening) }}" class="text-sm fw-semibold text-decoration-none">
-                                                            {{ $screening->patient_name }}
-                                                        </a>
-                                                    @else
-                                                        <span class="text-sm fw-semibold">{{ $screening->patient_name }}</span>
-                                                    @endif
-                                                    <span
-                                                        class="text-xs text-muted">{{ $screening->patient_address_domisili ?? $screening->patient_address ?? '-' }}</span>
-                                                </div>
+                                                    <div class="d-flex flex-column">
+                                                        @if ($user->role === \App\Enums\UserRole::Kader)
+                                                            <a href="{{ route('kader.screening.show', $screening) }}" class="text-sm fw-semibold text-decoration-none">
+                                                                {{ $screening->patient_name }}
+                                                            </a>
+                                                        @elseif ($user->role === \App\Enums\UserRole::Pemda)
+                                                            <a href="{{ route('pemda.screenings.show', $screening) }}" class="text-sm fw-semibold text-decoration-none">
+                                                                {{ $screening->patient_name }}
+                                                            </a>
+                                                        @elseif ($user->role === \App\Enums\UserRole::Puskesmas)
+                                                            <a href="{{ route('puskesmas.screenings.show', $screening) }}" class="text-sm fw-semibold text-decoration-none">
+                                                                {{ $screening->patient_name }}
+                                                            </a>
+                                                        @else
+                                                            <span class="text-sm fw-semibold">{{ $screening->patient_name }}</span>
+                                                        @endif
+                                                        <span
+                                                            class="text-xs text-muted">{{ $screening->patient_address_domisili ?? $screening->patient_address ?? '-' }}</span>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex flex-column">
@@ -436,12 +487,73 @@
                 }
             });
         </script>
+    @elseif ($user->role === \App\Enums\UserRole::Pemda && $dashboardCharts && count($dashboardCharts['kelurahan_values'] ?? []))
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const kelurahanLabels = @json($dashboardCharts['kelurahan_labels'] ?? []);
+                const kelurahanValues = @json($dashboardCharts['kelurahan_values'] ?? []);
+                const suspectSplitDataset = @json($dashboardCharts['suspect_split'] ?? []);
+
+                const kelurahanCtx = document.getElementById('pemdaKelurahanChart');
+                if (kelurahanCtx && kelurahanLabels.length && kelurahanValues.length) {
+                    new Chart(kelurahanCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: kelurahanLabels,
+                            datasets: [{
+                                label: 'Skrining',
+                                data: kelurahanValues,
+                                backgroundColor: '#0ea5a0',
+                                borderRadius: 6,
+                                maxBarThickness: 42,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true },
+                            },
+                        },
+                    });
+                }
+
+                const tbcCtx = document.getElementById('pemdaTbcChart');
+                if (tbcCtx && suspectSplitDataset.length) {
+                    new Chart(tbcCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: suspectSplitDataset.map(item => item.label),
+                            datasets: [
+                                {
+                                    label: 'Suspek (≥1 Ya)',
+                                    data: suspectSplitDataset.map(item => item.suspect),
+                                    backgroundColor: 'rgba(220, 53, 69, 0.75)',
+                                },
+                                {
+                                    label: 'Tidak Suspek',
+                                    data: suspectSplitDataset.map(item => item.non_suspect),
+                                    backgroundColor: 'rgba(54, 162, 235, 0.75)',
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true, stacked: true },
+                                x: { stacked: true },
+                            },
+                        },
+                    });
+                }
+
+            });
+        </script>
     @elseif ($dashboardCharts && count($dashboardCharts['screening'] ?? []))
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 const screeningDataset = @json($dashboardCharts['screening'] ?? []);
-                const tbcDataset = @json($dashboardCharts['tbc_cases'] ?? []);
                 const suspectSplitDataset = @json($dashboardCharts['suspect_split'] ?? []);
 
                 const screeningCtx = document.getElementById('pemdaScreeningChart');
@@ -497,7 +609,6 @@
                         },
                     });
                 }
-
             });
         </script>
     @endif

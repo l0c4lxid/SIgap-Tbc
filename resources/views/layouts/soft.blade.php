@@ -23,6 +23,12 @@
         UserRole::Pemda->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'dashboard'],
             ['label' => 'Verifikasi Pengguna', 'url' => route('pemda.verification'), 'icon' => 'verify'],
+            [
+                'label' => 'Skrining',
+                'url' => route('pemda.screenings'),
+                'icon' => 'screening',
+                'active_routes' => ['pemda.screenings', 'pemda.screenings.show'],
+            ],
             ['label' => 'Semua Berita', 'url' => route('news.index'), 'icon' => 'news'],
         ],
         UserRole::Kader->value => [

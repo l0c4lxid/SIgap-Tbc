@@ -74,9 +74,13 @@ class ScreeningController extends Controller
         $puskesmasId = optional($kader?->detail)->supervisor_id;
         abort_if($puskesmasId !== $request->user()->id, 403);
 
+        [$riskQuestions, $symptomQuestions] = $this->questionSets();
+
         return view('puskesmas.screening-detail', [
             'screening' => $screening,
             'kader' => $kader,
+            'riskQuestions' => $riskQuestions,
+            'symptomQuestions' => $symptomQuestions,
         ]);
     }
 
@@ -208,5 +212,31 @@ class ScreeningController extends Controller
         };
 
         return Excel::download($export, 'skrining-pasien.xlsx');
+    }
+
+    private function questionSets(): array
+    {
+        $riskQuestions = [
+            'riwayat_kontak_tbc' => 'Apakah pernah kontak erat dengan pasien TBC?',
+            'sakit_tbc' => 'Apakah pernah didiagnosis TBC sebelumnya?',
+            'kekurangan_gizi' => 'Apakah pernah mengalami kekurangan gizi?',
+            'merokok' => 'Apakah saat ini merokok?',
+            'perokok_pasif' => 'Apakah sering terpapar asap rokok (perokok pasif)?',
+            'kencing_manis' => 'Apakah memiliki riwayat diabetes/kencing manis?',
+            'hiv' => 'Apakah memiliki riwayat HIV?',
+            'lansia' => 'Apakah berusia lebih dari 65 tahun (lansia)?',
+            'warga_binaan' => 'Apakah termasuk warga binaan?',
+            'wilayah_miskin' => 'Apakah tinggal di wilayah miskin atau rentan?',
+        ];
+
+        $symptomQuestions = [
+            'gejala_batuk' => 'Apakah saat ini mengalami batuk?',
+            'gejala_bb_turun' => 'Apakah mengalami penurunan berat badan tanpa sebab jelas?',
+            'gejala_demam_hilang_timbul' => 'Apakah mengalami demam yang hilang timbul?',
+            'gejala_berkeringat_malam' => 'Apakah berkeringat pada malam hari?',
+            'gejala_kelenjar' => 'Apakah ada pembesaran kelenjar getah bening?',
+        ];
+
+        return [$riskQuestions, $symptomQuestions];
     }
 }

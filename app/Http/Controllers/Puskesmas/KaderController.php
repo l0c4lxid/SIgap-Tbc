@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Puskesmas;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Models\PatientScreening;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -99,8 +100,17 @@ class KaderController extends Controller
 
         abort_if(optional($kader->detail)->supervisor_id !== $request->user()->id, 403);
 
+        $screenings = PatientScreening::query()
+            ->where('kader_id', $kader->id)
+            ->latest()
+            ->paginate(5)
+            ->withQueryString();
+        $totalScreenings = PatientScreening::where('kader_id', $kader->id)->count();
+
         return view('puskesmas.kader-show', [
             'kader' => $kader,
+            'screenings' => $screenings,
+            'totalScreenings' => $totalScreenings,
         ]);
     }
 

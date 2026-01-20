@@ -46,7 +46,11 @@
                                     <tr>
                                         <td>{{ $firstNumber ? $firstNumber + $loop->index : $loop->iteration }}</td>
                                         <td>
-                                            <h6 class="mb-0 text-sm">{{ $kader->name }}</h6>
+                                            <h6 class="mb-0 text-sm">
+                                                <a href="{{ route('puskesmas.kaders.show', $kader) }}" class="text-decoration-none">
+                                                    {{ $kader->name }}
+                                                </a>
+                                            </h6>
                                             <p class="text-xs text-muted mb-0">{{ $kader->detail->organization ?? 'Kader' }}</p>
                                         </td>
                                         <td>

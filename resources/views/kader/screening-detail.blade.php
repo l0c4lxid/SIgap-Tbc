@@ -29,6 +29,16 @@
                                 ->filter(fn ($ans, $key) => str_starts_with((string) $key, 'gejala_') && $ans === 'ya')
                                 ->count();
                         @endphp
+                        @php
+                            $formatNumber = function ($value) {
+                                if ($value === null || $value === '') {
+                                    return '-';
+                                }
+                                $number = is_numeric($value) ? (float) $value : $value;
+                                $formatted = is_numeric($number) ? number_format($number, 2, '.', '') : $number;
+                                return rtrim(rtrim($formatted, '0'), '.');
+                            };
+                        @endphp
                         <div class="d-flex flex-wrap gap-3 mb-4">
                             <span class="badge bg-gradient-{{ $suspectCount ? 'danger' : 'success' }}">
                                 {{ $suspectCount ? 'Suspek TBC' : 'Non Suspek' }}
@@ -42,67 +52,86 @@
                                     <span class="badge bg-gradient-primary">A</span>
                                     <span class="text-sm fw-semibold">Identitas & Alamat</span>
                                 </div>
-                                <div class="detail-grid">
-                                    <div class="detail-item">
-                                        <span class="detail-label">WNI</span>
-                                        <span class="detail-value">{{ $screening->patient_is_wni ? 'Ya' : 'Tidak' }}</span>
-                                    </div>
-                                    <div class="detail-item detail-item--wide">
-                                        <span class="detail-label">Nama Peserta</span>
-                                        <span class="detail-value">{{ $screening->patient_name ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">NIK</span>
-                                        <span class="detail-value">{{ $screening->patient_nik ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Jenis Kelamin</span>
-                                        <span class="detail-value">{{ $screening->patient_gender ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Tempat Lahir</span>
-                                        <span class="detail-value">{{ $screening->patient_birth_place ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Tanggal Lahir</span>
-                                        <span class="detail-value">{{ optional($screening->patient_birth_date)->format('d M Y') }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Umur</span>
-                                        <span class="detail-value">{{ $screening->patient_age ?? '-' }} tahun</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Berat Badan</span>
-                                        <span class="detail-value">{{ $screening->patient_weight ?? '-' }} kg</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Tinggi Badan</span>
-                                        <span class="detail-value">{{ $screening->patient_height ?? '-' }} cm</span>
-                                    </div>
-                                    <div class="detail-item detail-item--wide">
-                                        <span class="detail-label">Nomor HP</span>
-                                        <span class="detail-value">{{ $screening->patient_phone ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">RT</span>
-                                        <span class="detail-value">{{ $screening->patient_address_rt ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">RW</span>
-                                        <span class="detail-value">{{ $screening->patient_address_rw ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="detail-label">Kelurahan</span>
-                                        <span class="detail-value">{{ $screening->patient_address_kelurahan ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item detail-item--wide">
-                                        <span class="detail-label">Alamat KTP</span>
-                                        <span class="detail-value">{{ $screening->patient_address_ktp ?? '-' }}</span>
-                                    </div>
-                                    <div class="detail-item detail-item--wide">
-                                        <span class="detail-label">Alamat Domisili</span>
-                                        <span class="detail-value">{{ $screening->patient_address_domisili ?? '-' }}</span>
-                                    </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle detail-table mb-0">
+                                        <tbody>
+                                            <tr>
+                                                <td class="detail-table__label">WNI</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_is_wni ? 'Ya' : 'Tidak' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Nama Peserta</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_name ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">NIK</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_nik ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Jenis Kelamin</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_gender ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Tempat Lahir</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_birth_place ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Tanggal Lahir</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ optional($screening->patient_birth_date)->locale('id')->translatedFormat('d F Y') }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Umur</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_age ?? '-' }} tahun</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Berat Badan</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $formatNumber($screening->patient_weight) }} kg</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Tinggi Badan</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $formatNumber($screening->patient_height) }} cm</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Nomor HP</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_phone ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">RT</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_address_rt ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">RW</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_address_rw ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Kelurahan</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_address_kelurahan ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Alamat KTP</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_address_ktp ?? '-' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-table__label">Alamat Domisili</td>
+                                                <td class="detail-table__colon">:</td>
+                                                <td class="detail-table__value">{{ $screening->patient_address_domisili ?? '-' }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
 
@@ -112,16 +141,30 @@
                                     <span class="text-sm fw-semibold">Faktor Risiko & Riwayat</span>
                                 </div>
                                 <div class="row g-2">
-                                    @foreach ($riskQuestions as $key => $question)
-                                        <div class="col-12 col-lg-6">
-                                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                                <span class="text-sm">{{ $loop->iteration }}. {{ $question }}</span>
-                                                <span class="badge bg-gradient-{{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'danger' : 'success' }}">
-                                                    {{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'Ya' : 'Tidak' }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endforeach
+                                    <div class="col-12 col-lg-6">
+                                        @foreach ($riskQuestions as $key => $question)
+                                            @if ($loop->iteration <= 5)
+                                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                                    <span class="text-sm">{{ $loop->iteration }}. {{ $question }}</span>
+                                                    <span class="badge bg-gradient-{{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'danger' : 'success' }}">
+                                                        {{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'Ya' : 'Tidak' }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        @foreach ($riskQuestions as $key => $question)
+                                            @if ($loop->iteration > 5)
+                                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                                    <span class="text-sm">{{ $loop->iteration }}. {{ $question }}</span>
+                                                    <span class="badge bg-gradient-{{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'danger' : 'success' }}">
+                                                        {{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'Ya' : 'Tidak' }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
 
@@ -131,16 +174,30 @@
                                     <span class="text-sm fw-semibold">Gejala TBC (Penentu Suspek)</span>
                                 </div>
                                 <div class="row g-2">
-                                    @foreach ($symptomQuestions as $key => $question)
-                                        <div class="col-12 col-lg-6">
-                                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                                <span class="text-sm">{{ $loop->iteration + count($riskQuestions) }}. {{ $question }}</span>
-                                                <span class="badge bg-gradient-{{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'danger' : 'success' }}">
-                                                    {{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'Ya' : 'Tidak' }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endforeach
+                                    <div class="col-12 col-lg-6">
+                                        @foreach ($symptomQuestions as $key => $question)
+                                            @if ($loop->iteration <= 3)
+                                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                                    <span class="text-sm">{{ $loop->iteration + count($riskQuestions) }}. {{ $question }}</span>
+                                                    <span class="badge bg-gradient-{{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'danger' : 'success' }}">
+                                                        {{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'Ya' : 'Tidak' }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        @foreach ($symptomQuestions as $key => $question)
+                                            @if ($loop->iteration > 3)
+                                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                                    <span class="text-sm">{{ $loop->iteration + count($riskQuestions) }}. {{ $question }}</span>
+                                                    <span class="badge bg-gradient-{{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'danger' : 'success' }}">
+                                                        {{ ($screening->answers[$key] ?? 'tidak') === 'ya' ? 'Ya' : 'Tidak' }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
                                 </div>
                                 <p class="text-xs text-muted mt-3">Hasil otomatis: minimal 1 jawaban "Ya" pada pertanyaan 11-15 langsung tercatat sebagai suspek.</p>
                             </div>
@@ -150,7 +207,7 @@
                         </div>
                     @else
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <span class="badge bg-gradient-primary">A</span>
+                            <span class="badge bg-gradient-primary">A.</span>
                             <span class="text-sm fw-semibold">Identitas & Alamat</span>
                         </div>
                         <form method="POST" action="{{ route('kader.screening.update', $screening) }}" id="screeningForm">

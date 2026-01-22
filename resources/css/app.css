@@ -1,4 +1,3 @@
-@import "remixicon/fonts/remixicon.css";
 
 
 :root {
@@ -49,7 +48,7 @@ body {
     color: var(--sigap-heading);
 }
 
-.g-sidenav-show .main-content {
+.g-sidenav-show .sigap-main {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
     border-radius: 26px 0 0 26px;
     margin-left: calc(var(--soft-sidebar-width) + (var(--soft-sidebar-gap) * 2));
@@ -62,7 +61,7 @@ body {
 }
 
 @media (max-width: 991.98px) {
-    .g-sidenav-show .main-content {
+    .g-sidenav-show .sigap-main {
         margin-left: 0;
         border-radius: 0;
     }
@@ -95,7 +94,7 @@ body {
         gap: 0.5rem;
     }
 
-    .g-sidenav-show .main-content .container-fluid {
+    .g-sidenav-show .sigap-main .container-fluid {
         padding: 0.85rem !important;
     }
 
@@ -125,7 +124,85 @@ body {
         min-height: 100vh;
     }
 
-    .g-sidenav-show .main-content {
+    .g-sidenav-show .sigap-main {
+        flex: 1 1 auto;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-top: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+    }
+
+    .g-sidenav-show .sigap-main.max-height-vh-100,
+    .g-sidenav-show .sigap-main.h-100 {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .g-sidenav-show .sigap-main > .container,
+    .g-sidenav-show .sigap-main > .container-fluid {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    .g-sidenav-show .sigap-main > .container-fluid.py-4 {
+        padding-top: 0 !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    .navbar-main {
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.5rem !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .navbar-main .container-fluid {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    .page-header {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .card {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .g-sidenav-show {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .g-sidenav-show .sigap-main {
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
@@ -135,15 +212,28 @@ body {
         background: transparent;
     }
 
-    .g-sidenav-show .main-content .container-fluid {
+    .g-sidenav-show .sigap-main.max-height-vh-100 {
+        max-height: none !important;
+    }
+
+    .g-sidenav-show .sigap-main.h-100 {
+        height: auto !important;
+    }
+
+    .g-sidenav-show .sigap-main .container-fluid {
         flex: 1 1 auto;
         min-height: 0;
         width: 100%;
         max-width: 100% !important;
-        padding-top: 0.5rem !important;
+        padding-top: 0 !important;
         padding-bottom: 1rem !important;
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
+    }
+
+    .g-sidenav-show .sigap-main .container-fluid.py-4 {
+        padding-top: 0 !important;
+        padding-bottom: 0.75rem !important;
     }
 
     .soft-content-shell {
@@ -153,9 +243,16 @@ body {
     }
 
     .navbar-main {
-        margin: 0.35rem 0.5rem 0.6rem;
+        margin: 0.25rem 0 0.5rem !important;
         padding: 0.45rem 0.75rem;
         border-radius: 14px;
+    }
+
+    .navbar-main .container-fluid {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }
 
     .pemda-verification.card,
@@ -218,12 +315,12 @@ body {
         padding: 1rem;
     }
 
-    .g-sidenav-show .main-content .container-fluid {
+    .g-sidenav-show .sigap-main .container-fluid {
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
     }
 
-    .g-sidenav-show .main-content {
+    .g-sidenav-show .sigap-main {
         background: transparent;
         border-radius: 0;
     }
@@ -451,6 +548,98 @@ body {
     .ps--active-x > .ps__rail-x {
         display: block;
         opacity: 1;
+    }
+}
+
+@media (max-width: 576px) {
+    html,
+    body {
+        min-height: 100vh !important;
+        min-height: 100svh !important;
+        min-height: 100dvh !important;
+        background: #ffffff !important;
+    }
+
+    body::before {
+        display: none !important;
+    }
+
+    body.g-sidenav-show,
+    body.g-sidenav-show .sigap-main {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    body.g-sidenav-show .sigap-main {
+        min-height: 100vh !important;
+        min-height: 100svh !important;
+        min-height: 100dvh !important;
+        border-radius: 0 !important;
+        background: #ffffff !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.g-sidenav-show .sigap-main.position-relative.bg-gray-100.border-radius-lg {
+        border-radius: 0 !important;
+        background: #ffffff !important;
+    }
+
+    body.g-sidenav-show .sigap-main .navbar-main {
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body.g-sidenav-show .sigap-main .navbar-main .container-fluid {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    body.g-sidenav-show .sigap-main .container-fluid.py-4 {
+        padding-top: 0 !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    body.g-sidenav-show .sigap-main .container-fluid.min-vh-100 {
+        min-height: 100vh !important;
+        min-height: 100svh !important;
+        min-height: 100dvh !important;
+        background: #ffffff !important;
+    }
+
+    body.g-sidenav-show .sigap-main .soft-content-shell {
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        background: #ffffff !important;
+    }
+
+    body.g-sidenav-show .sigap-main .row {
+        --bs-gutter-x: 0.75rem;
+    }
+
+    body.g-sidenav-show .sigap-main .card {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.g-sidenav-show .navbar-main.fixed-top {
+        position: static !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    body.g-sidenav-show .navbar-main.fixed-top + [class*="container"] {
+        margin-top: 0 !important;
     }
 }
 
@@ -1276,4 +1465,163 @@ body.sidebar-open {
 
 .chart-container canvas {
     max-height: 320px;
+}
+
+@media (max-width: 576px) {
+    html,
+    body {
+        height: 100% !important;
+        min-height: 100dvh !important;
+        background: #ffffff !important;
+    }
+
+    body::before {
+        display: none !important;
+    }
+
+    body.g-sidenav-show,
+    body.g-sidenav-show .sigap-main {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    body.g-sidenav-show .sigap-main {
+        min-height: 100dvh !important;
+        background: #ffffff !important;
+        border-radius: 0 !important;
+    }
+
+    body.g-sidenav-show .sigap-main.position-relative.bg-gray-100.border-radius-lg {
+        background: #ffffff !important;
+        border-radius: 0 !important;
+    }
+
+    body.g-sidenav-show .sigap-main > .container,
+    body.g-sidenav-show .sigap-main > .container-fluid {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    body.g-sidenav-show .sigap-main > .container-fluid.py-4 {
+        padding-top: 0 !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    body.g-sidenav-show .sigap-main .soft-content-shell {
+        padding: 0 !important;
+        background: #ffffff !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.g-sidenav-show .navbar-main {
+        margin: 0 !important;
+        border-radius: 0 !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+    }
+
+    body.g-sidenav-show .navbar-main .container-fluid {
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    body.g-sidenav-show .soft-footer {
+        margin-top: 0 !important;
+        background: #ffffff !important;
+    }
+
+    body.g-sidenav-show .card {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.g-sidenav-show .row {
+        --bs-gutter-x: 0.75rem;
+    }
+}
+
+.sigap-main .navbar-main {
+    margin: 1.25rem 0 1.5rem;
+    border-radius: 22px;
+    padding: 0;
+}
+
+.sigap-main .navbar-main .container-fluid {
+    padding: 0.75rem 1rem;
+}
+
+.sigap-main .soft-topbar {
+    align-items: center;
+    gap: 1rem;
+}
+
+.sigap-main .soft-topbar__summary {
+    gap: 0.5rem;
+}
+
+.sigap-main .soft-chip {
+    min-height: 30px;
+}
+
+.sigap-main .soft-user-pill {
+    min-height: 38px;
+    padding: 0.4rem 0.85rem;
+}
+
+.sigap-main .soft-user-avatar {
+    width: 34px;
+    height: 34px;
+}
+
+@media (max-width: 991.98px) {
+    .sigap-main .navbar-main {
+        margin: 0.65rem 0.85rem 0.9rem !important;
+        border-radius: 18px !important;
+    }
+
+    .sigap-main .navbar-main .container-fluid {
+        padding: 0.6rem 0.85rem !important;
+    }
+
+    .sigap-main .soft-topbar__actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .sigap-main .navbar-main {
+        margin: 0.5rem 0.75rem 0.75rem !important;
+        border-radius: 14px !important;
+    }
+
+    .sigap-main .navbar-main .container-fluid {
+        padding: 0.55rem 0.75rem !important;
+    }
+
+    .sigap-main .soft-chip {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.7rem;
+    }
+
+    .sigap-main .soft-user-pill {
+        padding: 0.35rem 0.75rem;
+    }
+
+    .sigap-main .soft-user-avatar {
+        width: 32px;
+        height: 32px;
+    }
 }

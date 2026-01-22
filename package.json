@@ -3,14 +3,18 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "vite",
+        "dev": "concurrently -k \"pnpm run dev:vite\" \"pnpm run dev:laravel\"",
+        "dev:laravel": "php artisan serve --host=0.0.0.0 --port=8000",
+        "dev:vite": "vite --host 0.0.0.0 --port 5173",
         "build": "vite build"
     },
     "devDependencies": {
         "axios": "^1.7.7",
-        "laravel-vite-plugin": "^1.0.5",
+        "concurrently": "^9.2.0",
+        "fdir": "^6.5.0",
+        "laravel-vite-plugin": "^1.3.0",
         "sass": "^1.77.8",
-        "vite": "^7.2.7"
+        "vite": "^6.4.1"
     },
     "dependencies": {
         "remixicon": "^4.3.0"

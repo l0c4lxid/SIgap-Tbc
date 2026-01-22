@@ -104,9 +104,9 @@
     ])
 
            
-    <main class="main-content position-relative bg-gray-100 max-height-vh-100 h-100 border-radius-lg">
-        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur" navbar-scroll="true">
-            <div class="container-fluid py-3 px-3">
+    <main class="main-content sigap-main position-relative">
+        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-0 mx-lg-4 shadow-none border-radius-xl" id="navbarBlur" navbar-scroll="true">
+            <div class="container-fluid py-2 py-lg-3 px-2 px-lg-3">
                 <div class="soft-topbar">
                     <div class="soft-topbar__primary">
                         <div class="soft-topbar__summary">
@@ -159,7 +159,7 @@
             </div>
         </nav>
 
-        <div class="container-fluid py-4 d-flex flex-column min-vh-100">
+        <div class="container-fluid py-2 py-lg-4 px-2 px-lg-3 d-flex flex-column min-vh-100">
             <div class="soft-content-shell d-flex flex-column flex-grow-1">
                 @yield('content')
                 @include('layouts.partials.soft-footer')

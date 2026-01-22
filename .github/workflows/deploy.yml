@@ -74,25 +74,25 @@ jobs:
         run: |
           if [ -d public ]; then
             cat > public/index.php <<'PHP'
-            <?php
+<?php
 
-            use Illuminate\Contracts\Http\Kernel;
-            use Illuminate\Http\Request;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\Request;
 
-            define('LARAVEL_START', microtime(true));
+define('LARAVEL_START', microtime(true));
 
-            require '/home/situbamy/situba/vendor/autoload.php';
+require '/home/situbamy/situba/vendor/autoload.php';
 
-            $app = require_once '/home/situbamy/situba/bootstrap/app.php';
+$app = require_once '/home/situbamy/situba/bootstrap/app.php';
 
-            $kernel = $app->make(Kernel::class);
+$kernel = $app->make(Kernel::class);
 
-            $response = $kernel->handle(
-                $request = Request::capture()
-            )->send();
+$response = $kernel->handle(
+    $request = Request::capture()
+)->send();
 
-            $kernel->terminate($request, $response);
-            PHP
+$kernel->terminate($request, $response);
+PHP
           fi
 
       # Deploy app core to /situba (exclude public/)

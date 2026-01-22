@@ -92,7 +92,7 @@ jobs:
             )->send();
 
             $kernel->terminate($request, $response);
-PHP
+            PHP
           fi
 
       # Deploy app core to /situba (exclude public/)

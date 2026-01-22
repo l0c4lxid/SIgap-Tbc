@@ -114,6 +114,10 @@ jobs:
             .github/**
             node_modules/**
             public/**
+            resources/assets/**
+            resources/sass/**
+            resources/scss/**
+            resources/less/**
             tests/**
             storage/logs/**
             .env

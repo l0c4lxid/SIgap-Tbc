@@ -385,6 +385,9 @@ class DashboardController extends Controller
                         'trend' => 'Input laporan baru setiap kunjungan',
                         'icon' => 'fa-solid fa-user-nurse',
                         'color' => 'primary',
+                        'url' => route('kader.screening.index'),
+                        'action_label' => 'Mulai tambah skrining baru',
+                        'action_url' => route('kader.screening.create'),
                     ],
                     [
                         'label' => 'Status Akun',

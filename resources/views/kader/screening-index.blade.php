@@ -13,10 +13,10 @@
                                     <p class="text-sm text-muted mb-0">Kelola laporan skrining yang Anda catat di lapangan.</p>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2">
-                                    <a href="{{ route('kader.screening.create') }}" class="btn btn-sm btn-primary">
+                                    <a href="{{ route('kader.screening.create') }}" class="btn btn-sm btn-primary w-100 w-md-auto">
                                         <i class="fa-solid fa-plus me-1"></i>Tambah Skrining
                                     </a>
-                                    <a href="{{ route('kader.screening.export.excel') }}" class="btn btn-sm btn-outline-success">
+                                    <a href="{{ route('kader.screening.export.excel') }}" class="btn btn-sm btn-outline-success w-100 w-md-auto">
                                         <i class="fa-solid fa-file-excel me-1"></i>Export Excel
                                     </a>
                                 </div>
@@ -29,7 +29,7 @@
                                     <input type="text" name="q" class="form-control" placeholder="Cari nama / NIK / HP / RT/RW / kelurahan" value="{{ $search ?? '' }}">
                                 </div>
                                 <div class="d-flex justify-content-end">
-                                    <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100 w-md-auto">Cari</button>
                                 </div>
                             </form>
                         </div>

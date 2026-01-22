@@ -2,10 +2,68 @@ name: Deploy to Shared Hosting (incremental)
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main", "dev"]
 
 jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+        options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, bcmath, ctype, fileinfo, json, tokenizer, xml, pdo, pdo_mysql, openssl, curl, zip, intl
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Copy CI environment
+        run: cp .env.ci .env
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Directory permissions
+        run: |
+          sudo chown -R $USER:$USER storage bootstrap/cache
+          chmod -R 775 storage bootstrap/cache
+
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      - name: Run PHPStan (Larastan)
+        run: vendor/bin/phpstan analyse --configuration=phpstan.neon --no-progress --error-format=table
+
+      - name: Run tests
+        run: php artisan test
+
   deploy:
+    needs: tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:

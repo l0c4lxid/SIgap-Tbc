@@ -395,6 +395,14 @@ body {
         width: 100%;
     }
 
+    .pemda-verification__filters .form-control,
+    .pemda-verification__filters .form-select,
+    .pemda-verification__bulk .form-control,
+    .pemda-verification__bulk .form-select {
+        width: 100%;
+        min-height: 40px;
+    }
+
     .pemda-verification__search-btn {
         width: 100%;
         justify-content: center;
@@ -434,11 +442,11 @@ body {
     }
 
     .pemda-verification__table tbody td {
-        display: flex;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 72px 1fr;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.35rem 0;
+        column-gap: 0.75rem;
+        padding: 0.3rem 0;
         border: none;
     }
 
@@ -467,16 +475,41 @@ body {
     }
 
     .pemda-verification__table tbody td::before {
-        flex: 0 0 76px;
-        font-size: 0.75rem;
+        flex: 0 0 72px;
+        font-size: 0.7rem;
         font-weight: 600;
         color: var(--sigap-muted);
         text-transform: uppercase;
         letter-spacing: 0.03em;
     }
 
+    .pemda-verification__table tbody td:last-child {
+        align-items: start;
+        row-gap: 0.4rem;
+    }
+
     .pemda-verification__table tbody td:last-child form {
-        margin-left: auto;
+        width: 100%;
+    }
+
+    .pemda-verification__table tbody td:last-child .rounded-pill {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .pemda-verification__table tbody td:nth-child(2) a {
+        padding: 0;
+        gap: 0.6rem;
+        align-items: center;
+    }
+
+    .pemda-verification__table tbody td:nth-child(2) i.fa-user,
+    .pemda-verification__table tbody td:nth-child(2) i.fa-solid {
+        margin-right: 0 !important;
+    }
+
+    .pemda-verification__table tbody td:nth-child(5) .badge {
+        justify-self: start;
     }
 
     .pemda-verification__pagination {

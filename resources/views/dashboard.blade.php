@@ -19,10 +19,7 @@
         @foreach ($cards as $card)
             @php $colClass = $cardColumns[$loop->index] ?? 'col-lg-3 col-md-6 col-12 mb-4'; @endphp
             <div class="{{ $colClass }}">
-                @if (!empty($card['url']))
-                    <a href="{{ $card['url'] }}" class="text-decoration-none text-reset d-block">
-                @endif
-                <div class="card">
+                <div class="card position-relative">
                     <div class="card-body p-3">
                         <div class="row">
                             <div class="col-8">
@@ -38,6 +35,12 @@
                                             {{ $card['trend'] }}
                                         </span>
                                     @endif
+                                    @if (!empty($card['action_url']) && !empty($card['action_label']))
+                                        <a href="{{ $card['action_url'] }}" class="d-inline-flex d-lg-none align-items-center gap-1 text-xs text-primary mt-1 position-relative z-1">
+                                            <span>{{ $card['action_label'] }}</span>
+                                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                             <div class="col-4 text-end">
@@ -47,11 +50,11 @@
                                 </div>
                             </div>
                         </div>
+                        @if (!empty($card['url']))
+                            <a href="{{ $card['url'] }}" class="stretched-link" aria-label="{{ $card['label'] }}"></a>
+                        @endif
                     </div>
                 </div>
-                @if (!empty($card['url']))
-                    </a>
-                @endif
             </div>
         @endforeach
     </div>

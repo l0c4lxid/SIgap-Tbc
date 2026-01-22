@@ -1,8 +1,12 @@
-name: Deploy Laravel to Shared Hosting
+name: Deploy Laravel via FTP
 
 on:
   push:
     branches: ["main"]
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -13,57 +17,48 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup PHP + Composer cache
+      # Setup PHP + Composer
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
+          tools: composer:v2
           extensions: mbstring, intl, pdo_mysql
-          coverage: none
-
-      - name: Get Composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies (production)
-        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
-      # Setup Node.js + pnpm
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
 
-      - name: Enable Corepack (pnpm)
-        run: corepack enable
+      # Install pnpm with Corepack
+      - name: Enable pnpm via Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm --version
 
       - name: Install frontend dependencies
         run: |
-          if command -v pnpm >/dev/null 2>&1; then
-            if [ -f pnpm-lock.yaml ]; then
-              pnpm install --frozen-lockfile
-            else
-              pnpm install
-            fi
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install --frozen-lockfile
           else
-            npm install
+            pnpm install
           fi
 
       - name: Build frontend assets
         run: |
-          if command -v pnpm >/dev/null 2>&1; then
-            pnpm run build
+          if [ -f package.json ]; then
+            if node -e "const pkg=require('./package.json');process.exit(pkg.scripts && pkg.scripts.build ? 0 : 1)"; then
+              pnpm run build || npm run build
+            else
+              echo "No build script found, skipping."
+            fi
           else
-            npm run build
+            echo "No package.json found, skipping."
           fi
 
       # Cache config/route (best effort)
@@ -86,9 +81,9 @@ jobs:
 
             define('LARAVEL_START', microtime(true));
 
-            require '/situba/vendor/autoload.php';
+            require '/home/situbamy/situba/vendor/autoload.php';
 
-            $app = require_once '/situba/bootstrap/app.php';
+            $app = require_once '/home/situbamy/situba/bootstrap/app.php';
 
             $kernel = $app->make(Kernel::class);
 
@@ -110,20 +105,21 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: ./
-          server-dir: /situba/
+          server-dir: situba/
           state-name: .ftp-deploy-core-state.json
           timeout: 300000
           dangerous-clean-slate: false
           exclude: |
-            **/.git*
-            **/.github/**
+            .git/**
+            .github/**
             node_modules/**
             public/**
             tests/**
             storage/logs/**
             .env
             .env.*
-            .env*
+            README*
+            *.md
 
       # Deploy public assets to /public_html
       - name: Deploy public to /public_html
@@ -135,11 +131,11 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: ./public/
-          server-dir: /public_html/
+          server-dir: public_html/
           state-name: .ftp-deploy-public-state.json
           timeout: 300000
           dangerous-clean-slate: false
           exclude: |
-            **/.git*
-            **/.github/**
+            .git/**
+            .github/**
             node_modules/**

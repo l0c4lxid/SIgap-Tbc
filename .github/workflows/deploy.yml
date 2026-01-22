@@ -73,26 +73,26 @@ jobs:
       - name: Generate public index.php
         run: |
           if [ -d public ]; then
-            cat > public/index.php <<'PHP'
-            <?php
-
-            use Illuminate\Contracts\Http\Kernel;
-            use Illuminate\Http\Request;
-
-            define('LARAVEL_START', microtime(true));
-
-            require '/home/situbamy/situba/vendor/autoload.php';
-
-            $app = require_once '/home/situbamy/situba/bootstrap/app.php';
-
-            $kernel = $app->make(Kernel::class);
-
-            $response = $kernel->handle(
-                $request = Request::capture()
-            )->send();
-
-            $kernel->terminate($request, $response);
-            PHP
+            printf '%s\n' \
+              '<?php' \
+              '' \
+              'use Illuminate\Contracts\Http\Kernel;' \
+              'use Illuminate\Http\Request;' \
+              '' \
+              "define('LARAVEL_START', microtime(true));" \
+              '' \
+              "require '/home/situbamy/situba/vendor/autoload.php';" \
+              '' \
+              "\$app = require_once '/home/situbamy/situba/bootstrap/app.php';" \
+              '' \
+              "\$kernel = \$app->make(Kernel::class);" \
+              '' \
+              "\$response = \$kernel->handle(" \
+              '    $request = Request::capture()' \
+              ')->send();' \
+              '' \
+              "\$kernel->terminate(\$request, \$response);" \
+              > public/index.php
           fi
 
       # Deploy app core to /situba (exclude public/)

@@ -6,38 +6,38 @@
 
 @switch($icon)
     @case('dashboard')
-        <i class="fa-solid fa-chart-simple {{ $stateClass }}"></i>
+        <i class="fa-solid fa-chart-simple fa-fw {{ $stateClass }}"></i>
         @break
     @case('folder')
-        <i class="fa-solid fa-folder-open {{ $stateClass }}"></i>
+        <i class="fa-solid fa-folder-open fa-fw {{ $stateClass }}"></i>
         @break
     @case('screening')
-        <i class="fa-solid fa-notes-medical {{ $stateClass }}"></i>
+        <i class="fa-solid fa-notes-medical fa-fw {{ $stateClass }}"></i>
         @break
     @case('berobat')
-        <i class="fa-solid fa-syringe {{ $stateClass }}"></i>
+        <i class="fa-solid fa-syringe fa-fw {{ $stateClass }}"></i>
         @break
     @case('sembuh')
-        <i class="fa-solid fa-heart-pulse {{ $stateClass }}"></i>
+        <i class="fa-solid fa-heart-pulse fa-fw {{ $stateClass }}"></i>
         @break
     @case('anggota')
-        <i class="fa-solid fa-people-group {{ $stateClass }}"></i>
+        <i class="fa-solid fa-people-group fa-fw {{ $stateClass }}"></i>
         @break
     @case('verify')
-        <i class="fa-solid fa-user-check {{ $stateClass }}"></i>
+        <i class="fa-solid fa-user-check fa-fw {{ $stateClass }}"></i>
         @break
     @case('profile')
-        <i class="fa-solid fa-id-card {{ $stateClass }}"></i>
+        <i class="fa-solid fa-id-card fa-fw {{ $stateClass }}"></i>
         @break
     @case('users')
-        <i class="fa-solid fa-users {{ $stateClass }}"></i>
+        <i class="fa-solid fa-users fa-fw {{ $stateClass }}"></i>
         @break
     @case('materi')
-        <i class="fa-solid fa-book-open {{ $stateClass }}"></i>
+        <i class="fa-solid fa-book-open fa-fw {{ $stateClass }}"></i>
         @break
     @case('news')
-        <i class="fa-solid fa-newspaper {{ $stateClass }}"></i>
+        <i class="fa-solid fa-newspaper fa-fw {{ $stateClass }}"></i>
         @break
     @default
-        <i class="fa-solid fa-circle-info {{ $stateClass }}"></i>
+        <i class="fa-solid fa-circle-info fa-fw {{ $stateClass }}"></i>
 @endswitch

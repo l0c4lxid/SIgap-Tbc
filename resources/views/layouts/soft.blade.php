@@ -92,6 +92,7 @@
     <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/remixicon/fonts/remixicon.css') }}">
     <link id="pagestyle" href="{{ asset('assets/css/soft-ui-dashboard.css?v=1.1.0') }}" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
@@ -128,7 +129,8 @@
                             </div>
                     </div>
                     <div class="soft-topbar__actions">
-                        <button id="iconNavbarSidenav" class="btn btn-outline-primary btn-icon d-xl-none" type="button" aria-label="Navigasi">
+                        <button id="soft-sidebar-toggle" class="btn btn-outline-primary btn-icon d-xl-none" type="button"
+                            aria-controls="sidenav-main" aria-expanded="false" aria-label="Navigasi">
                             <i class="ri-menu-3-line"></i>
                         </button>
                         <div class="dropdown soft-profile-dropdown ms-auto">

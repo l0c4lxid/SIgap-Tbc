@@ -1,45 +1,35 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="id">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <title>@yield('title', 'Error') - {{ config('app.name', 'Laravel') }}</title>
-
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <link rel="stylesheet" href="{{ mix('/css/si_gap_tbc.css') }}">
+        <title>Error - SITUBA</title>
+        <link rel="stylesheet" href="/css/si_gap_tbc.css">
     </head>
     <body class="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-emerald-50 text-slate-900">
         <main class="min-h-screen px-6 py-12 flex items-center justify-center">
             <div class="w-full max-w-2xl">
                 <div class="flex items-center justify-between">
-                    <a href="{{ url('/') }}" class="text-sm font-semibold tracking-wide text-emerald-700">
-                        {{ config('app.name', 'SITUBA') }}
-                    </a>
+                    <a href="/" class="text-sm font-semibold tracking-wide text-emerald-700">SITUBA</a>
                     <span class="text-xs uppercase tracking-[0.2em] text-slate-400">Error</span>
                 </div>
 
                 <div class="mt-6 rounded-3xl border border-white/70 bg-white/80 p-8 shadow-xl shadow-emerald-100 backdrop-blur">
                     <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p class="text-sm font-semibold text-emerald-600">Kode @yield('code')</p>
-                            <h1 class="mt-2 text-3xl font-bold text-slate-900">
-                                @yield('message')
-                            </h1>
+                            <p class="text-sm font-semibold text-emerald-600">Kode</p>
+                            <h1 class="mt-2 text-3xl font-bold text-slate-900">Terjadi Kesalahan</h1>
                             <p class="mt-3 text-base leading-relaxed text-slate-600">
-                                @yield('description')
+                                Halaman ini disediakan sebagai fallback statis untuk error.
                             </p>
                         </div>
                         <div class="flex items-center justify-start md:justify-end">
-                            <div class="h-24 w-24 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center text-3xl font-bold">
-                                @yield('code')
-                            </div>
+                            <div class="h-24 w-24 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center text-3xl font-bold">!</div>
                         </div>
                     </div>
 
                     <div class="mt-8 flex flex-wrap gap-3">
-                        <a href="{{ url('/') }}" class="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700">
+                        <a href="/" class="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700">
                             Kembali ke Beranda
                         </a>
                         <button type="button" onclick="history.back()" class="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-white px-5 py-2.5 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:text-emerald-800">

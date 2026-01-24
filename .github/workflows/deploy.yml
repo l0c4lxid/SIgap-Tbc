@@ -1,145 +1,49 @@
-name: Deploy Laravel via FTP
+name: Deploy SITUBA
 
 on:
   push:
-    branches: ["main"]
-
-concurrency:
-  group: deploy-main
-  cancel-in-progress: true
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout repository
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # Setup PHP + Composer
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.2"
-          tools: composer:v2
-          extensions: mbstring, intl, pdo_mysql
-
-      - name: Install Composer dependencies (production)
-        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
-
-      # Setup Node.js
-      - name: Setup Node.js
+      - name: Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Install pnpm with Corepack
-      - name: Enable pnpm via Corepack
+      - name: Build assets (Vite)
         run: |
-          corepack enable
-          corepack prepare pnpm@latest --activate
-          pnpm --version
+          npm ci || npm install
+          npm run build
 
-      - name: Install frontend dependencies
+      - name: Setup SSH key
         run: |
-          if [ -f pnpm-lock.yaml ]; then
-            pnpm install --frozen-lockfile
-          else
-            pnpm install
-          fi
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Build frontend assets
+      - name: Deploy via rsync
         run: |
-          if [ -f package.json ]; then
-            if node -e "const pkg=require('./package.json');process.exit(pkg.scripts && pkg.scripts.build ? 0 : 1)"; then
-              pnpm run build || npm run build
-            else
-              echo "No build script found, skipping."
-            fi
-          else
-            echo "No package.json found, skipping."
-          fi
+          rsync -avz --delete \
+            --exclude ".git" \
+            --exclude "node_modules" \
+            --exclude ".env" \
+            ./ \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}/"
 
-      # Cache config/route (best effort)
-      - name: Cache config and routes
+      - name: Laravel optimize on server
         run: |
-          if [ -f artisan ]; then
-            php artisan config:cache || true
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" << 'EOF'
+            set -e
+            cd /home/situbamy/SItuba
+            composer install --no-dev --optimize-autoloader || ~/bin/composer install --no-dev --optimize-autoloader
+            php artisan config:cache
             php artisan route:cache || true
-          fi
-
-      # Generate public/index.php for shared hosting
-      - name: Generate public index.php
-        run: |
-          if [ -d public ]; then
-            printf '%s\n' \
-              '<?php' \
-              '' \
-              'use Illuminate\Contracts\Http\Kernel;' \
-              'use Illuminate\Http\Request;' \
-              '' \
-              "define('LARAVEL_START', microtime(true));" \
-              '' \
-              "require '/home/situbamy/situba/vendor/autoload.php';" \
-              '' \
-              "\$app = require_once '/home/situbamy/situba/bootstrap/app.php';" \
-              '' \
-              "\$kernel = \$app->make(Kernel::class);" \
-              '' \
-              "\$response = \$kernel->handle(" \
-              '    $request = Request::capture()' \
-              ')->send();' \
-              '' \
-              "\$kernel->terminate(\$request, \$response);" \
-              > public/index.php
-          fi
-
-      # Deploy app core to /situba (exclude public/)
-      - name: Deploy core to /situba
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          protocol: ftps
-          port: 21
-          local-dir: ./
-          server-dir: situba/
-          state-name: .ftp-deploy-core-state.json
-          timeout: 300000
-          dangerous-clean-slate: false
-          exclude: |
-            .git/**
-            .github/**
-            node_modules/**
-            public/**
-            resources/assets/**
-            resources/sass/**
-            resources/scss/**
-            resources/less/**
-            tests/**
-            storage/logs/**
-            .env
-            .env.*
-            README*
-            *.md
-
-      # Deploy public assets to /public_html
-      - name: Deploy public to /public_html
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          protocol: ftps
-          port: 21
-          local-dir: ./public/
-          server-dir: public_html/
-          state-name: .ftp-deploy-public-state.json
-          timeout: 300000
-          dangerous-clean-slate: false
-          exclude: |
-            .git/**
-            .github/**
-            node_modules/**
+            php artisan view:cache || true
+          EOF

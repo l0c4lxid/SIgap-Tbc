@@ -4,39 +4,31 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>400 Bad Request - SITUBA</title>
-        <link rel="stylesheet" href="/css/si_gap_tbc.css">
     </head>
-    <body class="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-emerald-50 text-slate-900">
-        <main class="min-h-screen px-6 py-12 flex items-center justify-center">
-            <div class="w-full max-w-2xl">
-                <div class="flex items-center justify-between">
-                    <a href="/" class="text-sm font-semibold tracking-wide text-emerald-700">SITUBA</a>
-                    <span class="text-xs uppercase tracking-[0.2em] text-slate-400">Error</span>
+    <body style="background: radial-gradient(circle at 10% 20%, #f2f9f6 0%, #eef5ff 45%, #f7f8ff 100%);font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;color: #0f172a; margin: 0; min-height: 100vh;">
+        <main style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px;">
+            <div style="width: 100%; max-width: 860px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                    <a href="/" style="text-decoration: none; color: #047857; font-weight: 700; font-size: 14px; letter-spacing: 0.08em;">SITUBA</a>
+                    <span style="display: inline-flex; align-items: center; gap: 8px;padding: 6px 14px; border-radius: 999px;background: rgba(16, 185, 129, 0.12); color: #047857;font-size: 12px; font-weight: 600; letter-spacing: 0.12em;text-transform: uppercase;">Status</span>
                 </div>
 
-                <div class="mt-6 rounded-3xl border border-white/70 bg-white/80 p-8 shadow-xl shadow-emerald-100 backdrop-blur">
-                    <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <p class="text-sm font-semibold text-emerald-600">Kode 400</p>
-                            <h1 class="mt-2 text-3xl font-bold text-slate-900">Permintaan tidak valid</h1>
-                            <p class="mt-3 text-base leading-relaxed text-slate-600">Server tidak bisa memproses permintaan karena formatnya salah atau URL tidak valid.</p>
+                <div style="background: #ffffff; border-radius: 20px;box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);padding: 32px; border: 1px solid rgba(148, 163, 184, 0.25);">
+                    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: space-between;">
+                        <div style="min-width: 220px; flex: 1;">
+                            <div style="display: inline-flex; align-items: center; gap: 8px;padding: 6px 14px; border-radius: 999px;background: rgba(16, 185, 129, 0.12); color: #047857;font-size: 12px; font-weight: 600; letter-spacing: 0.12em;text-transform: uppercase;">Kode 400</div>
+                            <h1 style="margin: 16px 0 8px; font-size: 32px; font-weight: 700;">Permintaan tidak valid</h1>
+                            <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #475569;">Server tidak bisa memproses permintaan karena formatnya salah atau URL tidak valid.</p>
+                            <div style="margin-top: 24px; display: flex; flex-wrap: wrap; gap: 12px;">
+                                <a href="/" style="display: inline-block; padding: 12px 20px; border-radius: 999px;background: #10b981; color: #ffffff; text-decoration: none;font-weight: 600; box-shadow: 0 12px 24px rgba(16, 185, 129, 0.25);">Kembali ke Beranda</a>
+                                <a href="javascript:history.back()" style="display: inline-block; padding: 12px 20px; border-radius: 999px;background: #ffffff; color: #0f766e; text-decoration: none;font-weight: 600; border: 1px solid rgba(148, 163, 184, 0.4);">Kembali Sebelumnya</a>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-start md:justify-end">
-                            <div class="h-24 w-24 rounded-full bg-emerald-100/80 text-emerald-600 flex items-center justify-center text-3xl font-bold">400</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 flex flex-wrap gap-3">
-                        <a href="/" class="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700">
-                            Kembali ke Beranda
-                        </a>
-                        <button type="button" onclick="history.back()" class="inline-flex items-center justify-center rounded-full border border-emerald-200 bg-white px-5 py-2.5 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:text-emerald-800">
-                            Kembali ke Halaman Sebelumnya
-                        </button>
+                        <div style="height: 110px; width: 110px; border-radius: 50%;background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);display: flex; align-items: center; justify-content: center;color: #047857; font-size: 32px; font-weight: 700;box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2);">400</div>
                     </div>
                 </div>
 
-                <p class="mt-6 text-xs text-slate-500">
+                <p style="margin-top: 18px; font-size: 12px; color: #64748b;">
                     Jika masalah terus berlanjut, silakan hubungi admin atau coba beberapa saat lagi.
                 </p>
             </div>

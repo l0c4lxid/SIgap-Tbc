@@ -28,6 +28,11 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Put app into maintenance mode
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "set -e; cd '${{ secrets.SSH_PATH }}'; if [ -n '${{ secrets.MAINTENANCE_SECRET }}' ]; then php artisan down --secret='${{ secrets.MAINTENANCE_SECRET }}' --retry=60 --refresh=15; else php artisan down --retry=60 --refresh=15; fi"
+
       - name: Deploy via rsync
         run: |
           rsync -avz --delete \
@@ -39,11 +44,11 @@ jobs:
 
       - name: Laravel optimize on server
         run: |
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" << 'EOF'
-            set -e
-            cd /home/situbamy/SItuba
-            composer install --no-dev --optimize-autoloader || ~/bin/composer install --no-dev --optimize-autoloader
-            php artisan config:cache
-            php artisan route:cache || true
-            php artisan view:cache || true
-          EOF
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "set -e; cd '${{ secrets.SSH_PATH }}'; composer install --no-dev --optimize-autoloader || ~/bin/composer install --no-dev --optimize-autoloader; php artisan config:cache; php artisan route:cache || true; php artisan view:cache || true"
+
+      - name: Bring app back up
+        if: always()
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd '${{ secrets.SSH_PATH }}' && php artisan up || true"

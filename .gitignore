@@ -23,3 +23,11 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 Sigap-TBC.zip
+rr
+.rr.yaml
+
+**/caddy
+frankenphp
+frankenphp-worker.php
+rr
+.rr.yaml

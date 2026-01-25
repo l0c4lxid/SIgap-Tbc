@@ -12,9 +12,12 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "*",
         "laravel/framework": "^12.0",
+        "laravel/octane": "^2.13",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
-        "maennchen/zipstream-php": "^2.3"
+        "maennchen/zipstream-php": "^2.3",
+        "spiral/roadrunner-cli": "*",
+        "spiral/roadrunner-http": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",
@@ -53,7 +56,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"npm run dev\" --names='server,queue,vite'"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"npm run dev:vite\" --names=server,queue,vite"
         ],
         "test": [
             "@php artisan config:clear --ansi",
@@ -64,8 +67,7 @@
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php artisan boost:update --ansi"
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

@@ -14,18 +14,48 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Puskesmas\KaderController as PuskesmasKaderController;
 use App\Http\Controllers\Puskesmas\KelurahanController as PuskesmasKelurahanController;
 use App\Http\Controllers\Puskesmas\ScreeningController as PuskesmasScreeningController;
+use App\Models\PatientScreening;
 use App\Models\User;
 use App\Enums\UserRole;
 use App\Models\NewsPost;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     $puskesmasCount = User::where('role', UserRole::Puskesmas->value)->count();
     $kelurahanCount = User::where('role', UserRole::Kelurahan->value)->count();
+    $screeningsLast30Days = PatientScreening::query()
+        ->where('created_at', '>=', now()->subDays(30))
+        ->get();
+    $screeningsLast30DaysCount = $screeningsLast30Days->count();
+    $suspectLast30DaysCount = $screeningsLast30Days
+        ->filter(function ($screening) {
+            $positive = collect($screening->answers ?? [])
+                ->filter(fn ($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
+                ->count();
+            return $positive >= 1;
+        })
+        ->count();
+    $followUpRate = $screeningsLast30DaysCount > 0
+        ? (int) round(($suspectLast30DaysCount / $screeningsLast30DaysCount) * 100)
+        : 0;
+    $priorityKelurahan = PatientScreening::query()
+        ->whereNotNull('patient_address_kelurahan')
+        ->where('patient_address_kelurahan', '!=', '')
+        ->where('created_at', '>=', now()->subDays(30))
+        ->select('patient_address_kelurahan', DB::raw('count(*) as total'))
+        ->groupBy('patient_address_kelurahan')
+        ->orderByDesc('total')
+        ->limit(3)
+        ->pluck('patient_address_kelurahan');
 
     return view('landing', [
         'puskesmasCount' => $puskesmasCount,
         'kelurahanCount' => $kelurahanCount,
+        'screeningsLast30DaysCount' => $screeningsLast30DaysCount,
+        'followUpRate' => $followUpRate,
+        'criticalAlertsCount' => $suspectLast30DaysCount,
+        'priorityKelurahan' => $priorityKelurahan,
     ]);
 })->name('home');
 

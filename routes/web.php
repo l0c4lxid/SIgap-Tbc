@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Kader\MaterialController as KaderMaterialController;
 use App\Http\Controllers\Kader\ScreeningController as KaderScreeningController;
 use App\Http\Controllers\Kader\PuskesmasController as KaderPuskesmasController;
+use App\Http\Controllers\Kader\KelurahanController as KaderKelurahanController;
 use App\Http\Controllers\Kelurahan\MonitoringController as KelurahanMonitoringController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Pemda\ProfileController as PemdaProfileController;
@@ -144,10 +145,20 @@ Route::middleware('auth')->group(function () {
         ->name('kelurahan.kaders.status');
     Route::get('/kelurahan/kader-export/excel', [KelurahanMonitoringController::class, 'exportKadersExcel'])
         ->name('kelurahan.kaders.export.excel');
+    Route::get('/pemda/materi', [KaderMaterialController::class, 'index'])
+        ->name('pemda.materi');
+    Route::get('/puskesmas/materi', [KaderMaterialController::class, 'index'])
+        ->name('puskesmas.materi');
+    Route::get('/kelurahan/materi', [KaderMaterialController::class, 'index'])
+        ->name('kelurahan.materi');
     Route::get('/kader/materi', [KaderMaterialController::class, 'index'])
         ->name('kader.materi');
     Route::get('/kader/puskesmas', [KaderPuskesmasController::class, 'show'])
         ->name('kader.puskesmas');
+    Route::get('/kader/mitra', [KaderKelurahanController::class, 'index'])
+        ->name('kader.mitra');
+    Route::get('/kader/kelurahan', [KaderKelurahanController::class, 'index'])
+        ->name('kader.kelurahan');
     Route::get('/kader/skrining', [KaderScreeningController::class, 'index'])
         ->name('kader.screening.index');
     Route::get('/kader/skrining/create', [KaderScreeningController::class, 'create'])

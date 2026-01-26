@@ -9,40 +9,40 @@
                         <h5 class="mb-0">Data Skrining Kader</h5>
                         <p class="text-sm text-muted mb-0">Rekap seluruh skrining yang diinput oleh kader.</p>
                     </div>
-                    <form method="GET" action="{{ route('pemda.screenings') }}" class="d-flex flex-wrap gap-3 align-items-end w-100 justify-content-between" data-auto-submit>
-                        <div class="d-flex flex-wrap gap-3 align-items-end">
-                            <div class="d-flex flex-column">
+                    <form method="GET" action="{{ route('pemda.screenings') }}" class="d-flex flex-wrap gap-3 align-items-end w-100 justify-content-between screenings-filter" data-auto-submit>
+                        <div class="d-flex flex-wrap gap-3 align-items-end screenings-filter__row">
+                            <div class="d-flex flex-column screenings-filter__field">
                                 <label class="text-xxs text-muted mb-1">Tanggal mulai</label>
-                                <div class="input-group input-group-sm" style="min-width: 170px;">
+                                <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-white"><i class="fa fa-calendar text-muted"></i></span>
-                                    <input type="date" name="from" class="form-control" value="{{ $filters['from'] ?? '' }}">
+                                    <input type="date" name="from" class="form-control" value="{{ $filters['from'] ?? now()->subMonth()->toDateString() }}">
                                 </div>
                             </div>
-                            <div class="d-flex flex-column">
+                            <div class="d-flex flex-column screenings-filter__field">
                                 <label class="text-xxs text-muted mb-1">Tanggal akhir</label>
-                                <div class="input-group input-group-sm" style="min-width: 170px;">
+                                <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-white"><i class="fa fa-calendar text-muted"></i></span>
-                                    <input type="date" name="to" class="form-control" value="{{ $filters['to'] ?? '' }}">
+                                    <input type="date" name="to" class="form-control" value="{{ $filters['to'] ?? now()->toDateString() }}">
                                 </div>
                             </div>
-                            <div class="d-flex flex-column">
+                            <div class="d-flex flex-column screenings-filter__field">
                                 <span class="text-xxs text-muted mb-1 invisible">Spasi</span>
-                                <a href="{{ route('pemda.screenings.export.excel', request()->query()) }}" class="btn btn-sm btn-outline-primary btn-export">
+                                <a href="{{ route('pemda.screenings.export.excel', request()->query()) }}" class="btn btn-sm btn-outline-primary btn-export w-100">
                                     <i class="fa fa-file-excel me-1"></i> Export Excel
                                 </a>
                             </div>
                         </div>
-                        <div class="d-flex flex-wrap gap-2 align-items-end justify-content-end">
-                            <div class="d-flex flex-column">
+                        <div class="d-flex flex-wrap gap-2 align-items-end justify-content-end screenings-filter__row">
+                            <div class="d-flex flex-column screenings-filter__field">
                                 <label class="text-xxs text-muted mb-1">Cari nama / NIK / kader</label>
-                                <div class="input-group input-group-sm" style="min-width: 250px;">
+                                <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
                                     <input type="text" name="q" class="form-control" placeholder="Cari nama / NIK / kader" value="{{ $search ?? '' }}">
                                 </div>
                             </div>
-                            <div class="d-flex flex-column">
+                            <div class="d-flex flex-column screenings-filter__field">
                                 <span class="text-xxs text-muted mb-1 invisible">Spasi</span>
-                                <button type="submit" class="btn btn-sm btn-outline-success">Terapkan</button>
+                                <button type="submit" class="btn btn-sm btn-outline-success w-100">Terapkan</button>
                             </div>
                         </div>
                     </form>
@@ -125,7 +125,7 @@
                         </p>
                         @if ($hasPagination)
                             <div class="mb-0">
-                                {{ $screenings->withQueryString()->onEachSide(1)->links('pagination::bootstrap-5') }}
+                                {{ $screenings->withQueryString()->onEachSide(1)->links('pagination.compact-arrows') }}
                             </div>
                         @endif
                     </div>

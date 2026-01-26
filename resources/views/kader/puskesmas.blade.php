@@ -1,7 +1,7 @@
 @extends('layouts.soft')
 
 @section('content')
-    <div class="row">
+    <div class="row kader-puskesmas-page">
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header">

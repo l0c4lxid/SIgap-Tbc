@@ -258,6 +258,12 @@ body {
         max-width: 100%;
     }
 
+    /* Hindari ruang kosong berlebih pada halaman konten pendek */
+    .g-sidenav-show .sigap-main .container-fluid {
+        display: flex;
+        flex-direction: column;
+    }
+
     .navbar-main {
         margin: 0.25rem 0 0.5rem !important;
         padding: 0.45rem 0.75rem;
@@ -321,6 +327,93 @@ body {
         padding: 0;
     }
 
+    .screenings-filter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.85rem;
+    }
+
+    .screenings-filter__row {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .screenings-filter__field {
+        width: 100%;
+    }
+
+    .screenings-filter .input-group {
+        width: 100%;
+        min-width: 0 !important;
+    }
+
+    .screenings-filter__apply {
+        width: auto;
+        align-self: flex-end;
+    }
+
+    .screenings-filter__row--inline {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: flex-end;
+        gap: 0.5rem;
+    }
+
+    .screenings-filter__row--inline .screenings-filter__field {
+        flex: 1 1 auto;
+    }
+
+    .kaders-filter {
+        align-items: stretch;
+        max-width: 100%;
+    }
+
+    .kaders-filter__row {
+        flex-wrap: nowrap;
+        align-items: stretch;
+    }
+
+    .kaders-filter__search {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .kaders-filter__export {
+        width: 100%;
+    }
+
+    .kaders-filter__submit,
+    .kaders-filter__reset {
+        min-width: 96px;
+    }
+
+    .kelurahan-puskesmas__search {
+        width: 100%;
+        flex-wrap: nowrap;
+        align-items: stretch;
+    }
+
+    .kelurahan-puskesmas__search-input {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .kelurahan-puskesmas__search-input .input-group-text {
+        border-radius: 999px 0 0 999px;
+    }
+
+    .kelurahan-puskesmas__search-input .form-control {
+        border-radius: 0 999px 999px 0;
+    }
+
+    .kelurahan-puskesmas__search-btn {
+        white-space: nowrap;
+        min-width: 88px;
+        border-radius: 999px;
+    }
+
     .mobile-flat-card {
         background: transparent;
         border: none;
@@ -362,11 +455,11 @@ body {
     }
 
     .pemda-verification__title {
-        padding: 0.85rem 1rem;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(15, 23, 42, 0.06);
-        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
     }
 
     .pemda-verification__title h5 {
@@ -699,6 +792,16 @@ body {
 
 .soft-content-shell {
     flex: 1;
+}
+
+.kader-puskesmas-page {
+    flex: 1 1 auto;
+}
+
+@media (max-width: 767.98px) {
+    .kader-puskesmas-page {
+        flex: 1 1 auto;
+    }
 }
 
 .rw-filter {
@@ -1118,6 +1221,165 @@ body {
     box-shadow: none;
 }
 
+/* Stabilkan dropdown profil agar tidak flicker dan selalu di atas konten */
+.navbar-main {
+    position: relative;
+    z-index: 1050;
+}
+
+.soft-profile-dropdown .dropdown-menu {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    border-radius: 16px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+    z-index: 1060;
+}
+
+.soft-profile-dropdown .dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.soft-profile-dropdown .dropdown-menu::before {
+    display: none;
+}
+
+.kaders-filter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 420px;
+    margin-left: auto;
+}
+
+.kaders-filter__form {
+    width: 100%;
+}
+
+.kaders-filter__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.kaders-filter__search {
+    flex: 1 1 240px;
+    min-width: 240px;
+}
+
+.kaders-filter__search .input-group-text {
+    border-radius: 999px 0 0 999px;
+}
+
+.kaders-filter__search .form-control {
+    border-radius: 0 999px 999px 0;
+}
+
+.kaders-filter__submit,
+.kaders-filter__reset,
+.kaders-filter__export {
+    border-radius: 999px;
+}
+
+.kelurahan-puskesmas__search {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.kelurahan-puskesmas__search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.kelurahan-puskesmas__search-input .input-group-text {
+    border-radius: 999px 0 0 999px;
+}
+
+.kelurahan-puskesmas__search-input .form-control {
+    border-radius: 0 999px 999px 0;
+}
+
+    .kelurahan-puskesmas__search-btn {
+        border-radius: 999px;
+        min-width: 88px;
+    }
+
+    .kelurahan-kaders-filter {
+        align-items: stretch;
+        max-width: 100%;
+    }
+
+    .kelurahan-kaders-filter__row {
+        flex-wrap: nowrap;
+        align-items: stretch;
+    }
+
+    .kelurahan-kaders-filter__search {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .kelurahan-kaders-filter__export {
+        width: 100%;
+    }
+
+    .kelurahan-kaders-filter__submit {
+        min-width: 88px;
+    }
+
+.kelurahan-kaders-filter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 420px;
+    margin-left: auto;
+}
+
+.kelurahan-kaders-filter__form {
+    width: 100%;
+}
+
+.kelurahan-kaders-filter__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.kelurahan-kaders-filter__search {
+    flex: 1 1 240px;
+    min-width: 240px;
+}
+
+.kelurahan-kaders-filter__search .input-group-text {
+    border-radius: 999px 0 0 999px;
+}
+
+.kelurahan-kaders-filter__search .form-control {
+    border-radius: 0 999px 999px 0;
+}
+
+.kelurahan-kaders-filter__export,
+.kelurahan-kaders-filter__submit {
+    border-radius: 999px;
+}
+
 .btn-soft {
     background: rgba(15, 118, 110, 0.12);
     border: 1px solid rgba(15, 118, 110, 0.25);
@@ -1174,6 +1436,17 @@ body {
     background: rgba(14, 165, 160, 0.2);
     transform: none !important;
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.soft-profile-dropdown .soft-user-pill,
+.soft-profile-dropdown .soft-user-pill:active,
+.soft-profile-dropdown .soft-user-pill:focus {
+    box-shadow: none;
+    transform: none;
+}
+
+.soft-profile-dropdown .btn.show .soft-user-pill {
+    background: rgba(14, 165, 160, 0.12);
 }
 
 /* Pastikan dialog konfirmasi tampil di atas sidebar pada mode mobile */
@@ -1597,6 +1870,45 @@ body.soft-sidebar-open {
 
 .soft-footer__links a:hover {
     color: var(--sigap-primary);
+}
+
+/* Pastikan footer selalu menempel bawah pada halaman yang kontennya pendek */
+.g-sidenav-show .sigap-main {
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+.g-sidenav-show .sigap-main > .container-fluid {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.g-sidenav-show .sigap-main .container-fluid.min-vh-100 {
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+}
+
+@media (max-width: 575.98px) {
+    .g-sidenav-show .sigap-main {
+        min-height: 100vh;
+        min-height: 100svh;
+        min-height: 100dvh;
+    }
+
+    .g-sidenav-show .sigap-main > .container-fluid {
+        min-height: 100vh;
+        min-height: 100svh;
+        min-height: 100dvh;
+    }
+
+    .g-sidenav-show .sigap-main .soft-content-shell {
+        min-height: 100%;
+    }
 }
 
 .pagination .page-link {

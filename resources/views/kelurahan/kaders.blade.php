@@ -9,16 +9,18 @@
                         <h5 class="mb-0">Kader di Wilayah Kelurahan</h5>
                         <p class="text-sm text-muted mb-0">Daftar kader yang ditugaskan oleh puskesmas mitra kelurahan ini.</p>
                     </div>
-                    <div class="d-flex flex-wrap gap-2 align-items-center">
-                        <a href="{{ route('kelurahan.kaders.export.excel', request()->only('q')) }}" class="btn btn-sm btn-success">
+                    <div class="kelurahan-kaders-filter ms-auto">
+                        <a href="{{ route('kelurahan.kaders.export.excel', request()->only('q')) }}" class="btn btn-sm btn-success kelurahan-kaders-filter__export">
                             <i class="fa fa-file-excel me-1"></i> Export Excel
                         </a>
-                        <form method="GET" action="{{ route('kelurahan.kaders') }}" class="d-flex gap-2" data-auto-submit>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
-                                <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP / area" value="{{ $search ?? '' }}">
+                        <form method="GET" action="{{ route('kelurahan.kaders') }}" class="kelurahan-kaders-filter__form" data-auto-submit>
+                            <div class="kelurahan-kaders-filter__row">
+                                <div class="input-group input-group-sm kelurahan-kaders-filter__search">
+                                    <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
+                                    <input type="text" name="q" class="form-control" placeholder="Cari nama / nomor HP / area" value="{{ $search ?? '' }}">
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-outline-primary kelurahan-kaders-filter__submit">Cari</button>
                             </div>
-                            <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
                         </form>
                     </div>
                 </div>
@@ -94,7 +96,7 @@
                         </p>
                         @if ($hasPagination)
                             <div class="mb-0">
-                                {{ $kaders->withQueryString()->onEachSide(1)->links('pagination::bootstrap-5') }}
+                                {{ $kaders->withQueryString()->onEachSide(1)->links('pagination.compact-arrows') }}
                             </div>
                         @endif
                     </div>

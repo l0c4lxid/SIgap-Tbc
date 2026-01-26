@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Kader;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\PatientScreening;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -50,10 +52,29 @@ class ScreeningController extends Controller
         abort_if($request->user()->role !== UserRole::Kader, 403);
 
         [$riskQuestions, $symptomQuestions] = $this->questionSets();
+        $kelurahanName = optional($request->user()->detail)->organization;
+        $kelurahanOptions = User::query()
+            ->with('detail')
+            ->where('role', UserRole::Kelurahan->value)
+            ->where('is_active', true)
+            ->get()
+            ->map(fn($user) => trim($user->detail?->organization ?: ($user->name ?? '')))
+            ->filter(fn($name) => $name !== '')
+            ->unique()
+            ->sort()
+            ->values();
+        $kelurahanKeywordOptions = $kelurahanOptions
+            ->filter(fn($name) => Str::contains(Str::lower($name), 'kelurahan'))
+            ->values();
+        if ($kelurahanKeywordOptions->isNotEmpty()) {
+            $kelurahanOptions = $kelurahanKeywordOptions;
+        }
 
         return view('kader.screening-create', [
             'riskQuestions' => $riskQuestions,
             'symptomQuestions' => $symptomQuestions,
+            'kelurahanName' => $kelurahanName,
+            'kelurahanOptions' => $kelurahanOptions,
         ]);
     }
 
@@ -66,7 +87,7 @@ class ScreeningController extends Controller
 
         $rules = $this->buildRules($questions);
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, $this->buildMessages());
 
         $answers = $this->buildAnswers($questions, $validated);
 
@@ -117,7 +138,7 @@ class ScreeningController extends Controller
         [$riskQuestions, $symptomQuestions] = $this->questionSets();
         $questions = $riskQuestions + $symptomQuestions;
 
-        $validated = $request->validate($this->buildRules($questions));
+        $validated = $request->validate($this->buildRules($questions), $this->buildMessages());
         $answers = $this->buildAnswers($questions, $validated);
 
         $screening->update([
@@ -303,17 +324,17 @@ class ScreeningController extends Controller
     {
         $rules = [
             'patient_is_wni' => ['required', 'boolean'],
-            'patient_name' => ['required', 'string', 'max:255'],
-            'patient_nik' => ['nullable', 'string', 'max:30', 'required_if:patient_is_wni,1'],
-            'patient_phone' => ['nullable', 'string', 'max:25'],
+            'patient_name' => ['required', 'string', 'max:255', "regex:/^[\\p{L}\\p{M}\\s\\.']+$/u"],
+            'patient_nik' => ['nullable', 'regex:/^\\d+$/', 'required_if:patient_is_wni,1'],
+            'patient_phone' => ['nullable', 'regex:/^\\d*$/'],
             'patient_gender' => ['required', 'string', 'max:20'],
-            'patient_birth_place' => ['required', 'string', 'max:255'],
+            'patient_birth_place' => ['required', 'string', 'max:255', "regex:/^[\\p{L}\\p{M}\\s\\.']+$/u"],
             'patient_birth_date' => ['required', 'date'],
             'patient_age' => ['required', 'integer', 'min:0', 'max:150'],
             'patient_address_ktp' => ['required', 'string', 'max:255'],
             'patient_address_domisili' => ['required', 'string', 'max:255'],
-            'patient_address_rt' => ['required', 'string', 'max:5'],
-            'patient_address_rw' => ['required', 'string', 'max:5'],
+            'patient_address_rt' => ['required', 'string', 'max:3', 'regex:/^\\d{1,3}$/'],
+            'patient_address_rw' => ['required', 'string', 'max:3', 'regex:/^\\d{1,3}$/'],
             'patient_address_kelurahan' => ['required', 'string', 'max:100'],
             'patient_weight' => ['required', 'numeric', 'min:0'],
             'patient_height' => ['required', 'numeric', 'min:0'],
@@ -332,5 +353,15 @@ class ScreeningController extends Controller
             ->keys()
             ->mapWithKeys(fn($key) => [$key => $validated[$key]])
             ->toArray();
+    }
+
+    private function buildMessages(): array
+    {
+        return [
+            'patient_nik.regex' => 'NIK harus berupa angka saja.',
+            'patient_nik.required_if' => 'NIK wajib diisi jika pasien WNI.',
+            'patient_address_rt.regex' => 'RT harus berupa angka saja.',
+            'patient_address_rw.regex' => 'RW harus berupa angka saja.',
+        ];
     }
 }

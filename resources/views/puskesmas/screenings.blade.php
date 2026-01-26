@@ -13,37 +13,37 @@
                         <h5 class="mb-0">Monitoring Skrining Pasien</h5>
                         <p class="text-sm text-muted mb-0">Pantau laporan skrining yang dicatat kader mitra puskesmas.</p>
                     </div>
-                    <form method="GET" action="{{ route('puskesmas.screenings') }}" class="d-flex flex-wrap gap-3 align-items-end w-100 justify-content-between" data-auto-submit>
-                        <div class="d-flex flex-wrap gap-3 align-items-end">
-                            <div class="d-flex flex-column">
-                                <label class="text-xxs text-muted mb-1">Tanggal mulai</label>
-                                <div class="input-group input-group-sm" style="min-width: 170px;">
+                    <form method="GET" action="{{ route('puskesmas.screenings') }}" class="d-flex flex-wrap gap-3 align-items-end w-100 justify-content-between screenings-filter" data-auto-submit>
+                        <div class="d-flex flex-wrap gap-3 align-items-end screenings-filter__row">
+                            <div class="d-flex flex-column screenings-filter__field">
+                                <label class="text-xxs text-muted mb-1">Tanggal mulai (DD-MM-YYYY)</label>
+                                <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-white"><i class="fa fa-calendar text-muted"></i></span>
-                                    <input type="date" name="from" class="form-control" value="{{ $filters['from'] ?? '' }}">
+                                    <input type="date" name="from" class="form-control" placeholder="DD-MM-YYYY" value="{{ $filters['from'] ?? now()->subMonth()->toDateString() }}">
                                 </div>
                             </div>
-                            <div class="d-flex flex-column">
-                                <label class="text-xxs text-muted mb-1">Tanggal akhir</label>
-                                <div class="input-group input-group-sm" style="min-width: 170px;">
+                            <div class="d-flex flex-column screenings-filter__field">
+                                <label class="text-xxs text-muted mb-1">Tanggal akhir (DD-MM-YYYY)</label>
+                                <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-white"><i class="fa fa-calendar text-muted"></i></span>
-                                    <input type="date" name="to" class="form-control" value="{{ $filters['to'] ?? '' }}">
+                                    <input type="date" name="to" class="form-control" placeholder="DD-MM-YYYY" value="{{ $filters['to'] ?? now()->toDateString() }}">
                                 </div>
                             </div>
-                            <div class="d-flex align-items-end">
-                                <a href="{{ route('puskesmas.screenings.export.excel', request()->query()) }}" class="btn btn-sm btn-outline-primary btn-export">
+                            <div class="d-flex align-items-end screenings-filter__field">
+                                <a href="{{ route('puskesmas.screenings.export.excel', request()->query()) }}" class="btn btn-sm btn-outline-primary btn-export w-100">
                                     <i class="fa fa-file-excel me-1"></i> Export Excel
                                 </a>
                             </div>
                         </div>
-                        <div class="d-flex flex-wrap gap-2 align-items-end justify-content-end">
-                            <div class="d-flex flex-column">
+                        <div class="d-flex flex-wrap gap-2 align-items-end justify-content-end screenings-filter__row screenings-filter__row--inline">
+                            <div class="d-flex flex-column screenings-filter__field">
                                 <label class="text-xxs text-muted mb-1">Cari nama / NIK / HP / alamat / RT/RW / kelurahan</label>
-                                <div class="input-group input-group-sm" style="min-width: 250px;">
+                                <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
                                     <input type="text" name="q" class="form-control" placeholder="Cari nama / NIK / HP / alamat / RT/RW / kelurahan" value="{{ $search ?? '' }}">
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-sm btn-outline-success">Terapkan</button>
+                            <button type="submit" class="btn btn-sm btn-outline-success screenings-filter__apply">Terapkan</button>
                         </div>
                     </form>
                 </div>
@@ -140,7 +140,7 @@
                         </p>
                         @if ($hasPagination)
                             <div class="mb-0">
-                                {{ $screenings->withQueryString()->onEachSide(1)->links('pagination::bootstrap-5') }}
+                                {{ $screenings->withQueryString()->onEachSide(1)->links('pagination.compact-arrows') }}
                             </div>
                         @endif
                     </div>

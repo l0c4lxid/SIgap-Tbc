@@ -1,5 +1,29 @@
 @extends('layouts.soft')
 
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container .select2-selection--single {
+            height: 38px;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #d2d6da;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .select2-container .select2-selection__rendered {
+            padding-left: 0;
+            line-height: 1.5;
+        }
+        .select2-container .select2-selection__arrow {
+            height: 36px;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -26,11 +50,11 @@
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label">Nama Peserta</label>
-                                <input type="text" name="patient_name" class="form-control" value="{{ old('patient_name') }}" required>
+                                <input type="text" name="patient_name" class="form-control" value="{{ old('patient_name') }}" placeholder="Nama sesuai KTP" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">NIK</label>
-                                <input type="text" name="patient_nik" class="form-control" value="{{ old('patient_nik') }}" id="patientNik">
+                                <input type="text" name="patient_nik" class="form-control" value="{{ old('patient_nik') }}" id="patientNik" inputmode="numeric" placeholder="NIK (angka saja)" oninput="this.value = this.value.replace(/\\D/g, '')" onkeypress="if (event.key && !/[0-9]/.test(event.key)) event.preventDefault()">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Jenis Kelamin</label>
@@ -42,7 +66,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Tempat Lahir</label>
-                                <input type="text" name="patient_birth_place" class="form-control" value="{{ old('patient_birth_place') }}" required>
+                                <input type="text" name="patient_birth_place" class="form-control" value="{{ old('patient_birth_place') }}" placeholder="Contoh: Surakarta" required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Tanggal Lahir</label>
@@ -62,27 +86,39 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Nomor HP (opsional)</label>
-                                <input type="text" name="patient_phone" class="form-control" value="{{ old('patient_phone') }}">
+                                <input type="text" name="patient_phone" class="form-control" value="{{ old('patient_phone') }}" placeholder="Nomor HP (angka saja)" inputmode="numeric" oninput="this.value = this.value.replace(/\\D/g, '')" onkeypress="if (event.key && !/[0-9]/.test(event.key)) event.preventDefault()">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">RT</label>
-                                <input type="text" name="patient_address_rt" class="form-control" value="{{ old('patient_address_rt') }}" required>
+                                <input type="text" name="patient_address_rt" class="form-control" value="{{ old('patient_address_rt') }}" placeholder="00" inputmode="numeric" maxlength="3" oninput="this.value = this.value.replace(/\\D/g, '').slice(0, 3)" onkeypress="if (event.key && !/[0-9]/.test(event.key)) event.preventDefault()" required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">RW</label>
-                                <input type="text" name="patient_address_rw" class="form-control" value="{{ old('patient_address_rw') }}" required>
+                                <input type="text" name="patient_address_rw" class="form-control" value="{{ old('patient_address_rw') }}" placeholder="00" inputmode="numeric" maxlength="3" oninput="this.value = this.value.replace(/\\D/g, '').slice(0, 3)" onkeypress="if (event.key && !/[0-9]/.test(event.key)) event.preventDefault()" required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Kelurahan</label>
-                                <input type="text" name="patient_address_kelurahan" class="form-control" value="{{ old('patient_address_kelurahan') }}" required>
+                                <select name="patient_address_kelurahan" class="form-select select2-kelurahan" required>
+                                    <option value="">Pilih kelurahan</option>
+                                    @if (!empty($kelurahanName)
+                                        && !collect($kelurahanOptions ?? [])->contains($kelurahanName)
+                                        && (empty($kelurahanOptions) || \Illuminate\Support\Str::contains(\Illuminate\Support\Str::lower($kelurahanName), 'kelurahan')))
+                                        <option value="{{ $kelurahanName }}" selected>{{ $kelurahanName }}</option>
+                                    @endif
+                                    @foreach ($kelurahanOptions ?? [] as $kelurahanOption)
+                                        <option value="{{ $kelurahanOption }}" @selected(old('patient_address_kelurahan', $kelurahanName ?? '') === $kelurahanOption)>
+                                            {{ $kelurahanOption }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Alamat KTP</label>
-                                <input type="text" name="patient_address_ktp" class="form-control" value="{{ old('patient_address_ktp') }}" required>
+                                <input type="text" name="patient_address_ktp" class="form-control" value="{{ old('patient_address_ktp') }}" placeholder="Alamat sesuai KTP" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Alamat Domisili</label>
-                                <input type="text" name="patient_address_domisili" class="form-control" value="{{ old('patient_address_domisili') }}" required>
+                                <input type="text" name="patient_address_domisili" class="form-control" value="{{ old('patient_address_domisili') }}" placeholder="Alamat tempat tinggal sekarang" required>
                                 <div class="form-check mt-2">
                                     <input class="form-check-input" type="checkbox" id="domisiliSame" name="domisili_same">
                                     <label class="form-check-label" for="domisiliSame">Sama dengan alamat KTP</label>
@@ -107,11 +143,11 @@
                                             <label class="form-label">{{ $loop->iteration }}. {{ $question }}</label>
                                             <div class="d-flex flex-wrap gap-3">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="{{ $key }}" value="ya" id="{{ $key }}_ya" required>
+                                                    <input class="form-check-input" type="radio" name="{{ $key }}" value="ya" id="{{ $key }}_ya" @checked(old($key) === 'ya') required>
                                                     <label class="form-check-label" for="{{ $key }}_ya">Ya</label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="{{ $key }}" value="tidak" id="{{ $key }}_tidak">
+                                                    <input class="form-check-input" type="radio" name="{{ $key }}" value="tidak" id="{{ $key }}_tidak" @checked(old($key) === 'tidak')>
                                                     <label class="form-check-label" for="{{ $key }}_tidak">Tidak</label>
                                                 </div>
                                             </div>
@@ -126,11 +162,11 @@
                                             <label class="form-label">{{ $loop->iteration }}. {{ $question }}</label>
                                             <div class="d-flex flex-wrap gap-3">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="{{ $key }}" value="ya" id="{{ $key }}_ya" required>
+                                                    <input class="form-check-input" type="radio" name="{{ $key }}" value="ya" id="{{ $key }}_ya" @checked(old($key) === 'ya') required>
                                                     <label class="form-check-label" for="{{ $key }}_ya">Ya</label>
                                                 </div>
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="{{ $key }}" value="tidak" id="{{ $key }}_tidak">
+                                                    <input class="form-check-input" type="radio" name="{{ $key }}" value="tidak" id="{{ $key }}_tidak" @checked(old($key) === 'tidak')>
                                                     <label class="form-check-label" for="{{ $key }}_tidak">Tidak</label>
                                                 </div>
                                             </div>
@@ -150,11 +186,11 @@
                                     <label class="form-label">{{ $loop->iteration + count($riskQuestions) }}. {{ $question }}</label>
                                     <div class="d-flex flex-wrap gap-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="{{ $key }}" value="ya" id="{{ $key }}_ya" required>
+                                        <input class="form-check-input" type="radio" name="{{ $key }}" value="ya" id="{{ $key }}_ya" @checked(old($key) === 'ya') required>
                                             <label class="form-check-label" for="{{ $key }}_ya">Ya</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="{{ $key }}" value="tidak" id="{{ $key }}_tidak">
+                                        <input class="form-check-input" type="radio" name="{{ $key }}" value="tidak" id="{{ $key }}_tidak" @checked(old($key) === 'tidak')>
                                             <label class="form-check-label" for="{{ $key }}_tidak">Tidak</label>
                                         </div>
                                     </div>
@@ -175,6 +211,8 @@
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const wniField = document.querySelector('select[name="patient_is_wni"]');
@@ -184,6 +222,8 @@
             const addressKtpField = document.querySelector('input[name="patient_address_ktp"]');
             const addressDomField = document.querySelector('input[name="patient_address_domisili"]');
             const domisiliSame = document.getElementById('domisiliSame');
+            const rtField = document.querySelector('input[name="patient_address_rt"]');
+            const rwField = document.querySelector('input[name="patient_address_rw"]');
 
             const toggleNikRequired = () => {
                 if (!wniField || !nikField) {
@@ -252,6 +292,38 @@
                 }
             });
             syncDomisili();
+
+            const enforceDigits = (field) => {
+                if (!field) {
+                    return;
+                }
+                field.addEventListener('input', () => {
+                    field.value = field.value.replace(/\D/g, '').slice(0, 3);
+                });
+            };
+            enforceDigits(rtField);
+            enforceDigits(rwField);
+
+            const padTwoDigits = (field) => {
+                if (!field) {
+                    return;
+                }
+                field.addEventListener('blur', () => {
+                    const value = field.value.trim();
+                    if (value.length === 1) {
+                        field.value = `0${value}`;
+                    }
+                });
+            };
+            padTwoDigits(rtField);
+            padTwoDigits(rwField);
+
+            if (window.jQuery && window.jQuery.fn.select2) {
+                window.jQuery('.select2-kelurahan').select2({
+                    width: '100%',
+                    placeholder: 'Pilih kelurahan',
+                });
+            }
         });
     </script>
 @endpush

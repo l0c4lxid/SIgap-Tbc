@@ -9,12 +9,12 @@
                         <h5 class="mb-0">Puskesmas Mitra</h5>
                         <p class="text-sm text-muted mb-0">Pilih puskesmas induk jika belum terhubung. Hubungan aktif ditandai pada kartu.</p>
                     </div>
-                    <form method="GET" action="{{ route('kelurahan.puskesmas') }}" class="d-flex gap-2" data-auto-submit>
-                        <div class="input-group input-group-sm">
+                    <form method="GET" action="{{ route('kelurahan.puskesmas') }}" class="d-flex gap-2 kelurahan-puskesmas__search" data-auto-submit>
+                        <div class="input-group input-group-sm kelurahan-puskesmas__search-input">
                             <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
                             <input type="text" name="q" class="form-control" placeholder="Cari nama / alamat" value="{{ $search ?? '' }}">
                         </div>
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Cari</button>
+                        <button type="submit" class="btn btn-sm btn-outline-primary kelurahan-puskesmas__search-btn">Cari</button>
                     </form>
                 </div>
                 <div class="card-body">
@@ -101,7 +101,7 @@
                         </p>
                         @if ($hasPagination)
                             <div class="mb-0">
-                                {{ $puskesmasList->withQueryString()->onEachSide(1)->links('pagination::bootstrap-5') }}
+                                {{ $puskesmasList->withQueryString()->onEachSide(1)->links('pagination.compact-arrows') }}
                             </div>
                         @endif
                     </div>

@@ -318,6 +318,36 @@
             padTwoDigits(rtField);
             padTwoDigits(rwField);
 
+            const applyIndonesianValidation = (field) => {
+                if (!field) {
+                    return;
+                }
+                field.addEventListener('invalid', () => {
+                    if (field.validity.valueMissing) {
+                        field.setCustomValidity('Harap isi kolom ini.');
+                        return;
+                    }
+                    if (field.validity.patternMismatch) {
+                        field.setCustomValidity('Format tidak sesuai.');
+                        return;
+                    }
+                    if (field.validity.typeMismatch) {
+                        field.setCustomValidity('Format tidak valid.');
+                        return;
+                    }
+                    field.setCustomValidity('Data tidak valid.');
+                });
+                field.addEventListener('input', () => {
+                    field.setCustomValidity('');
+                });
+                field.addEventListener('change', () => {
+                    field.setCustomValidity('');
+                });
+            };
+
+            document.querySelectorAll('#screeningForm input, #screeningForm select, #screeningForm textarea')
+                .forEach((field) => applyIndonesianValidation(field));
+
             if (window.jQuery && window.jQuery.fn.select2) {
                 window.jQuery('.select2-kelurahan').select2({
                     width: '100%',

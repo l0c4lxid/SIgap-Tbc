@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $title ?? 'Export Kader' }}</title>
+    <title>SItuba | Export Kader</title>
     <style>
         * { font-family: DejaVu Sans, sans-serif; }
         table { width: 100%; border-collapse: collapse; margin-top: 12px; }

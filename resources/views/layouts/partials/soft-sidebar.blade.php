@@ -64,21 +64,7 @@
                 </nav>
             </div>
 
-            <div class="soft-sidebar__cta" id="soft-sidebar-cta">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div class="me-2">
-                        <p class="soft-sidebar__cta-text mb-2">Perbarui informasi agar koordinasi pemantauan akurat.</p>
-                        @if (!empty($profileNav))
-                            <a class="btn btn-sm btn-primary w-100" href="{{ $profileNav['url'] }}">
-                                <i class="ri-id-card-line me-1"></i>{{ $profileNav['label'] }}
-                            </a>
-                        @endif
-                    </div>
-                    <button type="button" class="soft-sidebar__cta-close" id="soft-sidebar-cta-close" aria-label="Tutup">
-                        <i class="ri-close-line"></i>
-                    </button>
-                </div>
-            </div>
+            
         </div>
     </div>
 </aside>
@@ -181,15 +167,6 @@
             }
         });
 
-        const cta = document.getElementById('soft-sidebar-cta');
-        const ctaClose = document.getElementById('soft-sidebar-cta-close');
-        const ctaKey = 'softSidebarCtaHidden';
-        if (localStorage.getItem(ctaKey) === '1') {
-            cta?.classList.add('d-none');
-        }
-        ctaClose?.addEventListener('click', () => {
-            cta?.classList.add('d-none');
-            localStorage.setItem(ctaKey, '1');
-        });
+
     });
 </script>

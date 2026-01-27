@@ -1,5 +1,7 @@
 @extends('layouts.soft')
 
+@section('subjudul', 'Materi edukasi kader')
+
 @section('content')
     <div class="row">
         <div class="col-12">

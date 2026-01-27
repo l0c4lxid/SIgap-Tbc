@@ -1,5 +1,7 @@
 @extends('layouts.soft')
 
+@section('subjudul', 'Puskesmas mitra kader')
+
 @section('content')
     <div class="row kader-puskesmas-page">
         <div class="col-12">

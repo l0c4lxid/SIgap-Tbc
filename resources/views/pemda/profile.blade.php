@@ -1,7 +1,46 @@
 @extends('layouts.soft')
 
+@section('subjudul', 'Profil pemerintah daerah')
+
 @section('content')
-    <form method="POST" action="{{ route('pemda.profile.update') }}" id="pemdaProfileForm" data-original-phone="{{ $user->phone }}">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h5 class="mb-2">Dukungan untuk koordinasi pemda</h5>
+            <p class="text-sm text-muted mb-3">Profil yang lengkap membantu pelaporan lintas puskesmas dan sinkronisasi
+                program daerah.</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-user-gear text-primary mt-1"></i>
+                        <div>
+                            <p class="mb-1 fw-semibold">Kontak penanggung jawab</p>
+                            <p class="mb-0 text-xs text-muted">Mudah dihubungi saat diperlukan.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-building-columns text-success mt-1"></i>
+                        <div>
+                            <p class="mb-1 fw-semibold">Data instansi jelas</p>
+                            <p class="mb-0 text-xs text-muted">Mendukung validasi dan laporan resmi.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-shield-halved text-danger mt-1"></i>
+                        <div>
+                            <p class="mb-1 fw-semibold">Keamanan akun</p>
+                            <p class="mb-0 text-xs text-muted">Kontrol akses tetap terjaga.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form method="POST" action="{{ route('pemda.profile.update') }}" id="pemdaProfileForm"
+        data-original-phone="{{ $user->phone }}">
         @csrf
         @method('PUT')
         <div class="row">
@@ -21,19 +60,23 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Nama Penanggung Jawab</label>
-                                <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
+                                <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}"
+                                    required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Instansi / Pemda</label>
-                                <input type="text" name="organization" class="form-control" value="{{ old('organization', $user->detail->organization ?? '') }}">
+                                <input type="text" name="organization" class="form-control"
+                                    value="{{ old('organization', $user->detail->organization ?? '') }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Alamat Lengkap</label>
-                                <input type="text" name="address" class="form-control" value="{{ old('address', $user->detail->address ?? '') }}">
+                                <input type="text" name="address" class="form-control"
+                                    value="{{ old('address', $user->detail->address ?? '') }}">
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Catatan</label>
-                                <textarea name="notes" rows="3" class="form-control">{{ old('notes', $user->detail->notes ?? '') }}</textarea>
+                                <textarea name="notes" rows="3"
+                                    class="form-control">{{ old('notes', $user->detail->notes ?? '') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -54,7 +97,8 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label">Nomor HP Login</label>
-                            <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone) }}" required>
+                            <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone) }}"
+                                required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Password baru</label>
@@ -62,7 +106,8 @@
                         </div>
                         <div>
                             <label class="form-label">Konfirmasi password</label>
-                            <input type="password" name="password_confirmation" class="form-control" autocomplete="new-password">
+                            <input type="password" name="password_confirmation" class="form-control"
+                                autocomplete="new-password">
                         </div>
                         <p class="text-xs text-muted mt-3">Kosongkan password jika tidak ingin mengganti.</p>
                     </div>
@@ -79,7 +124,7 @@
     <script>
         function confirmPemdaProfile() {
             const form = document.getElementById('pemdaProfileForm');
-            if (! form) return;
+            if (!form) return;
 
             const originalPhone = form.dataset.originalPhone;
             const phoneField = form.querySelector('input[name="phone"]');

@@ -8,7 +8,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $post->title }} - Blog SITUBA</title>
+    <title>SItuba | Blog</title>
     <meta name="description" content="{{ Str::limit(strip_tags($post->summary ?? $post->content), 150) }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

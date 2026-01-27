@@ -1,6 +1,46 @@
 @extends('layouts.soft')
 
+@section('subjudul', 'Perbarui profil akun')
+
 @section('content')
+    <div class="alert alert-info mb-4" role="alert">
+        <strong>Silahkan update profil anda.</strong> Lengkapi data agar koordinasi skrining dan tindak lanjut berjalan lebih cepat.
+    </div>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h5 class="mb-2">Kenapa profil penting?</h5>
+            <p class="text-sm text-muted mb-3">Data profil yang lengkap membantu tim lintas peran mengenali penanggung jawab dan mempercepat tindak lanjut kasus.</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                        <div>
+                            <p class="mb-1 fw-semibold">Identitas jelas</p>
+                            <p class="mb-0 text-xs text-muted">Memudahkan verifikasi dan pelaporan.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-location-dot text-primary mt-1"></i>
+                        <div>
+                            <p class="mb-1 fw-semibold">Alamat akurat</p>
+                            <p class="mb-0 text-xs text-muted">Koordinasi lapangan lebih cepat.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="fa-solid fa-shield-heart text-danger mt-1"></i>
+                        <div>
+                            <p class="mb-1 fw-semibold">Keamanan data</p>
+                            <p class="mb-0 text-xs text-muted">Akun terlindungi dan dapat ditelusuri.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <form method="POST" action="{{ route('profile.update') }}" id="generalProfileForm" data-original-phone="{{ $user->phone }}">
         @csrf
         @method('PATCH')

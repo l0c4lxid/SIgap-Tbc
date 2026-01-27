@@ -1,5 +1,7 @@
 @extends('layouts.soft')
 
+@section('subjudul', 'Daftar skrining puskesmas')
+
 @php
     use Illuminate\Support\Str;
 @endphp

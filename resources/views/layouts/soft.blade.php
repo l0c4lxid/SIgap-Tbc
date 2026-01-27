@@ -90,7 +90,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.ico') }}">
-    <title>{{ config('app.name', 'SITUBA') }}</title>
+    <title>SItuba | {{ $subjudul ?? 'Dashboard' }}</title>
     <link href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,800" rel="stylesheet" />
     <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
@@ -127,7 +127,7 @@
                             <div class="soft-topbar__heading">
                                 <div>
                                     <h1 class="soft-page-title mb-0">{{ $navTitle }}</h1>
-                    <p class="soft-topbar__subtitle mb-0">Data skrining dan tindak lanjut TBC yang terintegrasi di tiap level layanan.</p>
+                    <p class="soft-topbar__subtitle mb-0">{{ $subjudul ?? 'Dashboard' }}</p>
                                 </div>
                             </div>
                     </div>

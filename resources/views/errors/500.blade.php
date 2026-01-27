@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>500 Internal Server Error - SITUBA</title>
+        <title>SItuba | 500 Internal Server Error</title>
     </head>
     <body style="background: radial-gradient(circle at 10% 20%, #f2f9f6 0%, #eef5ff 45%, #f7f8ff 100%);font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;color: #0f172a; margin: 0; min-height: 100vh;">
         <main style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px;">

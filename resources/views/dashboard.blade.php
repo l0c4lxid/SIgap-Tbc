@@ -1,5 +1,7 @@
 @extends('layouts.soft')
 
+@section('subjudul', 'Ringkasan layanan SITUBA')
+
 @section('content')
     @php
         $cardCount = count($cards);

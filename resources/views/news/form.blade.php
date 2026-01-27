@@ -9,6 +9,8 @@
 
 @extends('layouts.soft')
 
+@section('subjudul', 'Tulis atau perbarui berita')
+
 @section('content')
     <div class="row">
         <div class="col-lg-10 mx-auto">

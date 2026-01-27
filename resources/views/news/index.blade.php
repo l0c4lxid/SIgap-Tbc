@@ -9,6 +9,8 @@
 
 @extends('layouts.soft')
 
+@section('subjudul', 'Daftar berita dan testimoni')
+
 @section('content')
     <div class="row">
         <div class="col-12">

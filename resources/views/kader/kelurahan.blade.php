@@ -1,5 +1,7 @@
 @extends('layouts.soft')
 
+@section('subjudul', 'Wilayah kelurahan kader')
+
 @section('content')
     <div class="container-fluid py-3">
         <div class="card mb-3">

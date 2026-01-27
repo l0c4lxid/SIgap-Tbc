@@ -1,5 +1,7 @@
 @extends('layouts.soft')
 
+@section('subjudul', 'Detail data skrining')
+
 @section('content')
     <div class="row">
         <div class="col-12">

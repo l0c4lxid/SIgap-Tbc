@@ -104,7 +104,7 @@ class DashboardController extends Controller
                         'value' => number_format($activeUsers),
                         'subtitle' => 'Total ' . number_format($totalUsers) . ' akun',
                         'trend' => $inactiveUsers . ' menunggu verifikasi',
-                        'icon' => 'fa-solid fa-users',
+                        'icon' => 'ri-group-line',
                         'color' => 'primary',
                         'url' => route('pemda.verification'),
                     ],
@@ -113,7 +113,7 @@ class DashboardController extends Controller
                         'value' => number_format($puskesmasCount),
                         'subtitle' => 'Kemitraan Terdaftar',
                         'trend' => $kaderCount . ' kader aktif',
-                        'icon' => 'fa-solid fa-hospital',
+                        'icon' => 'ri-hospital-line',
                         'color' => 'success',
                         'url' => route('pemda.verification', ['role' => UserRole::Puskesmas->value]),
                     ],
@@ -122,13 +122,13 @@ class DashboardController extends Controller
                         'value' => number_format($totalScreenings),
                         'subtitle' => number_format($uniquePatients) . ' pasien terdata',
                         'trend' => 'Pantau laporan terbaru',
-                        'icon' => 'fa-solid fa-notes-medical',
+                        'icon' => 'ri-file-list-3-line',
                         'color' => 'warning',
                         'url' => route('pemda.screenings'),
                     ],
                 ];
 
-                $recentScreenings = $baseScreeningQuery->limit($recentLimit)->get();
+                $recentScreenings = $baseScreeningQuery->paginate(5);
 
                 $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())
                     ->get();
@@ -202,7 +202,7 @@ class DashboardController extends Controller
                         'value' => number_format($puskesmasIds->count()),
                         'subtitle' => 'Terhubung ke kelurahan ini',
                         'trend' => $kaderIds->count() . ' kader aktif',
-                        'icon' => 'fa-solid fa-house-medical',
+                        'icon' => 'ri-hospital-line',
                         'color' => 'primary',
                     ],
                     [
@@ -210,7 +210,7 @@ class DashboardController extends Controller
                         'value' => number_format($totalScreenings),
                         'subtitle' => number_format($uniquePatients) . ' pasien terdata',
                         'trend' => 'Pantau laporan wilayah',
-                        'icon' => 'fa-solid fa-heart-pulse',
+                        'icon' => 'ri-pulse-line',
                         'color' => 'info',
                     ],
                     [
@@ -218,7 +218,7 @@ class DashboardController extends Controller
                         'value' => number_format($suspectThisMonth),
                         'subtitle' => 'Laporan indikasi TBC',
                         'trend' => now()->format('M Y'),
-                        'icon' => 'fa-solid fa-triangle-exclamation',
+                        'icon' => 'ri-alert-line',
                         'color' => 'warning',
                     ],
                 ];
@@ -229,11 +229,7 @@ class DashboardController extends Controller
                         ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
                         ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address_kelurahan) LIKE ?', ['%' . $kelurahanKeyword . '%']))
                         ->orderByDesc('created_at')
-                        ->limit(50)
-                        ->get()
-                        ->unique('kader_id')
-                        ->take(3)
-                        ->values();
+                        ->paginate(5);
 
                 $screeningsThisMonth = $kaderIds->isEmpty()
                     ? collect()
@@ -348,7 +344,7 @@ class DashboardController extends Controller
                         'value' => number_format($kaderIds->count()),
                         'subtitle' => 'Terhubung ke puskesmas ini',
                         'trend' => 'Koordinasikan kegiatan lapangan',
-                        'icon' => 'fa-solid fa-people-group',
+                        'icon' => 'ri-team-line',
                         'color' => 'info',
                         'url' => route('puskesmas.kaders'),
                     ],
@@ -357,7 +353,7 @@ class DashboardController extends Controller
                         'value' => number_format($screenings->count()),
                         'subtitle' => number_format($uniquePatientCount($screenings)) . ' pasien terdata',
                         'trend' => 'Pantau laporan kader',
-                        'icon' => 'fa-solid fa-notes-medical',
+                        'icon' => 'ri-file-list-3-line',
                         'color' => 'primary',
                         'url' => route('puskesmas.screenings'),
                     ],
@@ -365,7 +361,7 @@ class DashboardController extends Controller
 
                 $recentScreenings = $kaderIds->isEmpty()
                     ? null
-                    : $baseScreeningQuery->whereIn('kader_id', $kaderIds)->limit($recentLimit)->get();
+                    : $baseScreeningQuery->whereIn('kader_id', $kaderIds)->paginate(5);
 
                 $screeningsInRange = $kaderIds->isEmpty()
                     ? collect()
@@ -383,7 +379,7 @@ class DashboardController extends Controller
                         'value' => number_format($screenings->count()),
                         'subtitle' => number_format($uniquePatientCount($screenings)) . ' pasien terdata',
                         'trend' => 'Input laporan baru setiap kunjungan',
-                        'icon' => 'fa-solid fa-user-nurse',
+                        'icon' => 'ri-nurse-line',
                         'color' => 'primary',
                         'url' => route('kader.screening.index'),
                         'action_label' => 'Mulai tambah skrining baru',
@@ -394,14 +390,14 @@ class DashboardController extends Controller
                         'value' => $user->is_active ? 'Aktif' : 'Tidak Aktif',
                         'subtitle' => 'Anda dapat melakukan skrining',
                         'trend' => $user->is_active ? 'Tetap pantau pasien' : 'Hubungi admin',
-                        'icon' => 'fa-solid fa-shield-heart',
+                        'icon' => 'ri-shield-cross-line',
                         'color' => $user->is_active ? 'success' : 'warning',
                     ],
                 ];
 
                 $recentScreenings = $screenings->isEmpty()
                     ? collect()
-                    : $baseScreeningQuery->where('kader_id', $user->id)->limit(3)->get();
+                    : $baseScreeningQuery->where('kader_id', $user->id)->paginate(5);
 
                 $screeningsInRange = (clone $screeningsQuery)
                     ->where('created_at', '>=', $chartMonths->first())
@@ -416,11 +412,11 @@ class DashboardController extends Controller
                         'value' => number_format(User::where('is_active', true)->count()),
                         'subtitle' => 'Statistik umum',
                         'trend' => 'Pantau perkembangan aplikasi',
-                        'icon' => 'fa-solid fa-users',
+                        'icon' => 'ri-group-line',
                         'color' => 'primary',
                     ],
                 ];
-                $recentScreenings = $baseScreeningQuery->limit($recentLimit)->get();
+                $recentScreenings = $baseScreeningQuery->paginate(5);
                 $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())->get();
                 $dashboardCharts = $buildCharts($screeningsInRange);
                 break;

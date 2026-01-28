@@ -3,148 +3,134 @@
 @section('subjudul', 'Detail kader puskesmas')
 
 @section('content')
-    <div class="row">
-        <div class="col-12 mb-3">
-            <a href="{{ route('puskesmas.kaders') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fa fa-arrow-left"></i> Kembali ke daftar kader
-            </a>
-        </div>
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">{{ $kader->name }}</h5>
-                        <p class="text-sm text-muted mb-0">Detail kader mitra puskesmas Anda.</p>
-                    </div>
-                    <span class="badge {{ $kader->is_active ? 'bg-gradient-success text-white' : 'bg-gradient-warning text-dark' }}">
-                        {{ $kader->is_active ? 'Aktif' : 'Tidak Aktif' }}
-                    </span>
+    <div class="mb-6">
+        <a href="{{ route('puskesmas.kaders') }}" class="glass-button px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2 no-underline">
+            <i class="ri-arrow-left-line"></i> Kembali ke daftar kader
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {{-- Profile Card --}}
+        <div class="lg:col-span-2 glass-card p-6 h-full">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h5 class="font-bold text-xl text-gray-800 mb-1">{{ $kader->name }}</h5>
+                    <p class="text-sm text-gray-500 mb-0">Detail kader mitra puskesmas Anda.</p>
                 </div>
-                <div class="card-body">
-                    <div class="row gy-3">
-                        <div class="col-md-6">
-                            <p class="text-xs text-muted mb-1">Nomor HP</p>
-                            <p class="mb-0 fw-semibold">{{ $kader->phone }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-xs text-muted mb-1">Organisasi/Instansi</p>
-                            <p class="mb-0 fw-semibold">{{ $kader->detail->organization ?? 'Kader' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-xs text-muted mb-1">Catatan</p>
-                            <p class="mb-0">{{ $kader->detail->notes ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-xs text-muted mb-1">Terdaftar sejak</p>
-                            <p class="mb-0">{{ $kader->created_at->format('d M Y H:i') }}</p>
-                        </div>
-                    </div>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $kader->is_active ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                    {{ $kader->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">Nomor HP</p>
+                    <p class="text-gray-800 font-semibold mb-0">{{ $kader->phone }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">Organisasi/Instansi</p>
+                    <p class="text-gray-800 font-semibold mb-0">{{ $kader->detail->organization ?? 'Kader' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">Catatan</p>
+                    <p class="text-gray-800 mb-0">{{ $kader->detail->notes ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">Terdaftar sejak</p>
+                    <p class="text-gray-800 mb-0">{{ $kader->created_at->format('d M Y H:i') }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header">
-                    <h6 class="mb-0">Kelola Status</h6>
-                </div>
-                <div class="card-body">
-                    <p class="text-sm text-muted">Aktif/nonaktifkan akses kader ini ke aplikasi.</p>
-                    <form method="POST" action="{{ route('puskesmas.kaders.status', $kader) }}">
-                        @csrf
-                        <input type="hidden" name="status" value="{{ $kader->is_active ? 'inactive' : 'active' }}">
-                        <button type="submit" class="btn w-100 {{ $kader->is_active ? 'btn-outline-danger' : 'btn-outline-success' }}">
-                            {{ $kader->is_active ? 'Nonaktifkan Kader' : 'Aktifkan Kader' }}
-                        </button>
-                    </form>
-                </div>
+
+        {{-- Action Card --}}
+        <div class="glass-card p-6 h-full flex flex-col justify-between">
+            <div>
+                 <h6 class="font-bold text-lg text-gray-800 mb-4 border-b border-gray-100 pb-2">Kelola Status</h6>
+                 <p class="text-sm text-gray-600 mb-6">Aktif/nonaktifkan akses kader ini ke aplikasi.</p>
             </div>
-        </div>
-        <div class="col-12 mt-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0">Skrining yang Dicatat</h6>
-                        <p class="text-sm text-muted mb-0">Daftar skrining yang diinput oleh kader ini.</p>
-                    </div>
-                    <span class="badge bg-light text-dark">
-                        {{ number_format($totalScreenings) }} total
-                    </span>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table align-items-center mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Pasien</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">NIK</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Alamat</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Tanggal</th>
-                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                    $firstNumber = method_exists($screenings, 'firstItem') ? $screenings->firstItem() : 1;
-                                @endphp
-                                @forelse ($screenings as $screening)
-                                    @php
-                                        $positiveCount = collect($screening->answers ?? [])
-                                            ->filter(fn ($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
-                                            ->count();
-                                    @endphp
-                                    <tr>
-                                        <td class="text-sm">{{ $firstNumber ? $firstNumber + $loop->index : $loop->iteration }}</td>
-                                        <td>
-                                            <a href="{{ route('puskesmas.screenings.show', $screening) }}" class="text-sm fw-semibold text-decoration-none">
-                                                {{ $screening->patient_name ?? '-' }}
-                                            </a>
-                                        </td>
-                                        <td class="text-sm text-muted">{{ $screening->patient_nik ?? '-' }}</td>
-                                        <td class="text-sm text-muted">
-                                            {{ $screening->patient_address_domisili ?? $screening->patient_address ?? '-' }}
-                                        </td>
-                                        <td class="text-sm text-muted">{{ $screening->created_at->format('d M Y H:i') }}</td>
-                                        <td>
-                                            <span class="badge bg-gradient-{{ $positiveCount ? 'danger' : 'success' }}">
-                                                {{ $positiveCount ? 'Suspek' : 'Aman' }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">Belum ada skrining tercatat.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    @if (method_exists($screenings, 'firstItem'))
-                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-                            <p class="text-sm text-muted mb-0">
-                                Menampilkan <span class="fw-semibold">{{ $screenings->firstItem() ?? 0 }}</span> - <span class="fw-semibold">{{ $screenings->lastItem() ?? 0 }}</span> dari <span class="fw-semibold">{{ $screenings->total() }}</span> skrining
-                            </p>
-                            <div class="mb-0">
-                                {{ $screenings->withQueryString()->onEachSide(1)->links('pagination::bootstrap-5') }}
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
+            
+            <form method="POST" action="{{ route('puskesmas.kaders.status', $kader) }}" data-confirm="Apakah anda yakin ingin mengubah status aktif kader ini?" data-confirm-text="Ya, ubah status">
+                @csrf
+                <input type="hidden" name="status" value="{{ $kader->is_active ? 'inactive' : 'active' }}">
+                <button type="submit" class="w-full py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl {{ $kader->is_active ? 'bg-white text-red-500 border border-red-200 hover:bg-red-50' : 'glass-button' }}">
+                    {{ $kader->is_active ? 'Nonaktifkan Kader' : 'Aktifkan Kader' }}
+                </button>
+            </form>
         </div>
     </div>
-@endsection
 
-@push('scripts')
-    @if (session('status'))
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: @json(session('status')),
-                });
-            });
-        </script>
-    @endif
-@endpush
+    {{-- Screenings List --}}
+    <div class="glass-card p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+            <div>
+                 <h6 class="font-bold text-lg text-gray-800 mb-1">Skrining yang Dicatat</h6>
+                 <p class="text-sm text-gray-500 mb-0">Daftar skrining yang diinput oleh kader ini.</p>
+            </div>
+             <span class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full">
+                {{ number_format($totalScreenings) }} total
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="glass-table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Pasien</th>
+                        <th>NIK</th>
+                        <th>Alamat</th>
+                        <th>Tanggal</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $firstNumber = method_exists($screenings, 'firstItem') ? $screenings->firstItem() : 1;
+                    @endphp
+                    @forelse ($screenings as $screening)
+                        @php
+                            $positiveCount = collect($screening->answers ?? [])
+                                ->filter(fn ($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
+                                ->count();
+                        @endphp
+                        <tr class="hover:bg-white/30 transition-colors">
+                            <td>{{ $firstNumber ? $firstNumber + $loop->index : $loop->iteration }}</td>
+                            <td>
+                                <a href="{{ route('puskesmas.screenings.show', $screening) }}" class="font-bold text-gray-800 hover:text-[var(--color-glass-primary)] no-underline transition-colors">
+                                    {{ $screening->patient_name ?? '-' }}
+                                </a>
+                            </td>
+                            <td class="text-gray-600">{{ $screening->patient_nik ?? '-' }}</td>
+                            <td class="text-gray-600">
+                                {{ $screening->patient_address_domisili ?? $screening->patient_address ?? '-' }}
+                            </td>
+                            <td class="text-gray-600">{{ $screening->created_at->format('d M Y H:i') }}</td>
+                            <td>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $positiveCount ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                    {{ $positiveCount ? 'Suspek' : 'Aman' }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-8 text-gray-500">Belum ada skrining tercatat.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if (method_exists($screenings, 'firstItem'))
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 border-t border-gray-200/50 pt-4">
+                 <p class="text-sm text-gray-500 m-0">
+                    Menampilkan <span class="font-bold">{{ $screenings->firstItem() ?? 0 }}</span> - <span class="font-bold">{{ $screenings->lastItem() ?? 0 }}</span> dari <span class="font-bold">{{ $screenings->total() }}</span> skrining
+                </p>
+                <div>
+                     {{ $screenings->withQueryString()->onEachSide(1)->links('pagination.glass') }}
+                </div>
+            </div>
+        @endif
+    </div>
+
+    {{-- Removed redundant session script --}}
+@endsection

@@ -4,7 +4,7 @@
     $user = auth()->user();
     $isPemda = $user?->role === UserRole::Pemda;
     $isPuskesmas = $user?->role === UserRole::Puskesmas;
-    $statusBadge = $post->status === 'published' ? 'bg-success' : 'bg-warning text-dark';
+    $statusBadge = $post->status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
 @endphp
 
 @extends('layouts.soft')
@@ -12,75 +12,79 @@
 @section('subjudul', 'Tulis atau perbarui berita')
 
 @section('content')
-    <div class="row">
-        <div class="col-lg-10 mx-auto">
-            <div class="card shadow-sm border-0">
-                <div class="card-header d-flex align-items-start gap-3">
-                    <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
-                        <i class="fa fa-bullhorn text-white"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-1">{{ $isEdit ? 'Edit Berita' : 'Tulis Berita Baru' }}</h5>
-                        <p class="text-sm text-muted mb-0">
-                            Isi judul, unggah gambar utama, dan konten berita atau testimoni. Puskesmas dapat menerbitkan langsung; konten lain menunggu publikasi admin.
-                        </p>
-                    </div>
+    <div class="mx-auto max-w-4xl">
+        <div class="mb-6">
+            <a href="{{ route('news.index') }}" class="glass-button px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2 no-underline text-gray-600 hover:text-[var(--color-glass-primary)] transition-colors">
+                <i class="ri-arrow-left-line"></i> Kembali
+            </a>
+        </div>
+
+        <div class="glass-card p-8">
+            <div class="flex items-start gap-4 mb-6 border-b border-gray-200/50 pb-6">
+                 <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--color-glass-primary)] to-emerald-600 shadow-lg flex items-center justify-center text-white text-xl flex-shrink-0">
+                    <i class="ri-megaphone-line"></i>
                 </div>
-                <hr class="horizontal dark opacity-10 my-0">
-                <div class="card-body">
-                    <form method="POST" action="{{ $isEdit ? route('news.update', $post) : route('news.store') }}" enctype="multipart/form-data">
-                        @csrf
-                        @if ($isEdit)
-                            @method('PUT')
-                        @endif
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Judul</label>
-                                <input type="text" name="title" class="form-control" value="{{ old('title', $post->title) }}" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Gambar utama (opsional)</label>
-                                <input type="file" name="image" class="form-control" accept="image/*">
-                                @if ($post->image)
-                                    <div class="mt-2">
-                                        <p class="text-xs text-muted mb-1">Gambar saat ini:</p>
-                                        <img src="{{ asset('storage/' . $post->image->path) }}" alt="Gambar berita" class="img-fluid rounded" style="max-height: 200px;">
-                                    </div>
-                                @endif
-                                <p class="text-xs text-muted mt-1 mb-0">Format JPG/PNG, maksimal 2MB.</p>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Konten</label>
-                                <textarea name="content" rows="8" class="form-control" placeholder="Isi lengkap berita atau testimoni" required>{{ old('content', $post->content) }}</textarea>
-                                <p class="text-xs text-muted mt-2">Gunakan paragraf rapi agar mudah dibaca. Foto/video tambahan dapat disisipkan oleh tim konten.</p>
-                            </div>
-                            @if ($isEdit && $post->exists)
-                                <div class="col-12">
-                                    <div class="d-inline-flex align-items-center gap-2 px-3 py-2 border rounded">
-                                        <span class="badge {{ $statusBadge }}">
-                                            {{ $post->status === 'published' ? 'Sudah tayang' : 'Menunggu publikasi' }}
-                                        </span>
-                                        @if ($post->published_at)
-                                            <span class="text-xs text-muted">Dipublikasi {{ $post->published_at->translatedFormat('d M Y H:i') }}</span>
-                                        @endif
-                                    </div>
-                                    @if (! $isPemda && ! $isPuskesmas)
-                                        <p class="text-xs text-muted mt-2 mb-0">Perubahan akan menunggu publikasi admin sebelum tayang.</p>
-                                    @endunless
-                                </div>
-                            @endif
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-4">
-                            <a href="{{ route('news.index') }}" class="btn btn-outline-secondary">
-                                <i class="fa fa-arrow-left me-1"></i> Kembali
-                            </a>
-                            <button type="submit" class="btn btn-primary px-4">
-                                {{ $isEdit ? 'Simpan Perubahan' : 'Kirim Berita' }}
-                            </button>
-                        </div>
-                    </form>
+                <div>
+                     <h5 class="font-bold text-xl text-gray-800 mb-1">{{ $isEdit ? 'Edit Berita' : 'Tulis Berita Baru' }}</h5>
+                    <p class="text-sm text-gray-500 mb-0">
+                        Isi judul, unggah gambar utama, dan konten berita atau testimoni. Puskesmas dapat menerbitkan langsung; konten lain menunggu publikasi admin.
+                    </p>
                 </div>
             </div>
+
+            <form method="POST" action="{{ $isEdit ? route('news.update', $post) : route('news.store') }}" enctype="multipart/form-data" class="space-y-6">
+                @csrf
+                @if ($isEdit)
+                    @method('PUT')
+                @endif
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Judul Berita</label>
+                    <input type="text" name="title" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('title', $post->title) }}" placeholder="Judul yang menarik..." required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Gambar Utama (Opsional)</label>
+                    <div class="relative group">
+                         <input type="file" name="image" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-glass-primary)] file:text-white hover:file:bg-emerald-600" accept="image/*">
+                    </div>
+                    @if ($post->image)
+                        <div class="mt-4 p-2 bg-white/40 rounded-xl border border-gray-100 inline-block">
+                            <p class="text-xs text-gray-500 mb-2">Gambar saat ini:</p>
+                            <img src="{{ asset('storage/' . $post->image->path) }}" alt="Gambar berita" class="rounded-lg max-h-48 object-cover">
+                        </div>
+                    @endif
+                    <p class="text-xs text-gray-400 mt-2">Format JPG/PNG, maksimal 2MB. Gambar berkualitas meningkatkan keterbacaan.</p>
+                </div>
+
+                <div>
+                     <label class="block text-sm font-bold text-gray-700 mb-2">Konten Berita</label>
+                    <textarea name="content" rows="12" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" placeholder="Tuliskan isi berita atau testimoni secara lengkap..." required>{{ old('content', $post->content) }}</textarea>
+                    <p class="text-xs text-gray-400 mt-2">Gunakan paragraf yang rapi.</p>
+                </div>
+
+                @if ($isEdit && $post->exists)
+                     <div class="bg-gray-50/50 rounded-xl p-4 border border-gray-100 flex items-center justify-between">
+                        <div>
+                             <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold {{ $statusBadge }}">
+                                {{ $post->status === 'published' ? 'Sudah tayang' : 'Menunggu publikasi' }}
+                            </span>
+                            @if ($post->published_at)
+                                <span class="text-xs text-gray-500 ml-2">Dipublikasi {{ $post->published_at->translatedFormat('d M Y H:i') }}</span>
+                            @endif
+                        </div>
+                        @if (! $isPemda && ! $isPuskesmas)
+                             <p class="text-xs text-gray-500 italic mb-0">Perubahan akan menunggu persetujuan admin kembali.</p>
+                        @endif
+                    </div>
+                @endif
+
+                <div class="flex justify-end pt-6 border-t border-gray-100">
+                    <button type="submit" class="glass-button-cta px-8 py-3 rounded-xl font-bold text-white shadow-lg transform hover:-translate-y-0.5 transition-all">
+                        {{ $isEdit ? 'Simpan Perubahan' : 'Kirim Berita' }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 @endsection

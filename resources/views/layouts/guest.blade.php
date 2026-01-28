@@ -27,5 +27,27 @@
                 {{ $slot }}
             </div>
         </div>
+        <!-- SweetAlert -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            @if (session('status'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: @json(session('status')),
+                    confirmButtonColor: '#10B981'
+                });
+            @endif
+
+            @if ($errors->any())
+                const errorMessages = @json($errors->all());
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Perhatian',
+                    html: '<ul class="text-left text-sm mb-0 list-disc pl-4">' + errorMessages.map(msg => `<li>${msg}</li>`).join('') + '</ul>',
+                    confirmButtonColor: '#EF4444'
+                });
+            @endif
+        </script>
     </body>
 </html>

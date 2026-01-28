@@ -73,7 +73,7 @@ jobs:
 
       - name: Put app into maintenance mode
         run: |
-          ssh ${SSH_USER}@${SSH_HOST} "cd /home/situbamy/situba && php artisan down"
+          ssh ${SSH_USER}@${SSH_HOST} "cd /home/situbamy/situba && php artisan down --secret=\"situba-aman\""
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}

@@ -58,6 +58,7 @@
             return $currentUrl === ($item['url'] ?? '') || str_starts_with($currentUrl, $base . '/');
         });
     $navTitle = $activeNavItem['label'] ?? ($navItems[0]['label'] ?? 'Dashboard');
+    $navSubtitle = $subjudul ?? '';
 
     $profileNav = [
         'label' => $role === UserRole::Pemda ? 'Profil Pemda' : 'Profil Saya',
@@ -127,7 +128,9 @@
                             <div class="soft-topbar__heading">
                                 <div>
                                     <h1 class="soft-page-title mb-0">{{ $navTitle }}</h1>
-                    <p class="soft-topbar__subtitle mb-0">{{ $subjudul ?? 'Dashboard' }}</p>
+                    @if (!empty($navSubtitle))
+                        <p class="soft-topbar__subtitle mb-0">{{ $navSubtitle }}</p>
+                    @endif
                                 </div>
                             </div>
                     </div>
@@ -137,7 +140,7 @@
                             <i class="ri-menu-3-line"></i>
                         </button>
                         <div class="dropdown soft-profile-dropdown ms-auto">
-                            <button class="btn border-0 bg-transparent p-0" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn border-0 bg-transparent p-0 dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 <span class="soft-user-pill">
                                     <span class="soft-user-avatar">{{ $userInitials }}</span>
                                     <span class="d-none d-sm-flex flex-column text-start">

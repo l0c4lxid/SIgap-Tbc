@@ -1,6 +1,6 @@
 @extends('layouts.soft')
 
-@section('subjudul', 'Verifikasi pengguna SITUBA')
+@section('subjudul', 'Validasi pengguna')
 
 @section('content')
     <div class="row">

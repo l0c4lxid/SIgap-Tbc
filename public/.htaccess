@@ -34,3 +34,8 @@
     ExpiresByType image/png "access plus 30 days"
     ExpiresByType image/jpeg "access plus 30 days"
 </IfModule>
+
+# Correct MIME types for ES modules / JS assets
+<IfModule mod_mime.c>
+    AddType application/javascript .js .mjs
+</IfModule>

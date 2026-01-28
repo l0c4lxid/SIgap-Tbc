@@ -47,6 +47,10 @@ jobs:
             echo "No build script found; skipping."
           fi
 
+      - name: Ensure Vite hot file is removed
+        run: |
+          rm -f public/hot
+
       - name: Setup SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -93,7 +97,7 @@ jobs:
 
       - name: Post-deploy clear caches (no cache:clear)
         run: |
-          ssh ${SSH_USER}@${SSH_HOST} "cd /home/situbamy/situba && php artisan config:clear && php artisan route:clear && php artisan view:clear && php artisan event:clear"
+          ssh ${SSH_USER}@${SSH_HOST} "rm -f /home/situbamy/situba/public/hot /home/situbamy/public_html/hot && cd /home/situbamy/situba && php artisan config:clear && php artisan route:clear && php artisan view:clear && php artisan event:clear"
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}

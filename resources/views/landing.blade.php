@@ -167,24 +167,30 @@
                                         <div class="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                                             <div class="text-xs text-gray-500 mb-1">Skrining Baru</div>
                                             <div class="text-2xl font-bold text-gray-900" data-countup
-                                                data-target="{{ $screeningsLast30DaysCount ?? 0 }}">0</div>
-                                            <div class="text--[10px] text-emerald-600 font-medium">+12% vs bulan lalu</div>
+                                                data-target="{{ $screeningsLast30DaysCount ?? 0 }}">{{ $screeningsLast30DaysCount ?? 0 }}</div>
+                                            <div class="text--[10px] text-emerald-600 font-medium">
+                                                {{ ($screeningsMoMChange ?? 0) >= 0 ? '+' : '' }}{{ $screeningsMoMChange ?? 0 }}% vs bulan lalu
+                                            </div>
                                         </div>
                                         <div class="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                                             <div class="text-xs text-gray-500 mb-1">Tindak Lanjut</div>
                                             <div class="text-2xl font-bold text-gray-900" data-countup
-                                                data-target="{{ $followUpRate ?? 0 }}" data-suffix="%">0%</div>
+                                                data-target="{{ $followUpRate ?? 0 }}" data-suffix="%">{{ $followUpRate ?? 0 }}%</div>
                                             <div class="text-[10px] text-gray-400 font-medium">Target: 90%</div>
                                         </div>
                                     </div>
                                     <div class="space-y-3">
                                         <div class="flex items-center justify-between text-sm py-2 border-b border-gray-50">
                                             <span class="flex items-center gap-2 text-gray-600"><i class="fa-solid fa-users text-gray-400"></i> Kader Input Data</span>
-                                            <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">Just now</span>
+                                            <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
+                                                {{ $latestScreeningAt ? \Illuminate\Support\Carbon::parse($latestScreeningAt)->locale('id')->diffForHumans() : 'Belum ada data' }}
+                                            </span>
                                         </div>
                                         <div class="flex items-center justify-between text-sm py-2 border-b border-gray-50">
                                             <span class="flex items-center gap-2 text-gray-600"><i class="fa-solid fa-user-doctor text-gray-400"></i> Validasi PKM</span>
-                                            <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">2m ago</span>
+                                            <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
+                                                {{ $latestPuskesmasValidationAt ? \Illuminate\Support\Carbon::parse($latestPuskesmasValidationAt)->locale('id')->diffForHumans() : 'Belum ada data' }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -284,14 +290,16 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                                         <div class="text-xs text-gray-500 mb-1">Skrining Baru</div>
-                                        <div class="text-2xl font-bold text-gray-900"
-                                            data-target="{{ $screeningsLast30DaysCount ?? 0 }}">0</div>
-                                        <div class="text-[10px] text-emerald-600 font-medium">+12% vs bulan lalu</div>
+                                        <div class="text-2xl font-bold text-gray-900" data-countup
+                                            data-target="{{ $screeningsLast30DaysCount ?? 0 }}">{{ $screeningsLast30DaysCount ?? 0 }}</div>
+                                        <div class="text-[10px] text-emerald-600 font-medium">
+                                            {{ ($screeningsMoMChange ?? 0) >= 0 ? '+' : '' }}{{ $screeningsMoMChange ?? 0 }}% vs bulan lalu
+                                        </div>
                                     </div>
                                     <div class="p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
                                         <div class="text-xs text-gray-500 mb-1">Tindak Lanjut</div>
-                                        <div class="text-2xl font-bold text-gray-900"
-                                            data-target="{{ $followUpRate ?? 0 }}" data-suffix="%">0%</div>
+                                        <div class="text-2xl font-bold text-gray-900" data-countup
+                                            data-target="{{ $followUpRate ?? 0 }}" data-suffix="%">{{ $followUpRate ?? 0 }}%</div>
                                         <div class="text-[10px] text-gray-400 font-medium">Target: 90%</div>
                                     </div>
                                 </div>
@@ -301,12 +309,16 @@
                                     <div class="flex items-center justify-between text-sm py-2 border-b border-gray-50">
                                         <span class="flex items-center gap-2 text-gray-600"><i
                                                 class="fa-solid fa-users text-gray-400"></i> Kader Input Data</span>
-                                        <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">Just now</span>
+                                        <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
+                                            {{ $latestScreeningAt ? \Illuminate\Support\Carbon::parse($latestScreeningAt)->locale('id')->diffForHumans() : 'Belum ada data' }}
+                                        </span>
                                     </div>
                                     <div class="flex items-center justify-between text-sm py-2 border-b border-gray-50">
                                         <span class="flex items-center gap-2 text-gray-600"><i
                                                 class="fa-solid fa-user-doctor text-gray-400"></i> Validasi PKM</span>
-                                        <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">2m ago</span>
+                                        <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
+                                            {{ $latestPuskesmasValidationAt ? \Illuminate\Support\Carbon::parse($latestPuskesmasValidationAt)->locale('id')->diffForHumans() : 'Belum ada data' }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -348,7 +360,7 @@
                             <i class="fa-solid fa-hospital-user"></i>
                         </div>
                         <h3 class="text-4xl font-bold text-gray-900 mb-2" data-countup
-                            data-target="{{ $puskesmasCount ?? 0 }}">0</h3>
+                            data-target="{{ $puskesmasCount ?? 0 }}">{{ $puskesmasCount ?? 0 }}</h3>
                         <p class="text-gray-500 font-medium mb-4">Fasilitas Kesehatan</p>
                         <p class="text-sm text-gray-400 leading-relaxed">Terhubung langsung untuk validasi diagnosa dan
                             pemantauan pengobatan.</p>
@@ -362,7 +374,7 @@
                             <i class="fa-solid fa-map-location-dot"></i>
                         </div>
                         <h3 class="text-4xl font-bold text-gray-900 mb-2" data-countup
-                            data-target="{{ $kelurahanCount ?? 0 }}">0</h3>
+                            data-target="{{ $kelurahanCount ?? 0 }}">{{ $kelurahanCount ?? 0 }}</h3>
                         <p class="text-gray-500 font-medium mb-4">Kelurahan Aktif</p>
                         <p class="text-sm text-gray-400 leading-relaxed">Jaringan kewilayahan untuk pelacakan kontak
                             erat dan pendampingan.</p>

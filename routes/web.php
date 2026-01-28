@@ -28,6 +28,12 @@ Route::get('/', function () {
         ->where('created_at', '>=', now()->subDays(30))
         ->get();
     $screeningsLast30DaysCount = $screeningsLast30Days->count();
+    $screeningsPrev30DaysCount = PatientScreening::query()
+        ->whereBetween('created_at', [now()->subDays(60), now()->subDays(30)])
+        ->count();
+    $screeningsMoMChange = $screeningsPrev30DaysCount > 0
+        ? (int) round((($screeningsLast30DaysCount - $screeningsPrev30DaysCount) / $screeningsPrev30DaysCount) * 100)
+        : 0;
     $suspectLast30DaysCount = $screeningsLast30Days
         ->filter(function ($screening) {
             $positive = collect($screening->answers ?? [])
@@ -48,14 +54,24 @@ Route::get('/', function () {
         ->orderByDesc('total')
         ->limit(3)
         ->pluck('patient_address_kelurahan');
+    $latestScreeningAt = PatientScreening::query()
+        ->latest('created_at')
+        ->value('created_at');
+    $latestPuskesmasValidationAt = User::query()
+        ->where('role', UserRole::Puskesmas->value)
+        ->latest('updated_at')
+        ->value('updated_at');
 
     return view('landing', [
         'puskesmasCount' => $puskesmasCount,
         'kelurahanCount' => $kelurahanCount,
         'screeningsLast30DaysCount' => $screeningsLast30DaysCount,
+        'screeningsMoMChange' => $screeningsMoMChange,
         'followUpRate' => $followUpRate,
         'criticalAlertsCount' => $suspectLast30DaysCount,
         'priorityKelurahan' => $priorityKelurahan,
+        'latestScreeningAt' => $latestScreeningAt,
+        'latestPuskesmasValidationAt' => $latestPuskesmasValidationAt,
     ]);
 })->name('home');
 

@@ -29,27 +29,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: npm
 
-      - name: Enable pnpm (corepack)
+      - name: Install JS dependencies (npm)
         run: |
-          corepack enable
-          corepack prepare pnpm@latest --activate
-          pnpm --version
-
-      - name: Install JS dependencies (pnpm)
-        run: |
-          if [ -f pnpm-lock.yaml ]; then
-            pnpm install --frozen-lockfile
+          if [ -f package-lock.json ]; then
+            npm ci
           else
-            echo "pnpm-lock.yaml not found; skipping frontend install."
+            npm install
           fi
 
       - name: Build assets (if script exists)
         run: |
-          if pnpm run | grep -q " build"; then
-            pnpm run build
-          elif npm run | grep -q " build"; then
+          if npm run | grep -q " build"; then
             npm run build
           else
             echo "No build script found; skipping."

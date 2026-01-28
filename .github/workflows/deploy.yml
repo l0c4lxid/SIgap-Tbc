@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -11,50 +15,85 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, pdo_mysql
+          tools: composer:v2
+
+      - name: Install PHP dependencies (production)
+        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+
       - name: Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: pnpm
 
-      - name: Build assets (Vite)
+      - name: Enable pnpm (corepack)
         run: |
-          npm ci || npm install
-          npm run build
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm --version
+
+      - name: Install JS dependencies (pnpm)
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install --frozen-lockfile
+          else
+            echo "pnpm-lock.yaml not found; skipping frontend install."
+          fi
+
+      - name: Build assets (if script exists)
+        run: |
+          if pnpm run | grep -q " build"; then
+            pnpm run build
+          elif npm run | grep -q " build"; then
+            npm run build
+          else
+            echo "No build script found; skipping."
+          fi
 
       - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add SSH host to known_hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan "${SSH_HOST}" >> ~/.ssh/known_hosts
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
 
-      - name: Put app into maintenance mode
+      - name: Rsync project to server
         run: |
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "set -e; cd '${{ secrets.SSH_PATH }}'; if [ -n '${{ secrets.MAINTENANCE_SECRET }}' ]; then php artisan down --secret='${{ secrets.MAINTENANCE_SECRET }}' --retry=60 --refresh=15; else php artisan down --retry=60 --refresh=15; fi"
+          rsync -az \
+            --exclude='.git*' \
+            --exclude='.github*' \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            ./ ${SSH_USER}@${SSH_HOST}:/home/situbamy/situba
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
 
-      - name: Deploy via rsync
+      - name: Rsync public to web root
         run: |
-          rsync -avz --delete \
-            --exclude ".git" \
-            --exclude "node_modules" \
-            --exclude ".env" \
-            ./ \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}/"
+          rsync -az \
+            --exclude='.git*' \
+            --exclude='.github*' \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            ./public/ ${SSH_USER}@${SSH_HOST}:/home/situbamy/public_html
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
 
-      - name: Sync built assets to public_html
+      - name: Post-deploy optimize clear
         run: |
-          rsync -avz --delete \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}/public/build/" \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/situbamy/public_html/build/"
-
-      - name: Laravel optimize on server
-        run: |
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "set -e; cd '${{ secrets.SSH_PATH }}'; composer install --no-dev --optimize-autoloader || ~/bin/composer install --no-dev --optimize-autoloader; php artisan config:cache; php artisan route:cache || true; php artisan view:cache || true"
-
-      - name: Bring app back up from maintenance mode
-        if: always()
-        run: |
-          ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "cd '${{ secrets.SSH_PATH }}' && php artisan up || true"
+          ssh ${SSH_USER}@${SSH_HOST} "cd /home/situbamy/situba && php artisan optimize:clear"
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}

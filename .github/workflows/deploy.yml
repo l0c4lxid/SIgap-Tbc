@@ -78,6 +78,7 @@ jobs:
             --exclude='.github*' \
             --exclude='node_modules' \
             --exclude='.env' \
+            --exclude='index.php' \
             ./public/ ${SSH_USER}@${SSH_HOST}:/home/situbamy/public_html
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}

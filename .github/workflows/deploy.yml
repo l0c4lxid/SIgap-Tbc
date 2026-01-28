@@ -83,9 +83,9 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
 
-      - name: Post-deploy optimize clear
+      - name: Post-deploy clear caches (no cache:clear)
         run: |
-          ssh ${SSH_USER}@${SSH_HOST} "cd /home/situbamy/situba && php artisan optimize:clear"
+          ssh ${SSH_USER}@${SSH_HOST} "cd /home/situbamy/situba && php artisan config:clear && php artisan route:clear && php artisan view:clear && php artisan event:clear"
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}

@@ -41,10 +41,10 @@
                         </div>
                         <div>
                             <h6 class="font-bold text-sm m-0">Notifikasi</h6>
-                            <span class="text-xs text-gray-500">Baru saja</span>
+                            <span class="text-xs text-gray-500">{{ $notification['time'] }}</span>
                         </div>
                     </div>
-                    <p class="text-sm text-gray-600 m-0">Laporan skrining terbaru telah masuk dari wilayah Pantauan A.</p>
+                    <p class="text-sm text-gray-600 m-0">{{ $notification['text'] }}</p>
                 </div>
                 <div class="glass-panel p-6 rounded-2xl -rotate-2 absolute bottom-0 left-10 w-fit max-w-[280px]">
                      <div class="flex items-center gap-3 mb-3">
@@ -229,7 +229,7 @@
                 </div>
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[var(--color-glass-primary)] text-white shadow-sm">
                     @if ($user->role === \App\Enums\UserRole::Kelurahan)
-                        {{ $recentIsPaginator ? $recentScreenings->total() : $recentScreenings->count() }} Total Input
+                        {{ $recentIsPaginator ? $recentScreenings->total() . ' Total Input' : 'Aktivitas Terkini' }}
                     @else
                         {{ $recentSuspectCount }} Suspek Terdeteksi
                     @endif

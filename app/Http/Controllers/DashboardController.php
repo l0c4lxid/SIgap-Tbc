@@ -126,9 +126,22 @@ class DashboardController extends Controller
                         'color' => 'warning',
                         'url' => route('pemda.screenings'),
                     ],
+                    [
+                        'label' => 'Total Suspek TBC',
+                        'value' => number_format(PatientScreening::get()->filter(function ($screening) {
+                             return collect($screening->answers ?? [])
+                                ->filter(fn($ans, $key) => str_starts_with((string) $key, 'gejala_') && $ans === 'ya')
+                                ->count() >= 1;
+                        })->count()),
+                        'subtitle' => 'Indikasi Positif',
+                        'trend' => 'Segera tindak lanjuti',
+                        'icon' => 'ri-alarm-warning-line',
+                        'color' => 'danger',
+                        'url' => route('pemda.screenings'), 
+                    ],
                 ];
 
-                $recentScreenings = $baseScreeningQuery->paginate(5);
+                $recentScreenings = $baseScreeningQuery->take(3)->get();
 
                 $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())
                     ->get();
@@ -221,6 +234,15 @@ class DashboardController extends Controller
                         'icon' => 'ri-alert-line',
                         'color' => 'warning',
                     ],
+                    [
+                        'label' => 'Total Kader',
+                        'value' => number_format($kaderIds->count()),
+                        'subtitle' => 'Aktif di wilayah ini',
+                        'trend' => 'Mitra lapangan',
+                        'icon' => 'ri-team-line',
+                        'color' => 'success',
+                        'url' => route('kelurahan.kaders'),
+                    ],
                 ];
 
                 $recentScreenings = $kaderIds->isEmpty()
@@ -229,7 +251,8 @@ class DashboardController extends Controller
                         ->when($kaderIds->isNotEmpty(), fn($query) => $query->whereIn('kader_id', $kaderIds))
                         ->when($kelurahanKeyword, fn($query) => $query->whereRaw('LOWER(patient_address_kelurahan) LIKE ?', ['%' . $kelurahanKeyword . '%']))
                         ->orderByDesc('created_at')
-                        ->paginate(5);
+                        ->take(3)
+                        ->get();
 
                 $screeningsThisMonth = $kaderIds->isEmpty()
                     ? collect()
@@ -357,11 +380,32 @@ class DashboardController extends Controller
                         'color' => 'primary',
                         'url' => route('puskesmas.screenings'),
                     ],
+                    [
+                        'label' => 'Total Suspek',
+                        'value' => number_format($screenings->filter(function ($s) {
+                             return collect($s->answers ?? [])->filter(fn($a, $k) => str_starts_with($k, 'gejala_') && $a === 'ya')->count() >= 1;
+                        })->count()),
+                        'subtitle' => 'Indikasi TBC',
+                        'trend' => 'Perlu tindak lanjut',
+                        'icon' => 'ri-alarm-warning-line',
+                        'color' => 'danger',
+                        'url' => route('puskesmas.screenings'),
+                    ],
+                    [
+                        'label' => 'Kelurahan Binaan',
+                        'value' => number_format(User::where('role', UserRole::Kelurahan->value)
+                            ->whereHas('detail', fn($d) => $d->where('supervisor_id', $user->id))->count()),
+                        'subtitle' => 'Wilayah kerja',
+                        'trend' => 'Cakupan area',
+                        'icon' => 'ri-map-pin-line',
+                        'color' => 'success',
+                        'url' => route('puskesmas.kelurahan'),
+                    ],
                 ];
 
                 $recentScreenings = $kaderIds->isEmpty()
                     ? null
-                    : $baseScreeningQuery->whereIn('kader_id', $kaderIds)->paginate(5);
+                    : $baseScreeningQuery->whereIn('kader_id', $kaderIds)->take(3)->get();
 
                 $screeningsInRange = $kaderIds->isEmpty()
                     ? collect()
@@ -393,11 +437,29 @@ class DashboardController extends Controller
                         'icon' => 'ri-shield-cross-line',
                         'color' => $user->is_active ? 'success' : 'warning',
                     ],
+                    [
+                        'label' => 'Suspek Ditemukan',
+                        'value' => number_format($screenings->filter(function ($s) {
+                             return collect($s->answers ?? [])->filter(fn($a, $k) => str_starts_with($k, 'gejala_') && $a === 'ya')->count() >= 1;
+                        })->count()),
+                        'subtitle' => 'Total indikasi TBC',
+                        'trend' => 'Arahkan ke Puskesmas',
+                        'icon' => 'ri-alert-line',
+                        'color' => 'danger',
+                    ],
+                    [
+                        'label' => 'Kinerja Bulan Ini',
+                        'value' => number_format($screenings->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count()),
+                        'subtitle' => 'Skrining ' . now()->format('M Y'),
+                        'trend' => 'Terus tingkatkan',
+                        'icon' => 'ri-calendar-check-line',
+                        'color' => 'info',
+                    ],
                 ];
 
                 $recentScreenings = $screenings->isEmpty()
                     ? collect()
-                    : $baseScreeningQuery->where('kader_id', $user->id)->paginate(5);
+                    : $baseScreeningQuery->where('kader_id', $user->id)->take(3)->get();
 
                 $screeningsInRange = (clone $screeningsQuery)
                     ->where('created_at', '>=', $chartMonths->first())
@@ -416,17 +478,27 @@ class DashboardController extends Controller
                         'color' => 'primary',
                     ],
                 ];
-                $recentScreenings = $baseScreeningQuery->paginate(5);
+                $recentScreenings = $baseScreeningQuery->take(3)->get();
                 $screeningsInRange = PatientScreening::where('created_at', '>=', $chartMonths->first())->get();
                 $dashboardCharts = $buildCharts($screeningsInRange);
                 break;
         }
+
+        $latestScreening = $recentScreenings ? $recentScreenings->first() : null;
+        $notification = [
+            'has_new' => (bool)$latestScreening,
+            'text' => $latestScreening
+                ? "Laporan skrining terbaru telah masuk dari Kelurahan " . ($latestScreening->patient_address_kelurahan ?? 'Tidak Diketahui') . "."
+                : "Belum ada laporan aktivitas terbaru saat ini.",
+            'time' => $latestScreening ? $latestScreening->created_at->diffForHumans() : 'Hari ini',
+        ];
 
         return view('dashboard', [
             'user' => $user,
             'cards' => $cards,
             'recentScreenings' => $recentScreenings,
             'dashboardCharts' => $dashboardCharts,
+            'notification' => $notification,
         ]);
     }
 }

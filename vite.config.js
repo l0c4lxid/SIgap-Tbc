@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => {
                     'resources/css/app.css',
                     'resources/assets/scss/soft-ui-dashboard.scss',
                     'resources/js/app.js',
+                    'resources/css/landing-animations.css',
+                    'resources/js/landing-animations.js',
                 ],
                 refresh: true,
             }),

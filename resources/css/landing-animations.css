@@ -1,0 +1,213 @@
+/* Landing Animations CSS */
+:root {
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* Base Utility for Reveal */
+.reveal-base {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s var(--ease-out-expo);
+    will-change: opacity, transform;
+}
+
+.reveal-base.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger Delays */
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* Section Title Pipeline Reveal */
+.pipeline-title .pipeline-left {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.8s var(--ease-out-expo);
+}
+
+.pipeline-title .pipeline-right {
+    opacity: 0;
+    transition: opacity 0.8s ease-out 0.3s;
+}
+
+.pipeline-title .pipeline-line {
+    width: 0%;
+    transition: width 1s var(--ease-out-expo) 0.5s;
+}
+
+.pipeline-title.is-visible .pipeline-left {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.pipeline-title.is-visible .pipeline-right {
+    opacity: 1;
+}
+
+.pipeline-title.is-visible .pipeline-line {
+    width: 100%;
+}
+
+/* Hero Load Reveal */
+.hero-reveal {
+    animation: fadeSlideUp 1s var(--ease-out-expo) forwards;
+    opacity: 0;
+}
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card Hover Lift - Stable */
+.hover-lift {
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+    /* Removed translateZ/backface-visibility to avoid blurring or layer issues */
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px); 
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Ensure reveal animation doesn't fight with hover */
+.reveal-base.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    /* Remove transform from the active state so hover can take over cleanly */
+    /* However, we need to be careful not to snap. 
+       Best approach: set transform to none after animation.
+    */
+    animation: fillReset 0.1s forwards 1s; /* Clear transform after 1s */
+}
+
+@keyframes fillReset {
+    to { transform: none; }
+}
+
+/* Stepper Connector Animation */
+.stepper-connector {
+    position: absolute;
+    background: #e5e7eb;
+    transition: height 0.5s linear, width 0.5s linear;
+    z-index: 0;
+}
+
+.stepper-connector.active {
+    background: #10b981; /* Tailwind emerald-500 */
+}
+
+/* Marquee */
+.marquee-container {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.marquee-content {
+    display: flex;
+    gap: 2rem;
+    animation: marquee 25s linear infinite;
+    width: max-content;
+    will-change: transform;
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.marquee-container:hover .marquee-content {
+    animation-play-state: paused;
+}
+
+@media (min-width: 768px) {
+    .marquee-content {
+        animation: none;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* Shimmer Effect */
+.shimmer {
+    position: relative;
+    overflow: hidden;
+}
+
+.shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+    );
+    transform: skewX(-20deg);
+    animation: shimmerSwipe 3s infinite;
+    pointer-events: none;
+}
+
+@keyframes shimmerSwipe {
+    0% { left: -100%; }
+    20% { left: 100%; }
+    100% { left: 100%; }
+}
+
+/* Scroll Progress Bar */
+.scroll-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #10b981, #059669);
+    z-index: 100;
+    width: 0%;
+    will-change: width;
+}
+
+/* Prefers Reduced Motion overrides */
+@media (prefers-reduced-motion: reduce) {
+    .reveal-base,
+    .pipeline-title .pipeline-left,
+    .pipeline-title .pipeline-right,
+    .pipeline-title .pipeline-line,
+    .hero-reveal,
+    .hover-lift:hover,
+    .shimmer::after,
+    .marquee-content {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+        width: auto !important;
+    }
+    
+    .reveal-base.is-visible {
+        opacity: 1;
+    }
+}

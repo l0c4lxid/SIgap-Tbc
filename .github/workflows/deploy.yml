@@ -42,13 +42,19 @@ jobs:
             ./ \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}/"
 
+      - name: Sync built assets to public_html
+        run: |
+          rsync -avz --delete \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PATH }}/public/build/" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/situbamy/public_html/build/"
+
       - name: Laravel optimize on server
         run: |
           ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "set -e; cd '${{ secrets.SSH_PATH }}'; composer install --no-dev --optimize-autoloader || ~/bin/composer install --no-dev --optimize-autoloader; php artisan config:cache; php artisan route:cache || true; php artisan view:cache || true"
 
-      - name: Bring app back down from maintenance mode
+      - name: Bring app back up from maintenance mode
         if: always()
         run: |
           ssh "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "cd '${{ secrets.SSH_PATH }}' && php artisan down || true"
+            "cd '${{ secrets.SSH_PATH }}' && php artisan up || true"

@@ -29,6 +29,12 @@
                 'icon' => 'ri-stethoscope-line',
                 'active_routes' => ['pemda.screenings', 'pemda.screenings.show'],
             ],
+            [
+                'label' => 'Target Skrining',
+                'url' => route('pemda.screening-targets.index'),
+                'icon' => 'ri-focus-3-line',
+                'active_routes' => ['pemda.screening-targets.*'],
+            ],
             ['label' => 'Materi', 'url' => route('pemda.materi'), 'icon' => 'ri-book-open-line'],
             ['label' => 'Semua Berita', 'url' => route('news.index'), 'icon' => 'ri-newspaper-line'],
         ],
@@ -113,7 +119,7 @@
     <main class="xl:ml-80 p-4 min-h-screen transition-all duration-300">
         
         <!-- Top Navbar -->
-        <div class="glass-panel sticky top-4 z-30 rounded-2xl px-6 py-4 mb-6 flex items-center justify-between gap-4">
+        <div class="glass-panel z-30 rounded-2xl px-6 py-4 mb-6 flex items-center justify-between gap-4">
             
             <!-- Left: Toggle & Title -->
             <div class="flex items-center gap-4">
@@ -151,21 +157,21 @@
                     </button>
 
                     <!-- Dropdown Menu -->
-                    <div id="profile-menu" class="hidden absolute right-0 mt-3 w-56 glass-panel rounded-xl shadow-xl overflow-hidden animate-fade-in origin-top-right">
-                        <div class="p-3 border-b border-gray-100/50">
-                            <p class="text-sm font-bold text-gray-800 m-0">{{ $user?->name }}</p>
+                    <div id="profile-menu" class="hidden absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl overflow-hidden animate-fade-in origin-top-right ring-1 ring-black ring-opacity-5 z-50">
+                        <div class="p-3 border-b border-gray-100">
+                            <p class="text-sm font-bold text-gray-900 m-0">{{ $user?->name }}</p>
                             <p class="text-xs text-gray-500 m-0">{{ $user?->email }}</p>
                         </div>
                         <div class="p-1">
-                            <a href="{{ $profileNav['url'] }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50/50 hover:text-[var(--color-glass-primary)] transition-colors no-underline">
-                                <i class="ri-user-settings-line"></i> {{ $profileNav['label'] }}
+                            <a href="{{ $profileNav['url'] }}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-900 hover:bg-gray-50 hover:text-[var(--color-glass-primary)] transition-colors no-underline">
+                                <i class="ri-user-settings-line text-lg"></i> {{ $profileNav['label'] }}
                             </a>
                         </div>
-                        <div class="p-1 border-t border-gray-100/50">
+                        <div class="p-1 border-t border-gray-100">
                              <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50/50 transition-colors border-none bg-transparent cursor-pointer">
-                                    <i class="ri-logout-box-r-line"></i> Keluar
+                                <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-700 hover:bg-red-50 transition-colors border-none bg-transparent cursor-pointer">
+                                    <i class="ri-logout-box-r-line text-lg"></i> Keluar
                                 </button>
                             </form>
                         </div>

@@ -56,8 +56,8 @@
                             <span class="text-xs text-gray-500">Bulan ini</span>
                         </div>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2" title="{{ $targetPercentage ?? 0 }}% Tercapai">
+                        <div class="bg-green-500 h-2 rounded-full" style="width: {{ $targetPercentage ?? 0 }}%"></div>
                     </div>
                 </div>
             </div>

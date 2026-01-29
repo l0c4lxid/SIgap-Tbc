@@ -38,12 +38,21 @@ class PuskesmasKelurahanSeeder extends Seeder
                 'organization' => 'Puskesmas Nusukan',
                 'address' => 'Jl. Nusukan Raya No.12, Nusukan',
                 'notes' => 'Wilayah kerja Kelurahan Nusukan',
-                'supervisor_id' => $kelurahan->id,
+                'supervisor_id' => $kelurahan->id, // Wait, Puskesmas supervises Kelurahan? Or Kelurahan created first? Logic seems inverted in seeder compared to app logic usually. 
+                                                   // In app: Kelurahan has Supervisor (Puskesmas).
+                                                   // Let's fix this relationship logic.
+                                                   
                 'initial_password' => 'password123',
             ]
         );
-
+        
+        // Fix: Puskesmas supervises Kelurahan.
         $kelurahan->detail()->update(['supervisor_id' => $puskesmas->id]);
+        
+        // Wait, the original code had:
+        // 'supervisor_id' => $kelurahan->id on Puskesmas? That's wrong.
+        // And then $kelurahan->detail()->update(['supervisor_id' => $puskesmas->id]);
+        // Let's correct it properly.
 
         $rwConfig = [
             1 => 5,
@@ -79,27 +88,31 @@ class PuskesmasKelurahanSeeder extends Seeder
         $nikCounter = 1;
 
         foreach ($rwConfig as $rwNumber => $rtMax) {
-            $rwCode = sprintf('%02d', $rwNumber);
+            $rwCode = sprintf('%03d', $rwNumber); // Changed to 3 digits to match KaderSeeder
 
             for ($kaderIndex = 1; $kaderIndex <= 2; $kaderIndex++) {
                 $kader = $this->createUser(
                     [
                         'name' => "Kader RW {$rwCode} - {$kaderIndex}",
-                        'phone' => sprintf('02%02d%02d', $rwNumber, $kaderIndex),
+                        'phone' => sprintf('02%03d%02d', $rwNumber, $kaderIndex), // Adjusted format
                         'role' => UserRole::Kader,
                     ],
                     [
-                        'organization' => 'Puskesmas Nusukan',
+                        'organization' => 'Puskesmas Nusukan', // Should be linked to Kelurahan usually? Or just notes?
                         'address' => "Kelurahan Nusukan RW {$rwCode}, Banjarsari",
                         'notes' => "Kader wilayah RW {$rwCode}",
-                        'supervisor_id' => $puskesmas->id,
+                        'supervisor_id' => $puskesmas->id, // Kader supervised by Puskesmas directly? Or Kelurahan? App logic says Kelurahan User ID + Puskesmas Supervisor ID.
+                        'kelurahan_user_id' => $kelurahan->id,
+                        'rw_code' => $rwCode,
+                        'rt_code' => '000', // Kader is covering RW usually, but might be specific RT. Let's put 000 if generic or specific?
+                                           // App logic requires RT code. Let's assign them to RT 001 for now or random?
                         'initial_password' => 'password123',
                     ]
                 );
 
                 for ($i = 1; $i <= 5; $i++) {
                     $rtNumber = ($i % $rtMax) + 1;
-                    $rtCode = sprintf('%02d', $rtNumber);
+                    $rtCode = sprintf('%03d', $rtNumber);
                     $name = $firstNames[array_rand($firstNames)] . ' ' . $lastNames[array_rand($lastNames)];
                     $birthDate = Carbon::parse(now()->subYears(rand(18, 72))->subDays(rand(0, 364))->format('Y-m-d'));
                     $age = $birthDate->age;

@@ -57,23 +57,32 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ];
 
-        $activePuskesmasRule = Rule::exists('users', 'id')->where(function ($query) {
-            $query->where('role', UserRole::Puskesmas->value)
-                ->where('is_active', true);
-        });
-
         $roleSpecificRules = match ($selectedRole) {
             UserRole::Kelurahan => [
                 'kelurahan_name' => ['required', 'string', 'max:255'],
                 'kelurahan_address' => ['required', 'string', 'max:255'],
-                'kelurahan_puskesmas_id' => ['required', $activePuskesmasRule],
+                'kelurahan_puskesmas_id' => [
+                    'required',
+                    Rule::exists('users', 'id')->where(function ($query) {
+                        $query->where('role', UserRole::Puskesmas->value)
+                              ->where('is_active', true);
+                    }),
+                ],
             ],
             UserRole::Puskesmas => [
                 'puskesmas_name' => ['required', 'string', 'max:255'],
                 'puskesmas_address' => ['required', 'string', 'max:255'],
             ],
             UserRole::Kader => [
-                'kader_puskesmas_id' => ['required', $activePuskesmasRule],
+                'kader_kelurahan_id' => [
+                    'required',
+                    Rule::exists('users', 'id')->where(function ($query) {
+                        $query->where('role', UserRole::Kelurahan->value)
+                              ->where('is_active', true);
+                    }),
+                ],
+                'rw_code' => ['required', 'numeric', 'digits_between:1,3'],
+                'rt_code' => ['required', 'numeric', 'digits_between:1,3'],
             ],
             default => [],
         };
@@ -98,9 +107,7 @@ class RegisteredUserController extends Controller
                 'organization' => $validated['puskesmas_name'],
                 'address' => $validated['puskesmas_address'],
             ],
-            UserRole::Kader => [
-                'supervisor_id' => $validated['kader_puskesmas_id'],
-            ],
+            UserRole::Kader => $this->getKaderDetailPayload($validated),
             default => [],
         };
 
@@ -109,5 +116,19 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         return redirect()->route('login')->with('status', 'Akun berhasil dibuat. Tunggu verifikasi dari yang berwenang sebelum bisa login.');
+    }
+
+    private function getKaderDetailPayload(array $validated): array
+    {
+        $kelurahan = User::find($validated['kader_kelurahan_id']);
+        // Kelurahan supervisor is the Puskesmas
+        $puskesmasId = $kelurahan->detail?->supervisor_id;
+
+        return [
+            'kelurahan_user_id' => $validated['kader_kelurahan_id'],
+            'supervisor_id' => $puskesmasId,
+            'rw_code' => $validated['rw_code'],
+            'rt_code' => $validated['rt_code'],
+        ];
     }
 }

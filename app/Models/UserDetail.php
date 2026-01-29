@@ -20,6 +20,9 @@ class UserDetail extends Model
         'family_card_number',
         'supervisor_id',
         'pending_supervisor_id',
+        'kelurahan_user_id',
+        'rw_code',
+        'rt_code',
     ];
 
     protected $casts = [];
@@ -32,5 +35,26 @@ class UserDetail extends Model
     public function supervisor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'supervisor_id');
+    }
+
+    public function kelurahan(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'kelurahan_user_id');
+    }
+
+    public function getAreaAttribute(): ?string
+    {
+        $rw = $this->rw_code;
+        $rt = $this->rt_code;
+
+        if (! $rw && ! $rt) {
+            return null;
+        }
+
+        if ($rw && $rt) {
+            return "RW {$rw} / RT {$rt}";
+        }
+
+        return $rw ? "RW {$rw}" : "RT {$rt}";
     }
 }

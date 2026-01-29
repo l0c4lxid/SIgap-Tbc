@@ -22,7 +22,7 @@ class ScreeningSeeder extends Seeder
             
         $this->command->info("Found {$kaders->count()} kaders. Generating screenings...");
 
-        $faker = \Faker\Factory::create('id_ID');
+        $faker = fake('id_ID');
 
         foreach ($kaders as $kader) {
             // Get Kelurahan Name

@@ -57,16 +57,16 @@
                 }">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Gambar Utama (Opsional)</label>
                     <div class="relative group">
-                         <!-- Hidden Real Input -->
+                         <!-- Real Input (Overlay with Opacity 0) -->
+                         <!-- This ensures native click behavior works on all devices -->
                          <input type="file" name="image" x-ref="photo" 
-                                class="hidden" 
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                                 accept="image/*"
                                 @change="updatePreview()">
                                 
-                         <!-- Custom Button -->
+                         <!-- Visual Button -->
                          <div class="flex items-center gap-3">
                             <button type="button" 
-                                    x-on:click.prevent="$refs.photo.click()"
                                     class="glass-button px-4 py-2 rounded-xl text-sm font-bold inline-flex items-center gap-2 hover:bg-emerald-600 transition-colors">
                                 <i class="ri-upload-cloud-2-line text-lg"></i>
                                 Pilih Gambar

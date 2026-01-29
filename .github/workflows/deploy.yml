@@ -39,13 +39,8 @@ jobs:
             npm install
           fi
 
-      - name: Build assets (if script exists)
-        run: |
-          if npm run | grep -q " build"; then
-            npm run build
-          else
-            echo "No build script found; skipping."
-          fi
+      - name: Build assets
+        run: npm run build
 
       - name: Ensure Vite hot file is removed
         run: |
@@ -95,9 +90,19 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
 
-      - name: Post-deploy clear caches (no cache:clear)
+      - name: Post-deploy clear caches and link storage
         run: |
-          ssh ${SSH_USER}@${SSH_HOST} "rm -f /home/situbamy/situba/public/hot /home/situbamy/public_html/hot && cd /home/situbamy/situba && php artisan config:clear && php artisan route:clear && php artisan view:clear && php artisan event:clear"
+          ssh ${SSH_USER}@${SSH_HOST} "
+            rm -f /home/situbamy/situba/public/hot /home/situbamy/public_html/hot && 
+            cd /home/situbamy/situba && 
+            php artisan storage:link && 
+            php artisan config:clear && 
+            php artisan route:clear && 
+            php artisan view:clear && 
+            php artisan event:clear &&
+            ln -sfn /home/situbamy/situba/storage/app/public /home/situbamy/public_html/storage && 
+            php artisan up
+          "
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}

@@ -235,8 +235,9 @@
                     @endif
                 </span>
             </div>
-            <div class="overflow-x-auto">
-                <table class="glass-table">
+            {{-- Desktop View: Table --}}
+            <div class="hidden md:block overflow-x-auto rounded-xl">
+                <table class="glass-table w-full">
                     <thead>
                         <tr>
                             @if ($user->role === \App\Enums\UserRole::Kelurahan)
@@ -258,7 +259,7 @@
                                     ->filter(fn($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
                                     ->count();
                             @endphp
-                            <tr>
+                            <tr class="hover:bg-white/40 transition-colors">
                                 @if ($user->role === \App\Enums\UserRole::Kelurahan)
                                     <td>
                                         <div class="flex flex-col">
@@ -319,6 +320,78 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Mobile View: Cards --}}
+            <div class="md:hidden space-y-4">
+                @foreach ($recentScreenings as $screening)
+                    @php
+                        $positiveCount = collect($screening->answers ?? [])
+                            ->filter(fn($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
+                            ->count();
+                        
+                        $routeName = match($user->role) {
+                            \App\Enums\UserRole::Kader => 'kader.screening.show',
+                            \App\Enums\UserRole::Pemda => 'pemda.screenings.show',
+                            \App\Enums\UserRole::Puskesmas => 'puskesmas.screenings.show',
+                            default => null,
+                        };
+                    @endphp
+                    <div class="bg-white/50 border border-gray-100 rounded-xl p-4 shadow-sm hover:bg-white/80 transition-all flex flex-col gap-3">
+                        
+                        {{-- Top Row: Patient & Date --}}
+                        <div class="flex justify-between items-start">
+                            <div class="flex flex-col">
+                                @if($routeName && $user->role !== \App\Enums\UserRole::Kelurahan)
+                                    <a href="{{ route($routeName, $screening) }}" class="font-bold text-[var(--color-glass-primary)] text-sm hover:underline">
+                                        {{ $screening->patient_name }}
+                                    </a>
+                                @else
+                                    <span class="font-bold text-gray-800 text-sm">{{ $user->role === \App\Enums\UserRole::Kelurahan ? ($screening->kader->name ?? 'Mandiri') : $screening->patient_name }}</span>
+                                @endif
+                                
+                                @if($user->role !== \App\Enums\UserRole::Kelurahan)
+                                    <span class="text-[10px] text-gray-500 line-clamp-1">{{ $screening->patient_address_domisili ?? $screening->patient_address ?? '-' }}</span>
+                                @else
+                                    <span class="text-[10px] text-gray-500">{{ $screening->kader->detail->organization ?? '-' }}</span>
+                                @endif
+                            </div>
+                            <span class="text-[10px] font-mono text-gray-400 bg-gray-100/50 px-2 py-1 rounded-md">
+                                {{ $screening->created_at->format('d M') }}
+                            </span>
+                        </div>
+
+                        {{-- Middle Row: Status & Officer --}}
+                        <div class="flex justify-between items-center border-t border-gray-100/50 pt-3">
+                            {{-- Left: Officer Info --}}
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs">
+                                    <i class="ri-user-star-line"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] text-gray-500">Petugas</span>
+                                    <span class="text-xs font-semibold text-gray-700">{{ $screening->kader->name ?? 'Mandiri' }}</span>
+                                </div>
+                            </div>
+                            
+                            {{-- Right: Status --}}
+                            @if($user->role !== \App\Enums\UserRole::Kelurahan)
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $positiveCount > 0 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100' }}">
+                                    @if($positiveCount > 0)
+                                        <i class="ri-error-warning-fill"></i> {{ $positiveCount }} Gejala
+                                    @else
+                                        <i class="ri-check-double-line"></i> Sehat
+                                    @endif
+                                </span>
+                            @else
+                                <a href="tel:{{ $screening->kader->phone ?? '' }}" class="text-xs text-blue-500 font-medium flex items-center gap-1">
+                                    <i class="ri-phone-line"></i> {{ $screening->kader->phone ?? '-' }}
+                                </a>
+                            @endif
+                        </div>
+
+                    </div>
+                @endforeach
             </div>
             @if ($recentIsPaginator)
                 <div class="p-4 border-t border-gray-100/50 bg-gray-50/30 flex flex-wrap justify-between items-center gap-4">

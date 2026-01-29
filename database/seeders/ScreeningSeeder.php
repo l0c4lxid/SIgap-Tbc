@@ -41,30 +41,41 @@ class ScreeningSeeder extends Seeder
             for ($i = 0; $i < $count; $i++) {
                 $isSuspek = rand(0, 100) < 30; // 30% chance of suspek
                 
-                if ($isSuspek) {
-                    // Suspect: Mix of symptoms, but usually Cough is main indicator or at least one is present
-                    // For simplicity, let's say Suspects always have cough OR weight loss
-                    $answers = [
-                        'gejala_batuk' => rand(0, 100) < 80 ? 'ya' : 'tidak', // 80% cough
-                        'gejala_bb_turun' => rand(0, 100) < 40 ? 'ya' : 'tidak',
-                        'gejala_demam_hilang_timbul' => rand(0, 100) < 30 ? 'ya' : 'tidak',
-                        'gejala_berkeringat_malam' => rand(0, 100) < 30 ? 'ya' : 'tidak',
+                    // Generate full set of answers like the real app
+                    $allRiskQuestions = [
+                        'riwayat_kontak_tbc', 'sakit_tbc', 'kekurangan_gizi', 'merokok', 
+                        'perokok_pasif', 'kencing_manis', 'hiv', 'lansia', 
+                        'warga_binaan', 'wilayah_miskin'
                     ];
-                    // Ensure at least one is 'ya' if we really want to guarantee strict "Suspect" definition
-                    if (!in_array('ya', $answers)) {
-                        $answers['gejala_batuk'] = 'ya';
-                    }
-                } else {
-                    // Non-Suspect: No symptoms
-                    $answers = [
-                        'gejala_batuk' => 'tidak',
-                        'gejala_bb_turun' => 'tidak',
-                        'gejala_demam_hilang_timbul' => 'tidak',
-                        'gejala_berkeringat_malam' => 'tidak',
-                    ];
-                }
 
-                // Random RW/RT (Assuming specific format or just random numbers)
+                    $generatedAnswers = [];
+                    foreach ($allRiskQuestions as $q) {
+                        // Some randomness for risk factors
+                        $generatedAnswers[$q] = rand(0, 100) < 10 ? 'ya' : 'tidak';
+                    }
+
+                    if ($isSuspek) {
+                        // Suspect: Mix of symptoms
+                        $generatedAnswers['gejala_batuk'] = rand(0, 100) < 80 ? 'ya' : 'tidak';
+                        $generatedAnswers['gejala_bb_turun'] = rand(0, 100) < 40 ? 'ya' : 'tidak';
+                        $generatedAnswers['gejala_demam_hilang_timbul'] = rand(0, 100) < 30 ? 'ya' : 'tidak';
+                        $generatedAnswers['gejala_berkeringat_malam'] = rand(0, 100) < 30 ? 'ya' : 'tidak';
+                        $generatedAnswers['gejala_kelenjar'] = rand(0, 100) < 20 ? 'ya' : 'tidak'; // Added missing
+
+                        // Ensure at least one symptom is 'ya'
+                        if (!collect($generatedAnswers)->filter(fn($v, $k) => str_starts_with($k, 'gejala_') && $v === 'ya')->count()) {
+                            $generatedAnswers['gejala_batuk'] = 'ya';
+                        }
+                    } else {
+                        // Non-Suspect: No symptoms
+                        $generatedAnswers['gejala_batuk'] = 'tidak';
+                        $generatedAnswers['gejala_bb_turun'] = 'tidak';
+                        $generatedAnswers['gejala_demam_hilang_timbul'] = 'tidak';
+                        $generatedAnswers['gejala_berkeringat_malam'] = 'tidak';
+                        $generatedAnswers['gejala_kelenjar'] = 'tidak'; // Added missing
+                    }
+
+                    // Random RW/RT (Assuming specific format or just random numbers)
                 // If Kader has RW assigned, maybe prioritize that, but for now random is fine for coverage
                 $rw = $kader->detail->rw_code ?? str_pad(rand(1, 23), 3, '0', STR_PAD_LEFT); // Example RW
                 $rt = $kader->detail->rt_code ?? str_pad(rand(1, 9), 3, '0', STR_PAD_LEFT); // Example RT
@@ -99,11 +110,15 @@ class ScreeningSeeder extends Seeder
                     'patient_address_ktp' => $address,
                     'patient_address_domisili' => $address,
                     
+                    // Added Missing Fields
+                    'patient_weight' => rand(45, 90),
+                    'patient_height' => rand(150, 180),
+                    
                     // Allow created_at to be this month for dashboard charts
                     'created_at' => Carbon::now()->subDays(rand(0, 20)),
                     'updated_at' => Carbon::now(),
                     
-                    'answers' => $answers,
+                    'answers' => $generatedAnswers,
                 ]);
             }
         }

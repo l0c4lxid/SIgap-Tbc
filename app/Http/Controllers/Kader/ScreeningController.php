@@ -220,10 +220,18 @@ class ScreeningController extends Controller
                         return $value === 'ya' ? 'Ya' : ($value === 'tidak' ? 'Tidak' : ($value ?? '-'));
                     };
 
+                    // Calculate Status
+                    $positiveCount = collect($answers)
+                        ->filter(fn($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
+                        ->count();
+                    $status = $positiveCount > 0 ? 'Suspek TBC' : 'Tidak Suspek';
+
                     $asText = fn($value) => ($value === null || $value === '') ? '-' : "'" . $value;
 
                     $row = [
                         'No' => $index + 1,
+                        'Status Skrining' => $status, // Added Detail
+                        'Total Gejala' => $positiveCount, // Added Detail
                         'Nama' => $screening->patient_name ?? '-',
                         'WNI' => $screening->patient_is_wni ? 'Ya' : 'Tidak',
                         'NIK' => $asText($screening->patient_nik),
@@ -257,6 +265,8 @@ class ScreeningController extends Controller
                 return array_merge(
                     [
                         'No',
+                        'Status Skrining', // Added Header
+                        'Total Gejala', // Added Header
                         'Nama',
                         'WNI',
                         'NIK',
@@ -283,10 +293,10 @@ class ScreeningController extends Controller
             public function columnFormats(): array
             {
                 return [
-                    'D' => NumberFormat::FORMAT_TEXT,
-                    'E' => NumberFormat::FORMAT_TEXT,
-                    'M' => NumberFormat::FORMAT_TEXT,
-                    'N' => NumberFormat::FORMAT_TEXT,
+                    'F' => NumberFormat::FORMAT_TEXT, // NIK shifted
+                    'G' => NumberFormat::FORMAT_TEXT, // HP shifted
+                    'O' => NumberFormat::FORMAT_TEXT, // RT shifted
+                    'P' => NumberFormat::FORMAT_TEXT, // RW shifted
                 ];
             }
         };

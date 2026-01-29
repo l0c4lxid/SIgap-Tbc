@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class ScreeningController extends Controller
 {
@@ -84,35 +86,102 @@ class ScreeningController extends Controller
         abort_if($request->user()->role !== UserRole::Pemda, 403);
 
         $screenings = $this->buildQuery($request)->get();
+        // Get question labels for headers
+        [$riskQuestions, $symptomQuestions] = $this->questionSets();
+        $questionLabels = $riskQuestions + $symptomQuestions;
 
-        $export = new class($screenings) implements FromCollection, WithHeadings {
-            public function __construct(private $screenings)
+        $export = new class($screenings, $questionLabels) implements FromCollection, WithHeadings, WithColumnFormatting {
+            public function __construct(private $screenings, private $questionLabels)
             {
             }
 
             public function collection()
             {
                 return $this->screenings->values()->map(function ($screening, $index) {
-                    $addressParts = array_filter([
-                        $screening->patient_address_domisili ?? $screening->patient_address ?? null,
-                        $screening->patient_address_rt ? 'RT ' . $screening->patient_address_rt : null,
-                        $screening->patient_address_rw ? 'RW ' . $screening->patient_address_rw : null,
-                        $screening->patient_address_kelurahan ?? null,
-                    ]);
+                    $answers = $screening->answers ?? [];
+                    $getAnswer = function ($key) use ($answers) {
+                        $value = $answers[$key] ?? null;
+                        return $value === 'ya' ? 'Ya' : ($value === 'tidak' ? 'Tidak' : ($value ?? '-'));
+                    };
 
-                    return [
-                        $index + 1,
-                        $screening->patient_name ?? '-',
-                        $addressParts ? implode(', ', $addressParts) : '-',
-                        $screening->kader?->name ?? '-',
-                        optional($screening->created_at)?->format('d/m/Y H:i') ?? '-',
+                    // Calculate Status
+                    $positiveCount = collect($answers)
+                        ->filter(fn($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
+                        ->count();
+                    $status = $positiveCount > 0 ? 'Suspek TBC' : 'Tidak Suspek';
+
+                    $asText = fn($value) => ($value === null || $value === '') ? '-' : "'" . $value;
+
+                    $row = [
+                        'No' => $index + 1,
+                        'Kader PJ' => $screening->kader?->name ?? '-', // Specific to Pemda View
+                        'Status Skrining' => $status,
+                        'Total Gejala' => $positiveCount,
+                        'Nama' => $screening->patient_name ?? '-',
+                        'WNI' => $screening->patient_is_wni ? 'Ya' : 'Tidak',
+                        'NIK' => $asText($screening->patient_nik),
+                        'Nomor HP' => $asText($screening->patient_phone),
+                        'Alamat' => $screening->patient_address ?? '-',
+                        'Jenis Kelamin' => $screening->patient_gender ?? '-',
+                        'Tempat Lahir' => $screening->patient_birth_place ?? '-',
+                        'Tanggal Lahir' => optional($screening->patient_birth_date)?->format('d/m/Y') ?? '-',
+                        'Umur' => $screening->patient_age ?? '-',
+                        'Alamat KTP' => $screening->patient_address_ktp ?? '-',
+                        'Alamat Domisili' => $screening->patient_address_domisili ?? '-',
+                        'RT' => $asText($screening->patient_address_rt),
+                        'RW' => $asText($screening->patient_address_rw),
+                        'Kelurahan' => $screening->patient_address_kelurahan ?? '-',
+                        'BB (kg)' => $screening->patient_weight ?? '-',
+                        'TB (cm)' => $screening->patient_height ?? '-',
+                        'Tanggal Skrining' => optional($screening->created_at)?->format('d/m/Y H:i') ?? '-',
                     ];
+
+                    foreach ($this->questionLabels as $key => $label) {
+                        $row[$label] = $getAnswer($key);
+                    }
+
+                    return $row;
                 });
             }
 
             public function headings(): array
             {
-                return ['No', 'Nama', 'Alamat', 'Kader PJ', 'Tanggal Skrining'];
+                return array_merge(
+                    [
+                        'No',
+                        'Kader PJ',
+                        'Status Skrining',
+                        'Total Gejala',
+                        'Nama',
+                        'WNI',
+                        'NIK',
+                        'Nomor HP',
+                        'Alamat',
+                        'Jenis Kelamin',
+                        'Tempat Lahir',
+                        'Tanggal Lahir',
+                        'Umur',
+                        'Alamat KTP',
+                        'Alamat Domisili',
+                        'RT',
+                        'RW',
+                        'Kelurahan',
+                        'BB (kg)',
+                        'TB (cm)',
+                        'Tanggal Skrining',
+                    ],
+                    array_values($this->questionLabels),
+                );
+            }
+
+            public function columnFormats(): array
+            {
+                return [
+                    'G' => NumberFormat::FORMAT_TEXT, // NIK
+                    'H' => NumberFormat::FORMAT_TEXT, // HP
+                    'P' => NumberFormat::FORMAT_TEXT, // RT
+                    'Q' => NumberFormat::FORMAT_TEXT, // RW
+                ];
             }
         };
 

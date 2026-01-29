@@ -18,21 +18,21 @@
             </p>
         </div>
 
-        {{-- Main Stage --}}
         <div class="relative w-full aspect-video md:aspect-[16/9] lg:aspect-[2/1] bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-900 ring-1 ring-gray-200">
             
             {{-- React Mount Point --}}
             <div id="materiFlipbook" 
                  data-pages='@json($pages)' 
                  data-pdf-url="{{ asset('pdf/' . rawurlencode('Lembar balik.pdf')) }}"
-                 class="w-full h-full">
+                 class="w-full h-full relative">
+                 
+                 {{-- Loading Indicator (SSR) --}}
+                 {{-- Placed INSIDE so React wipes it when mounting --}}
+                 <div class="absolute inset-0 flex flex-col items-center justify-center text-white/30 pointer-events-none z-0">
+                     <i class="ri-loader-4-line animate-spin text-4xl mb-3"></i>
+                     <span class="text-xs font-mono uppercase tracking-widest">Memuat...</span>
+                 </div>
             </div>
-
-             {{-- Loading Indicator (SSR) --}}
-             <div class="absolute inset-0 flex flex-col items-center justify-center text-white/30 pointer-events-none -z-0">
-                 <i class="ri-loader-4-line animate-spin text-4xl mb-3"></i>
-                 <span class="text-xs font-mono uppercase tracking-widest">Memuat...</span>
-             </div>
         </div>
 
         {{-- Footer Actions --}}

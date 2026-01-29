@@ -43,17 +43,57 @@
                     <input type="text" name="title" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('title', $post->title) }}" placeholder="Judul yang menarik..." required>
                 </div>
 
-                <div>
+                <div x-data="{ 
+                    photoName: null, 
+                    photoPreview: null, 
+                    updatePreview() {
+                        const file = this.$refs.photo.files[0];
+                        if (!file) return;
+                        this.photoName = file.name;
+                        const reader = new FileReader();
+                        reader.onload = (e) => { this.photoPreview = e.target.result; };
+                        reader.readAsDataURL(file);
+                    }
+                }">
                     <label class="block text-sm font-bold text-gray-700 mb-2">Gambar Utama (Opsional)</label>
                     <div class="relative group">
-                         <input type="file" name="image" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-glass-primary)] file:text-white hover:file:bg-emerald-600" accept="image/*">
+                         <!-- Hidden Real Input -->
+                         <input type="file" name="image" x-ref="photo" 
+                                class="hidden" 
+                                accept="image/*"
+                                @change="updatePreview()">
+                                
+                         <!-- Custom Button -->
+                         <div class="flex items-center gap-3">
+                            <button type="button" 
+                                    x-on:click.prevent="$refs.photo.click()"
+                                    class="glass-button px-4 py-2 rounded-xl text-sm font-bold inline-flex items-center gap-2 hover:bg-emerald-600 transition-colors">
+                                <i class="ri-upload-cloud-2-line text-lg"></i>
+                                Pilih Gambar
+                            </button>
+                            <span class="text-sm text-gray-500 italic" x-text="photoName ?? 'Belum ada file dipilih'"></span>
+                         </div>
                     </div>
-                    @if ($post->image)
-                        <div class="mt-4 p-2 bg-white/40 rounded-xl border border-gray-100 inline-block">
-                            <p class="text-xs text-gray-500 mb-2">Gambar saat ini:</p>
-                            <img src="{{ asset('storage/' . $post->image->path) }}" alt="Gambar berita" class="rounded-lg max-h-48 object-cover">
+
+                    <!-- Image Preview Area -->
+                    <div class="mt-4" x-show="photoPreview || {{ $post->image ? 'true' : 'false' }}">
+                        <p class="text-xs text-gray-500 mb-2 font-semibold">Preview Gambar:</p>
+                        
+                        <!-- New Preview -->
+                        <div x-show="photoPreview" style="display: none;">
+                            <span class="block w-full h-64 bg-cover bg-center bg-no-repeat rounded-xl shadow-md border border-gray-200"
+                                  :style="'background-image: url(\'' + photoPreview + '\');'">
+                            </span>
                         </div>
-                    @endif
+
+                        <!-- Existing Image (Fallback) -->
+                        <div x-show="!photoPreview && {{ $post->image ? 'true' : 'false' }}">
+                            @if ($post->image)
+                                <img src="{{ asset('storage/' . $post->image->path) }}" alt="Gambar berita" class="rounded-xl max-h-64 w-full object-cover shadow-md border border-gray-200">
+                            @endif
+                        </div>
+                    </div>
+                    
                     <p class="text-xs text-gray-400 mt-2">Format JPG/PNG, maksimal 2MB. Gambar berkualitas meningkatkan keterbacaan.</p>
                 </div>
 

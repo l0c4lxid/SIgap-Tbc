@@ -16,6 +16,7 @@
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
         "maennchen/zipstream-php": "^2.3",
+        "spatie/pdf-to-image": "^1.2",
         "spiral/roadrunner-cli": "*",
         "spiral/roadrunner-http": "*"
     },

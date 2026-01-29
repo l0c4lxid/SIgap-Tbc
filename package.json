@@ -21,7 +21,12 @@
         "vite": "^6.4.1"
     },
     "dependencies": {
+        "@vitejs/plugin-react": "^5.1.2",
         "pdfjs-dist": "^5.4.530",
-        "remixicon": "^4.3.0"
+        "react": "^19.2.4",
+        "react-dom": "^19.2.4",
+        "react-pageflip": "^2.0.3",
+        "remixicon": "^4.3.0",
+        "resize-observer-polyfill": "^1.5.1"
     }
 }

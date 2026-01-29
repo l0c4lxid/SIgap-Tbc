@@ -35,8 +35,8 @@ class ScreeningSeeder extends Seeder
                 }
             }
             
-            // Generate 3-8 screenings per kader to ensure enough data
-            $count = rand(3, 8);
+            // Generate 2-3 screenings per kader to ensure manageable data volume (approx 250 total)
+            $count = rand(2, 3);
             
             for ($i = 0; $i < $count; $i++) {
                 $isSuspek = rand(0, 100) < 30; // 30% chance of suspek

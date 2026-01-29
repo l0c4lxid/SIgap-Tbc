@@ -22,7 +22,7 @@ class ScreeningSeeder extends Seeder
             
         $this->command->info("Found {$kaders->count()} kaders. Generating screenings...");
 
-        $faker = fake('id_ID');
+
 
         foreach ($kaders as $kader) {
             // Get Kelurahan Name
@@ -69,13 +69,23 @@ class ScreeningSeeder extends Seeder
                 $rw = $kader->detail->rw_code ?? str_pad(rand(1, 23), 3, '0', STR_PAD_LEFT); // Example RW
                 $rt = $kader->detail->rt_code ?? str_pad(rand(1, 9), 3, '0', STR_PAD_LEFT); // Example RT
 
+                // Generate Random Data without Faker (for Prod compat)
+                $firstNames = ['Budi', 'Siti', 'Agus', 'Ratna', 'Joko', 'Sri', 'Wayan', 'Eka', 'Santoso', 'Lestari', 'Bambang', 'Wati'];
+                $lastNames = ['Susanto', 'Widodo', 'Kusuma', 'Putri', 'Saputra', 'Indah', 'Pratama', 'Dewi', 'Setiawan', 'Ningsih'];
+                
+                $name = $firstNames[array_rand($firstNames)] . ' ' . $lastNames[array_rand($lastNames)];
+                $nik = '3372' . rand(100000000000, 999999999999);
+                $phone = '08' . rand(1000000000, 9999999999);
+                $street = ['Jl. Slamet Riyadi', 'Jl. Urip Sumoharjo', 'Jl. Adi Sucipto', 'Jl. Dr. Radjiman', 'Jl. Veteran', 'Jl. Sutan Syahrir'][rand(0, 5)];
+                $address = $street . ' No. ' . rand(1, 150) . ', Surakarta';
+
                 PatientScreening::create([
                     'kader_id' => $kader->id,
                     'patient_is_wni' => true,
-                    'patient_name' => $faker->name,
-                    'patient_nik' => $faker->nik,
-                    'patient_phone' => $faker->phoneNumber,
-                    'patient_address' => $faker->address,
+                    'patient_name' => $name,
+                    'patient_nik' => $nik,
+                    'patient_phone' => $phone,
+                    'patient_address' => $address,
                     
                     // Populate Location Fields
                     'patient_address_kelurahan' => $kelurahanName,
@@ -83,11 +93,11 @@ class ScreeningSeeder extends Seeder
                     'patient_address_rt' => $rt,
 
                     'patient_gender' => rand(0, 1) ? 'L' : 'P',
-                    'patient_birth_place' => $faker->city,
-                    'patient_birth_date' => $faker->date('Y-m-d', '-20 years'),
+                    'patient_birth_place' => 'Surakarta',
+                    'patient_birth_date' => Carbon::now()->subYears(rand(20, 70))->subDays(rand(0, 365)),
                     'patient_age' => rand(20, 70),
-                    'patient_address_ktp' => $faker->address,
-                    'patient_address_domisili' => $faker->address,
+                    'patient_address_ktp' => $address,
+                    'patient_address_domisili' => $address,
                     
                     // Allow created_at to be this month for dashboard charts
                     'created_at' => Carbon::now()->subDays(rand(0, 20)),

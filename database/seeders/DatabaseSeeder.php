@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
             PemdaUserSeeder::class,
             PuskesmasKelurahanSeeder::class,
             KaderSeeder::class,
-            ScreeningSeeder::class,
+            // ScreeningSeeder::class, // Integrated into KaderSeeder
         ]);
     }
 }

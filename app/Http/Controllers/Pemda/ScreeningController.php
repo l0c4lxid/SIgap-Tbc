@@ -13,6 +13,14 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ScreeningController extends Controller
 {
@@ -90,7 +98,14 @@ class ScreeningController extends Controller
         [$riskQuestions, $symptomQuestions] = $this->questionSets();
         $questionLabels = $riskQuestions + $symptomQuestions;
 
-        $export = new class($screenings, $questionLabels) implements FromCollection, WithHeadings, WithColumnFormatting {
+
+
+// ... inside the class ...
+
+
+
+// ... inside implements list ...
+        $export = new class($screenings, $questionLabels) extends DefaultValueBinder implements FromCollection, WithHeadings, WithColumnFormatting, WithStyles, WithColumnWidths, ShouldAutoSize, WithCustomValueBinder {
             public function __construct(private $screenings, private $questionLabels)
             {
             }
@@ -110,11 +125,11 @@ class ScreeningController extends Controller
                         ->count();
                     $status = $positiveCount > 0 ? 'Suspek TBC' : 'Tidak Suspek';
 
-                    $asText = fn($value) => ($value === null || $value === '') ? '-' : "'" . $value;
+                    $asText = fn($value) => ($value === null || $value === '') ? '-' : (string) $value;
 
                     $row = [
                         'No' => $index + 1,
-                        'Kader PJ' => $screening->kader?->name ?? '-', // Specific to Pemda View
+                        'Kader PJ' => $screening->kader?->name ?? '-', 
                         'Status Skrining' => $status,
                         'Total Gejala' => $positiveCount,
                         'Nama' => $screening->patient_name ?? '-',
@@ -170,7 +185,7 @@ class ScreeningController extends Controller
                         'TB (cm)',
                         'Tanggal Skrining',
                     ],
-                    array_values($this->questionLabels),
+                    array_values($this->questionLabels)
                 );
             }
 
@@ -181,6 +196,51 @@ class ScreeningController extends Controller
                     'H' => NumberFormat::FORMAT_TEXT, // HP
                     'P' => NumberFormat::FORMAT_TEXT, // RT
                     'Q' => NumberFormat::FORMAT_TEXT, // RW
+                ];
+            }
+
+            public function bindValue(Cell $cell, $value)
+            {
+                $column = $cell->getColumn();
+                
+                // Columns: G (NIK), H (HP), P (RT), Q (RW)
+                if (in_array($column, ['G', 'H', 'P', 'Q'])) {
+                    $cell->setValueExplicit($value, DataType::TYPE_STRING);
+                    return true;
+                }
+
+                // Else return default behavior
+                return parent::bindValue($cell, $value);
+            }
+
+            public function styles(Worksheet $sheet)
+            {
+                // Bold Header
+                $sheet->getStyle('1')->getFont()->setBold(true);
+                
+                // Borders for all cells
+                $sheet->getStyle($sheet->calculateWorksheetDimension())
+                      ->getBorders()
+                      ->getAllBorders()
+                      ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+                // Vertical Alignment Center
+                $sheet->getStyle($sheet->calculateWorksheetDimension())
+                      ->getAlignment()
+                      ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            }
+
+            public function columnWidths(): array
+            {
+                return [
+                    'B' => 25, // Kader PJ
+                    'C' => 15, // Status
+                    'E' => 30, // Nama
+                    'G' => 20, // NIK
+                    'H' => 15, // HP
+                    'I' => 45, // Alamat
+                    'N' => 35, // Alamat KTP
+                    'O' => 35, // Alamat Domisili
                 ];
             }
         };

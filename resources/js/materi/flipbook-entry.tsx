@@ -21,6 +21,9 @@ const FlipbookViewer: React.FC<FlipbookProps> = ({ initialPages, pdfUrl }) => {
     const [zoom, setZoom] = useState(1);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [logs, setLogs] = useState<string[]>([]);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [loadingProgress, setLoadingProgress] = useState(0);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const addLog = (msg: string) => {
         console.log(msg);
@@ -176,14 +179,22 @@ const FlipbookViewer: React.FC<FlipbookProps> = ({ initialPages, pdfUrl }) => {
         if (containerSize.width === 0) return { width: 300, height: 400 };
 
         if (isMobile) {
-            const width = Math.min(containerSize.width * 0.9, 500);
+            const width = Math.min(containerSize.width * 0.96, 600);
             const height = width * 1.414;
             return { width, height };
         } else {
-            const totalWidth = Math.min(containerSize.width * 0.9, 1200);
-            const pageHeight = Math.min(containerSize.height * 0.9, 800);
-            let pageWidth = pageHeight / 1.414;
-            if (pageWidth * 2 > totalWidth) pageWidth = totalWidth / 2;
+            // Desktop: Use mostly full available space
+            const availableWidth = containerSize.width * 0.96;
+            const availableHeight = containerSize.height * 0.96;
+            
+            // Calculate based on height first (A4 ratio)
+            let pageWidth = availableHeight / 1.414;
+            
+            // Check if 2 pages fit in available width
+            if (pageWidth * 2 > availableWidth) {
+                pageWidth = availableWidth / 2;
+            }
+            
             return { width: pageWidth, height: pageWidth * 1.414 };
         }
     };
@@ -196,115 +207,129 @@ const FlipbookViewer: React.FC<FlipbookProps> = ({ initialPages, pdfUrl }) => {
         setZoom(prev => Math.min(Math.max(direction === 'in' ? prev + 0.15 : prev - 0.15, 1), 2.0));
     };
 
-    if (isGenerating) {
-         return (
-             <div className="w-full h-[60vh] flex flex-col items-center justify-center text-white/70">
-                 <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                 <p className="font-bold text-lg">Memproses Materi...</p>
-                 <p className="text-sm font-mono mt-2">{loadingProgress}% Selesai</p>
-                 <div className="mt-8 bg-gray-900/50 p-4 rounded-lg w-full max-w-lg font-mono text-[10px] text-left text-gray-400 max-h-32 overflow-hidden flex flex-col-reverse">
-                    {logs.slice(-5).map((log, i) => <div key={i}>{log}</div>)}
-                 </div>
-             </div>
-         );
-    }
-
-    if (errorMessage) {
-        return (
-            <div className="text-white text-center p-8">
-                <div className="text-red-400 text-4xl mb-4"><i className="ri-error-warning-line"></i></div>
-                <h3 className="text-xl font-bold mb-2">Gagal memuat materi</h3>
-                <p className="text-sm opacity-80 max-w-md mx-auto mb-4">{errorMessage}</p>
-                <a href={pdfUrl} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors">
-                    Unduh PDF Saja
-                </a>
-            </div>
-        );
-    }
-    
-    if (pages.length === 0 && !isGenerating) {
-        return <div className="text-white text-center">Tidak ada halaman untuk ditampilkan.</div>;
-    }
-
     const activeFullscreen = isFullscreen || isPseudoFullscreen;
+
+    // Listen for External Trigger (from Blade Button)
+    useEffect(() => {
+        const handleExternalToggle = () => {
+            toggleFullscreen();
+        };
+        window.addEventListener('toggle-flipbook-fullscreen', handleExternalToggle);
+        return () => window.removeEventListener('toggle-flipbook-fullscreen', handleExternalToggle);
+    }, [toggleFullscreen]);
 
     return (
         <div 
             ref={containerRef}
-            className={`relative flex flex-col items-center justify-center bg-[#1e1e1e] transition-all duration-300 ${activeFullscreen ? 'fixed inset-0 z-[9999] w-screen h-screen p-0 bg-black' : 'w-full h-[calc(100vh-10rem)] md:h-[75vh] rounded-2xl border border-gray-800'}`}
+            className={`relative flex flex-col items-center justify-center bg-[#1e1e1e] transition-all duration-300 ${activeFullscreen ? 'fixed inset-0 z-[2147483647] w-screen h-screen p-0 bg-black' : 'w-full h-[calc(100vh-10rem)] md:h-[75vh] rounded-2xl border border-gray-800'}`}
         >
             
-            {/* Top Controls: ALWAYS VISIBLE in Fullscreen for UX */}
-            <div className={`absolute top-4 z-20 w-full flex justify-center px-4`}>
-                 <FlipbookControls 
-                    current={currentPage} 
-                    total={pages.length}
-                    onPrev={() => bookRef.current?.pageFlip().flipPrev()} 
-                    onNext={() => bookRef.current?.pageFlip().flipNext()}
-                    onZoomIn={() => handleZoom('in')}
-                    onZoomOut={() => handleZoom('out')}
-                    zoomLevel={zoom}
-                    isMobile={isMobile}
-                    isFullscreen={activeFullscreen}
-                    onToggleFullscreen={toggleFullscreen}
-                 />
+            {/* Top Controls: ALWAYS VISIBLE */}
+            <div className={`absolute top-4 z-20 w-full flex justify-center px-4 pointer-events-none`}>
+                 <div className="pointer-events-auto">
+                     <FlipbookControls 
+                        current={currentPage} 
+                        total={pages.length}
+                        onPrev={() => bookRef.current?.pageFlip().flipPrev()} 
+                        onNext={() => bookRef.current?.pageFlip().flipNext()}
+                        onZoomIn={() => handleZoom('in')}
+                        onZoomOut={() => handleZoom('out')}
+                        zoomLevel={zoom}
+                        isMobile={isMobile}
+                        isFullscreen={activeFullscreen}
+                        onToggleFullscreen={toggleFullscreen}
+                     />
+                 </div>
             </div>
 
             {/* Stage Area */}
-            <div className="relative w-full h-full overflow-hidden flex items-center justify-center p-4"
-                 style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}>
+            <div className="relative w-full h-full overflow-hidden flex items-center justify-center p-4">
                 
-                <HTMLFlipBook
-                    width={dims.width}
-                    height={dims.height}
-                    size={isMobile ? 'fixed' : 'stretch'}
-                    minWidth={200}
-                    maxWidth={1000}
-                    minHeight={300}
-                    maxHeight={1500}
-                    maxShadowOpacity={0.5}
-                    showCover={true}
-                    mobileScrollSupport={true}
-                    className="shadow-2xl"
-                    onFlip={onFlip}
-                    ref={bookRef}
-                    style={{ margin: '0 auto' }}
-                    startPage={0}
-                    drawShadow={true}
-                    flippingTime={1000}
-                    usePortrait={isMobile}
-                    startZIndex={0}
-                    autoSize={true}
-                    clickEventForward={true}
-                    useMouseEvents={true}
-                    swipeDistance={30}
-                    showPageCorners={true}
-                    disableFlipByClick={false}
-                >
-                    {pages.map((url, index) => (
-                        <div key={index} className="bg-white demoPage shadow-sm overflow-hidden border-r border-gray-200/50">
-                             <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                                <img 
-                                    src={url} 
-                                    alt={`Page ${index + 1}`} 
-                                    className="w-full h-full object-contain select-none" 
-                                    loading="eager" 
-                                    draggable={false}
-                                />
-                                <div className="absolute bottom-2 right-2 text-[10px] text-gray-400 font-mono">{index + 1}</div>
-                             </div>
+                {/* 1. Generating State */}
+                {isGenerating && (
+                     <div className="w-full h-full flex flex-col items-center justify-center text-white/70 bg-[#1e1e1e]">
+                         <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                         <p className="font-bold text-lg">Memproses Materi...</p>
+                         <p className="text-sm font-mono mt-2">{loadingProgress}% Selesai</p>
+                         <div className="mt-8 bg-gray-900/50 p-4 rounded-lg w-full max-w-lg font-mono text-[10px] text-left text-gray-400 max-h-32 overflow-hidden flex flex-col-reverse">
+                            {logs.slice(-5).map((log, i) => <div key={i}>{log}</div>)}
+                         </div>
+                     </div>
+                )}
+
+                {/* 2. Error State */}
+                {!isGenerating && errorMessage && (
+                    <div className="text-white text-center p-8 bg-[#1e1e1e] w-full h-full flex flex-col items-center justify-center">
+                        <div className="text-red-400 text-4xl mb-4"><i className="ri-error-warning-line"></i></div>
+                        <h3 className="text-xl font-bold mb-2">Gagal memuat materi</h3>
+                        <p className="text-sm opacity-80 max-w-md mx-auto mb-4">{errorMessage}</p>
+                        <a href={pdfUrl} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors">
+                            Unduh PDF Saja
+                        </a>
+                    </div>
+                )}
+
+                {/* 3. Empty State (should not happen if generic success) */}
+                {!isGenerating && !errorMessage && pages.length === 0 && (
+                     <div className="text-white text-center p-8 flex flex-col items-center justify-center h-full w-full">
+                        <i className="ri-file-search-line text-4xl mb-4 opacity-50"></i>
+                        <p className="mb-4">Tidak ada halaman untuk ditampilkan.</p>
+                        <div className="bg-black/50 p-4 rounded text-xs font-mono text-left opacity-70">
+                            <p>Status: Ready</p>
+                            <p>Pages: 0</p>
+                            <p>PDF: {pdfUrl || 'None'}</p>
                         </div>
-                    ))}
-                </HTMLFlipBook>
+                     </div>
+                )}
+
+                {/* 4. Content State */}
+                {!isGenerating && !errorMessage && pages.length > 0 && (
+                    <div style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}>
+                        <HTMLFlipBook
+                            width={dims.width}
+                            height={dims.height}
+                            size="fixed"
+                            minWidth={200}
+                            maxWidth={3000}
+                            minHeight={300}
+                            maxHeight={3000}
+                            maxShadowOpacity={0.5}
+                            showCover={true}
+                            mobileScrollSupport={true}
+                            className="shadow-2xl"
+                            onFlip={onFlip}
+                            ref={bookRef}
+                            style={{ margin: '0 auto' }}
+                            startPage={0}
+                            drawShadow={true}
+                            flippingTime={1000}
+                            usePortrait={isMobile}
+                            startZIndex={0}
+                            autoSize={true}
+                            clickEventForward={true}
+                            useMouseEvents={true}
+                            swipeDistance={30}
+                            showPageCorners={true}
+                            disableFlipByClick={false}
+                        >
+                            {pages.map((url, index) => (
+                                <div key={index} className="bg-white shadow-sm overflow-hidden border-r border-gray-200/50">
+                                     <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                                        <img 
+                                            src={url} 
+                                            alt={`Page ${index + 1}`} 
+                                            className="w-full h-full object-contain select-none" 
+                                            loading="eager" 
+                                            draggable={false}
+                                        />
+                                        <div className="absolute bottom-2 right-2 text-[10px] text-gray-400 font-mono">{index + 1}</div>
+                                     </div>
+                                </div>
+                            ))}
+                        </HTMLFlipBook>
+                    </div>
+                )}
             </div>
-            
-            {/* Hidden Bridge Button for External Triggers */}
-            <button 
-                id="flipFullscreen" 
-                className="hidden" 
-                onClick={toggleFullscreen} 
-                aria-hidden="true"
-            ></button>
         </div>
     );
 };

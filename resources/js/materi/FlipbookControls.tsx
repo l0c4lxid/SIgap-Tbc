@@ -1,11 +1,4 @@
 import React from 'react';
-import { 
-    RiArrowLeftSLine, 
-    RiArrowRightSLine, 
-    RiZoomInLine, 
-    RiZoomOutLine, 
-    RiFullscreenLine 
-} from 'remixicon/react/index'; // Ensure remixicon is installed or use font-awesome classes if necessary
 
 interface ControlsProps {
     current: number;
@@ -45,19 +38,19 @@ const FlipbookControls: React.FC<ControlsProps> = ({
                 <button 
                     onClick={onPrev} 
                     disabled={current === 0}
-                    className="w-8 h-8 rounded-full hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    className="w-8 h-8 rounded-full hover:bg-emerald-50 text-gray-700 hover:text-emerald-600 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                 >
-                    <i className="fa-solid fa-chevron-left"></i>
+                    <i className="ri-arrow-left-s-line text-2xl"></i>
                 </button>
-                <span className="text-xs font-bold text-gray-700 font-mono min-w-[80px] text-center select-none">
+                <span className="text-xs font-bold text-gray-800 font-mono min-w-[80px] text-center select-none">
                     {label}
                 </span>
                 <button 
                     onClick={onNext} 
                     disabled={current >= total - 1}
-                    className="w-8 h-8 rounded-full hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    className="w-8 h-8 rounded-full hover:bg-emerald-50 text-gray-700 hover:text-emerald-600 flex items-center justify-center disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                 >
-                    <i className="fa-solid fa-chevron-right"></i>
+                    <i className="ri-arrow-right-s-line text-2xl"></i>
                 </button>
             </div>
 
@@ -66,10 +59,10 @@ const FlipbookControls: React.FC<ControlsProps> = ({
                  <button 
                     onClick={onZoomOut} 
                     disabled={zoomLevel <= 1}
-                    className="w-8 h-8 rounded-full hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 flex items-center justify-center disabled:opacity-30 transition-colors"
+                    className="w-8 h-8 rounded-full hover:bg-emerald-50 text-gray-700 hover:text-emerald-600 flex items-center justify-center disabled:opacity-30 transition-colors"
                     title="Zoom Out"
                 >
-                    <i className="fa-solid fa-magnifying-glass-minus"></i>
+                    <i className="ri-zoom-out-line text-xl"></i>
                 </button>
                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full select-none">
                     {Math.round(zoomLevel * 100)}%
@@ -77,10 +70,10 @@ const FlipbookControls: React.FC<ControlsProps> = ({
                  <button 
                     onClick={onZoomIn} 
                     disabled={zoomLevel >= 1.6}
-                    className="w-8 h-8 rounded-full hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 flex items-center justify-center disabled:opacity-30 transition-colors"
+                    className="w-8 h-8 rounded-full hover:bg-emerald-50 text-gray-700 hover:text-emerald-600 flex items-center justify-center disabled:opacity-30 transition-colors"
                     title="Zoom In"
                 >
-                    <i className="fa-solid fa-magnifying-glass-plus"></i>
+                    <i className="ri-zoom-in-line text-xl"></i>
                 </button>
             </div>
 
@@ -90,7 +83,7 @@ const FlipbookControls: React.FC<ControlsProps> = ({
                 className="w-8 h-8 rounded-full hover:bg-emerald-50 text-emerald-600 flex items-center justify-center transition-colors"
                 title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
             >
-                <i className={`fa-solid ${isFullscreen ? 'fa-compress' : 'fa-expand'}`}></i>
+                <i className={`${isFullscreen ? 'ri-fullscreen-exit-line' : 'ri-fullscreen-line'} text-xl`}></i>
             </button>
 
         </div>

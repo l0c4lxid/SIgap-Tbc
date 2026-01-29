@@ -103,6 +103,9 @@ Route::get('/sitemap.xml', function () {
 Route::get('/blog', [NewsController::class, 'publicIndex'])->name('blog.index');
 Route::get('/blog/{newsPost}', [NewsController::class, 'publicShow'])->name('blog.show');
 
+// Public Material Access
+Route::get('/materi-edukasi', [KaderMaterialController::class, 'publicIndex'])->name('public.materi');
+
 Route::middleware('auth')->group(function () {
     Route::get('/berita', [NewsController::class, 'index'])->name('news.index');
     Route::get('/berita/create', [NewsController::class, 'create'])->name('news.create');

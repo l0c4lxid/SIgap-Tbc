@@ -445,6 +445,39 @@ class DashboardController extends Controller
                 // ... (rest of kader logic same) ...
 
             default:
+                // Filter logic for Kader/Region-specific users falling into default
+                $userDetail = $user->detail;
+                $rwCode = $userDetail?->rw_code;
+                $kelurahanUser = $userDetail?->kelurahan;
+                // Try to get clean Kelurahan name for matching
+                $kelurahanName = $kelurahanUser?->detail?->organization ?? $kelurahanUser?->name;
+                $kelurahanKeyword = $kelurahanName 
+                    ? (Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value() ?: Str::of($kelurahanName)->trim()->lower()->value())
+                    : null;
+
+                $screeningsQuery = PatientScreening::query();
+                $kaderQuery = User::where('role', UserRole::Kader->value);
+
+                // Apply Filters if User has Location Data
+                if ($rwCode) {
+                    $screeningsQuery->where('patient_address_rw', $rwCode);
+                    $kaderQuery->whereHas('detail', fn($q) => $q->where('rw_code', $rwCode));
+                }
+                if ($kelurahanKeyword) {
+                    $screeningsQuery->whereRaw('LOWER(patient_address_kelurahan) LIKE ?', ['%' . $kelurahanKeyword . '%']);
+                    // For Kaders, we assume they are linked via valid Kelurahan User ID if available, 
+                    // otherwise we might need to filter by fuzzy matching if relations aren't strict. 
+                    // Using strict relation if ID exists is safer:
+                    if ($userDetail?->kelurahan_user_id) {
+                        $kaderQuery->whereHas('detail', fn($q) => $q->where('kelurahan_user_id', $userDetail->kelurahan_user_id));
+                    }
+                }
+
+                $screeningsAll = $screeningsQuery->get();
+                $suspectCount = $screeningsAll->filter(function ($s) {
+                     return collect($s->answers ?? [])->filter(fn($a, $k) => str_starts_with($k, 'gejala_') && $a === 'ya')->count() >= 1;
+                })->count();
+
                 $cards = [
                     [
                         'label' => 'Pengguna Aktif',
@@ -453,6 +486,33 @@ class DashboardController extends Controller
                         'trend' => 'Pantau perkembangan aplikasi',
                         'icon' => 'ri-group-line',
                         'color' => 'primary',
+                    ],
+                     [
+                        'label' => 'Total Skrining',
+                        'value' => number_format($screeningsAll->count()),
+                        'subtitle' => $rwCode ? "RW {$rwCode}" : 'Semua Data',
+                        'trend' => 'Laporan masuk',
+                        'icon' => 'ri-file-list-3-line',
+                        'color' => 'success',
+                        'url' => '#',
+                    ],
+                    [
+                        'label' => 'Total Suspek',
+                        'value' => number_format($suspectCount),
+                        'subtitle' => 'Indikasi TBC',
+                        'trend' => 'Perlu penanganan',
+                        'icon' => 'ri-alarm-warning-line',
+                        'color' => 'danger',
+                        'url' => '#',
+                    ],
+                    [
+                        'label' => 'Total Kader',
+                        'value' => number_format($kaderQuery->count()),
+                        'subtitle' => $rwCode ? "Wilayah RW {$rwCode}" : 'Total Petugas',
+                        'trend' => 'Ujung tombak',
+                        'icon' => 'ri-team-line',
+                        'color' => 'info',
+                        'url' => '#',
                     ],
                 ];
                 $recentScreenings = $baseScreeningQuery->take(3)->get();
@@ -470,12 +530,36 @@ class DashboardController extends Controller
             'time' => $latestScreening ? $latestScreening->created_at->diffForHumans() : 'Hari ini',
         ];
 
+        // Logic for Top Suspect Kelurahan Widget
+        $topSuspectKelurahan = null;
+        try {
+            $topSuspectKelurahan = PatientScreening::all()
+                ->groupBy(fn($s) => $s->patient_address_kelurahan ? Str::title($s->patient_address_kelurahan) : 'Lainnya')
+                ->map(function ($group) {
+                    return $group->filter(function ($s) {
+                        return collect($s->answers ?? [])
+                            ->filter(fn($a, $k) => str_starts_with($k, 'gejala_') && $a === 'ya')
+                            ->count() >= 1;
+                    })->count();
+                })
+                ->sortDesc()
+                ->pipe(function ($collection) {
+                    return $collection->isNotEmpty() 
+                        ? ['name' => $collection->keys()->first(), 'count' => $collection->first()] 
+                        : null;
+                });
+        } catch (\Throwable $e) {
+            // Fallback if anything goes wrong
+            $topSuspectKelurahan = null;
+        }
+
         return view('dashboard', [
             'user' => $user,
             'cards' => $cards,
             'recentScreenings' => $recentScreenings,
             'dashboardCharts' => $dashboardCharts,
             'notification' => $notification,
+            'topSuspectKelurahan' => $topSuspectKelurahan,
         ]);
     }
 }

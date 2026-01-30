@@ -48,17 +48,20 @@
                 </div>
                 <div class="glass-panel p-6 rounded-2xl -rotate-2 absolute bottom-0 left-10 w-fit max-w-[280px]">
                      <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                            <i class="ri-check-double-line text-xl"></i>
+                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                            <i class="ri-map-pin-range-line text-xl"></i>
                         </div>
                         <div>
-                            <h6 class="font-bold text-sm m-0">Target Tercapai</h6>
-                            <span class="text-xs text-gray-500">Bulan ini</span>
+                            <h6 class="font-bold text-sm m-0">Zona Waspada</h6>
+                            <span class="text-xs text-gray-500">Suspek Terbanyak</span>
                         </div>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2" title="{{ $targetPercentage ?? 0 }}% Tercapai">
-                        <div class="bg-green-500 h-2 rounded-full" style="width: {{ $targetPercentage ?? 0 }}%"></div>
-                    </div>
+                    @if($topSuspectKelurahan && $topSuspectKelurahan['count'] > 0)
+                        <p class="text-sm font-bold text-gray-800 m-0 leading-tight">{{ $topSuspectKelurahan['name'] }}</p>
+                        <span class="text-xs text-red-600 font-medium">{{ $topSuspectKelurahan['count'] }} Kasus Terindikasi</span>
+                    @else
+                        <p class="text-sm text-gray-500 m-0">Menunggu data...</p>
+                    @endif
                 </div>
             </div>
         </div>

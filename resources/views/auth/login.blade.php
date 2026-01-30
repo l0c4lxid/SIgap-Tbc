@@ -142,7 +142,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Login Gagal',
-                html: '<ul class="text-left space-y-1 text-sm">' + errors.map(e => `<li>• ${e}</li>`).join('') + '</ul>',
+                html: '<ul class="text-left space-y-1 text-sm">' + errors.map(e => `<li>${e}</li>`).join('') + '</ul>',
                 confirmButtonColor: '#10b981',
                 customClass: {
                     popup: 'rounded-2xl',

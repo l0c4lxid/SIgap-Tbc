@@ -31,16 +31,46 @@
             <div class="bg-white/40 rounded-xl p-4 border border-white/50">
                 <p class="text-xs text-gray-500 uppercase font-bold mb-1">Nama Kelurahan</p>
                 <h6 class="font-bold text-lg text-gray-800 mb-1">{{ $kelurahan->name }}</h6>
-                <p class="text-xs text-gray-500 mb-0">{{ optional($kelurahan->detail)->organization ?? '-' }}</p>
+                @if(optional($kelurahan->detail)->organization && $kelurahan->detail->organization !== $kelurahan->name)
+                    <p class="text-xs text-gray-500 mb-0">{{ $kelurahan->detail->organization }}</p>
+                @endif
             </div>
             <div class="bg-white/40 rounded-xl p-4 border border-white/50">
                  <p class="text-xs text-gray-500 uppercase font-bold mb-1">Alamat Kelurahan</p>
                 <p class="text-sm text-gray-800 mb-0">{{ optional($kelurahan->detail)->address ?? '-' }}</p>
             </div>
-             <div class="bg-white/40 rounded-xl p-4 border border-white/50">
-                 <p class="text-xs text-gray-500 uppercase font-bold mb-1">Total Skrining Sesuai Alamat</p>
+            <div class="bg-gradient-to-br from-[var(--color-glass-primary)]/10 to-[var(--color-glass-primary)]/20 rounded-xl p-4 border border-[var(--color-glass-primary)]/20">
+                 <p class="text-xs text-[var(--color-glass-primary)] uppercase font-bold mb-1">Total Skrining</p>
                 <h5 class="font-bold text-2xl text-[var(--color-glass-primary)] mb-1">{{ method_exists($screenings, 'total') ? number_format($screenings->total()) : $screenings->count() }}</h5>
-                <p class="text-xs text-gray-500 mb-0">Alamat mengandung: {{ $kelurahan->name }}</p>
+                <p class="text-xs text-gray-500 mb-0">Wilayah: {{ \Illuminate\Support\Str::replace('Kelurahan ', '', $kelurahan->name) }}</p>
+            </div>
+        </div>
+
+        {{-- RW & RT Global Stats --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-200/50 flex flex-col justify-center min-h-[100px]">
+                <div class="flex items-start justify-between mb-2">
+                    <p class="text-sm text-blue-600 uppercase font-bold mb-0 tracking-wider">Total RW</p>
+                    <div class="p-2 bg-blue-100 rounded-full">
+                        <i class="ri-map-2-line text-blue-500 text-lg"></i>
+                    </div>
+                </div>
+                <div>
+                     <h5 class="font-bold text-3xl text-blue-700 mb-0">{{ $totalRw ?? 0 }}</h5>
+                     <p class="text-xs text-blue-400 mt-1">Wilayah Rukun Warga</p>
+                </div>
+            </div>
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl p-4 border border-orange-200/50 flex flex-col justify-center min-h-[100px]">
+                <div class="flex items-start justify-between mb-2">
+                    <p class="text-sm text-orange-600 uppercase font-bold mb-0 tracking-wider">Total RT</p>
+                    <div class="p-2 bg-orange-100 rounded-full">
+                        <i class="ri-community-line text-orange-500 text-lg"></i>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-bold text-3xl text-orange-700 mb-0">{{ $totalRt ?? 0 }}</h5>
+                    <p class="text-xs text-orange-400 mt-1">Wilayah Rukun Tetangga</p>
+                </div>
             </div>
         </div>
 
@@ -49,11 +79,26 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Pasien</th>
+                        <th>
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => ($sortColumn == 'name' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center gap-1 group cursor-pointer text-[var(--color-glass-text-muted)] no-underline">
+                                Pasien
+                                <i class="ri-arrow-up-down-line text-[10px] opacity-50 group-hover:opacity-100 {{ $sortColumn == 'name' ? 'opacity-100 text-[var(--color-glass-primary)]' : '' }}"></i>
+                            </a>
+                        </th>
                         <th>Kontak</th>
                         <th>Kader</th>
-                        <th>Alamat</th>
-                        <th>Tanggal</th>
+                        <th>
+                             <a href="{{ request()->fullUrlWithQuery(['sort' => 'address', 'direction' => ($sortColumn == 'address' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center gap-1 group cursor-pointer text-[var(--color-glass-text-muted)] no-underline">
+                                Alamat
+                                <i class="ri-arrow-up-down-line text-[10px] opacity-50 group-hover:opacity-100 {{ $sortColumn == 'address' ? 'opacity-100 text-[var(--color-glass-primary)]' : '' }}"></i>
+                            </a>
+                        </th>
+                        <th>
+                             <a href="{{ request()->fullUrlWithQuery(['sort' => 'date', 'direction' => ($sortColumn == 'date' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" class="flex items-center gap-1 group cursor-pointer text-[var(--color-glass-text-muted)] no-underline">
+                                Tanggal
+                                <i class="ri-arrow-up-down-line text-[10px] opacity-50 group-hover:opacity-100 {{ $sortColumn == 'date' ? 'opacity-100 text-[var(--color-glass-primary)]' : '' }}"></i>
+                            </a>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>

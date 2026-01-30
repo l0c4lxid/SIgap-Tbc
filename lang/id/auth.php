@@ -14,7 +14,7 @@ return [
     */
 
     'failed' => 'Informasi login tidak valid. Silakan periksa kembali.',
-    'password' => 'The provided password is incorrect.',
-    'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+    'password' => 'Password yang dimasukkan salah.',
+    'throttle' => 'Terlalu banyak percobaan login. Silakan coba lagi dalam :seconds detik.',
 
 ];

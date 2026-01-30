@@ -100,7 +100,7 @@
             </p>
             @if ($hasPagination)
                 <div>
-                    {{ $kaders->withQueryString()->onEachSide(1)->links() }}
+                    {{ $kaders->withQueryString()->onEachSide(1)->links('pagination.glass') }}
                 </div>
             @endif
         </div>

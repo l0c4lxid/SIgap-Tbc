@@ -110,7 +110,7 @@
     ])
 
     <!-- Main Content Wrapper -->
-    <main class="xl:ml-80 p-4 min-h-screen transition-all duration-300">
+    <main class="xl:ml-80 p-4 min-h-screen transition-all duration-300 flex flex-col">
         
         <!-- Top Navbar -->
         <div class="glass-panel z-30 rounded-2xl px-6 py-4 mb-6 flex items-center justify-between gap-4">
@@ -175,14 +175,14 @@
         </div>
 
         <!-- Content Area -->
-        <div class="animate-fade-in">
+        <div class="animate-fade-in flex-1">
             @yield('content')
         </div>
 
         <!-- Footer -->
         <footer class="mt-8 mb-4 text-center">
             <p class="text-xs text-gray-400">
-                &copy; {{ date('Y') }} SItuba Dashboard. All rights reserved.
+                &copy; 2026 SItuba Dashboard. All rights reserved.
             </p>
         </footer>
     </main>

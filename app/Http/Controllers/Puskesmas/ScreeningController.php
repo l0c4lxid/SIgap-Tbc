@@ -29,7 +29,12 @@ class ScreeningController extends Controller
         $perPage = 10;
         $kaderIds = User::query()
             ->where('role', UserRole::Kader->value)
-            ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $request->user()->id))
+            ->whereHas('detail', function ($detail) use ($request) {
+                $detail->where('supervisor_id', $request->user()->id)
+                    ->whereHas('kelurahan.detail', function ($k) use ($request) {
+                        $k->where('supervisor_id', $request->user()->id);
+                    });
+            })
             ->pluck('id');
 
         $screenings = $kaderIds->isEmpty()
@@ -103,7 +108,12 @@ class ScreeningController extends Controller
         // Same Logic as Pemda
         $kaderIds = User::query()
             ->where('role', UserRole::Kader->value)
-            ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $request->user()->id))
+            ->whereHas('detail', function ($detail) use ($request) {
+                $detail->where('supervisor_id', $request->user()->id)
+                    ->whereHas('kelurahan.detail', function ($k) use ($request) {
+                        $k->where('supervisor_id', $request->user()->id);
+                    });
+            })
             ->pluck('id');
 
         $screenings = $kaderIds->isEmpty()

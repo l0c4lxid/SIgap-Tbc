@@ -165,16 +165,41 @@ class DashboardController extends Controller
                 $kelurahan = $user;
                 $kelurahan->loadMissing('detail');
 
-                $puskesmasIds = collect(optional($kelurahan->detail)->supervisor_id ? [$kelurahan->detail->supervisor_id] : []);
-                $kelurahanName = optional($kelurahan->detail)->organization ?? $kelurahan->name;
+                // STRICT VALIDATION: Check if Kelurahan has an active Puskesmas supervisor
+                $detail = $kelurahan->detail;
+                $hasSupervisor = $detail && $detail->supervisor_id;
+
+                if (!$hasSupervisor) {
+                    $cards = [
+                        ['label' => 'Skrining Tercatat', 'value' => 0, 'subtitle' => '0 pasien terdata', 'trend' => 'Menunggu persetujuan', 'icon' => 'ri-pulse-line', 'color' => 'secondary'],
+                        ['label' => 'Total Suspek', 'value' => 0, 'subtitle' => 'Akumulasi kasus', 'trend' => 'Semua waktu', 'icon' => 'ri-alarm-warning-line', 'color' => 'secondary'],
+                        ['label' => 'Suspek Bulan Ini', 'value' => 0, 'subtitle' => 'Laporan indikasi TBC', 'trend' => '-', 'icon' => 'ri-alert-line', 'color' => 'secondary'],
+                        ['label' => 'Total Kader', 'value' => 0, 'subtitle' => 'Aktif di wilayah ini', 'trend' => 'Mitra lapangan', 'icon' => 'ri-team-line', 'color' => 'secondary'],
+                    ];
+                    $dashboardCharts = [
+                        'daily_screening' => [],
+                        'rw_split' => [],
+                        'rt_split' => [],
+                        'kader_screening' => [],
+                        'period_label' => now()->format('M Y'),
+                    ];
+                    $recentScreenings = collect();
+                    $notification = [
+                        'has_new' => false,
+                        'text' => 'Akun Anda belum disetujui oleh Puskesmas. Silakan ajukan kemitraan di menu "Puskesmas Pembina".',
+                        'time' => 'Info',
+                    ];
+                    break;
+                }
+
+                $puskesmasIds = collect([$detail->supervisor_id]);
+                $kelurahanName = $detail->organization ?? $kelurahan->name;
                 $kelurahanKeyword = Str::of($kelurahanName)->replace('Kelurahan', '')->trim()->lower()->value()
                     ?: Str::of($kelurahanName)->trim()->lower()->value();
 
-                $kaderIds = $puskesmasIds->isEmpty()
-                    ? collect()
-                    : User::query()
+                $kaderIds = User::query()
                         ->where('role', UserRole::Kader->value)
-                        ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $puskesmasIds))
+                        ->whereHas('detail', fn($q) => $q->whereIn('supervisor_id', $puskesmasIds))
                         ->pluck('id');
 
                 $screeningsQuery = PatientScreening::query()
@@ -203,6 +228,13 @@ class DashboardController extends Controller
                         })
                         ->count();
 
+                $totalSuspects = $screenings->filter(function ($screening) {
+                    $positive = collect($screening->answers ?? [])
+                        ->filter(fn($ans, $key) => str_starts_with((string) $key, 'gejala_') && $ans === 'ya')
+                        ->count();
+                    return $positive >= 1;
+                })->count();
+
                 $cards = [
                     [
                         'label' => 'Skrining Tercatat',
@@ -211,6 +243,14 @@ class DashboardController extends Controller
                         'trend' => 'Pantau laporan wilayah',
                         'icon' => 'ri-pulse-line',
                         'color' => 'info',
+                    ],
+                    [
+                        'label' => 'Total Suspek',
+                        'value' => number_format($totalSuspects),
+                        'subtitle' => 'Akumulasi kasus',
+                        'trend' => 'Semua waktu',
+                        'icon' => 'ri-alarm-warning-line',
+                        'color' => 'danger',
                     ],
                     [
                         'label' => 'Suspek Bulan Ini',
@@ -345,7 +385,12 @@ class DashboardController extends Controller
                 // ... (Puskesmas logic same) ...
                 $kaderIds = User::query()
                     ->where('role', UserRole::Kader->value)
-                    ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $user->id))
+                    ->whereHas('detail', function ($q) use ($user) {
+                        $q->where('supervisor_id', $user->id)
+                            ->whereHas('kelurahan.detail', function ($k) use ($user) {
+                                $k->where('supervisor_id', $user->id);
+                            });
+                    })
                     ->pluck('id');
 
                 $screeningsQuery = PatientScreening::query()->whereIn('kader_id', $kaderIds);

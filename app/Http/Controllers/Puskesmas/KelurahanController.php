@@ -57,6 +57,9 @@ class KelurahanController extends Controller
         abort_if($kelurahan->role !== UserRole::Kelurahan, 404);
 
         $kelurahan->loadMissing('detail.supervisor');
+        
+        // STRICT VALIDATION: Ensure this Kelurahan is officially supervised by the logged-in Puskesmas.
+        // If not, deny access (403). No data will be pulled.
         abort_if(optional($kelurahan->detail)->supervisor_id !== $request->user()->id, 403);
 
         $perPage = 10;

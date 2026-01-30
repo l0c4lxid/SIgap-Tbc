@@ -20,19 +20,7 @@ class KaderController extends Controller
 
         $perPage = 10;
 
-        $kaders = User::query()
-            ->with('detail')
-            ->where('role', UserRole::Kader->value)
-            ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $request->user()->id))
-            ->when($request->filled('q'), function ($query) use ($request) {
-                $term = '%' . $request->input('q') . '%';
-                $query->where(function ($sub) use ($term) {
-                    $sub->where('name', 'like', $term)
-                        ->orWhere('phone', 'like', $term)
-                        ->orWhereHas('detail', fn($detail) => $detail->where('notes', 'like', $term));
-                });
-            })
-            ->latest()
+        $kaders = $this->kaderQuery($request)
             ->paginate($perPage)
             ->withQueryString();
 
@@ -138,7 +126,12 @@ class KaderController extends Controller
         return User::query()
             ->with('detail')
             ->where('role', UserRole::Kader->value)
-            ->whereHas('detail', fn($detail) => $detail->where('supervisor_id', $request->user()->id))
+            ->whereHas('detail', function ($detail) use ($request) {
+                $detail->where('supervisor_id', $request->user()->id)
+                    ->whereHas('kelurahan.detail', function ($k) use ($request) {
+                         $k->where('supervisor_id', $request->user()->id);
+                    });
+            })
             ->when($request->filled('q'), function ($query) use ($request) {
                 $term = '%' . $request->input('q') . '%';
                 $query->where(function ($sub) use ($term) {

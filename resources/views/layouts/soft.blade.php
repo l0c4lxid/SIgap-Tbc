@@ -29,12 +29,6 @@
                 'icon' => 'ri-stethoscope-line',
                 'active_routes' => ['pemda.screenings', 'pemda.screenings.show'],
             ],
-            [
-                'label' => 'Target Skrining',
-                'url' => route('pemda.screening-targets.index'),
-                'icon' => 'ri-focus-3-line',
-                'active_routes' => ['pemda.screening-targets.*'],
-            ],
             ['label' => 'Materi', 'url' => route('pemda.materi'), 'icon' => 'ri-book-open-line'],
             ['label' => 'Semua Berita', 'url' => route('news.index'), 'icon' => 'ri-newspaper-line'],
         ],

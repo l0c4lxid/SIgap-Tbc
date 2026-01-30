@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\PatientScreening;
-use App\Models\ScreeningTarget;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -102,37 +101,6 @@ class DashboardController extends Controller
                 $totalScreenings = $screenings->count();
                 $uniquePatients = $uniquePatientCount($screenings);
 
-                // Target Stats (Achievement)
-                $currentMonth = now()->format('Y-m');
-                $targetTotalThisMonth = ScreeningTarget::active()
-                    ->where('month', $currentMonth) // Assuming monthly targets mostly
-                    ->orWhere(function ($q) { // Handle partial custom periods intersecting today if needed, but 'month' is primary
-                        $q->where('period_type', 'monthly')->where('month', now()->format('Y-m'));
-                    })
-                    ->sum('target_total'); 
-                
-                // Correction: The query above is slightly redundant/risky with orWhere. 
-                // Let's simplified to just monthly aimed at this month for the "Target Tercapai" context
-                // effectively: targets designed for this month.
-                $targetTotalThisMonth = ScreeningTarget::active()
-                     ->where(function($q) use ($currentMonth) {
-                         $q->where('month', $currentMonth)
-                           ->orWhere(function($sub) {
-                               $sub->where('period_type', 'custom')
-                                   ->where('date_from', '<=', now())
-                                   ->where('date_to', '>=', now());
-                           });
-                     })
-                     ->sum('target_total');
-
-                $actualScreeningsThisMonth = PatientScreening::query()
-                    ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
-                    ->count();
-
-                $achievementPercent = $targetTotalThisMonth > 0 
-                    ? round(($actualScreeningsThisMonth / $targetTotalThisMonth) * 100) 
-                    : 0;
-
                 $cards = [
                     [
                         'label' => 'Pengguna',
@@ -142,15 +110,6 @@ class DashboardController extends Controller
                         'icon' => 'ri-group-line',
                         'color' => 'primary',
                         'url' => route('pemda.verification'),
-                    ],
-                    [
-                        'label' => 'Target Tercapai',
-                        'value' => $achievementPercent . '%',
-                        'subtitle' => number_format($actualScreeningsThisMonth) . ' / ' . number_format($targetTotalThisMonth) . ' Skrining',
-                        'trend' => 'Realisasi Bulan Ini',
-                        'icon' => 'ri-focus-3-line',
-                        'color' => 'success', // or purple/info
-                        'url' => route('pemda.screening-targets.index'),
                     ],
                     [
                         'label' => 'Skrining Total',
@@ -229,36 +188,6 @@ class DashboardController extends Controller
                 $monthStart = now()->startOfMonth();
                 $monthEnd = now()->endOfMonth();
                 
-                // Target Stats
-                $activeTarget = ScreeningTarget::active()
-                    ->where('kelurahan_user_id', $kelurahan->id)
-                    ->where('period_type', 'monthly')
-                    ->where('month', now()->format('Y-m'))
-                    ->with('allocations') // Optimistic loading
-                    ->first();
-                
-                // If not found monthly, try finding custom capable
-                if (!$activeTarget) {
-                     $activeTarget = ScreeningTarget::active()
-                        ->where('kelurahan_user_id', $kelurahan->id)
-                        ->where('period_type', 'custom')
-                        ->where('date_from', '<=', now())
-                        ->where('date_to', '>=', now())
-                        ->first();
-                }
-
-                if ($activeTarget) {
-                    // Manual calc if needed or just query aggregations
-                    // Using service logic simplified here or assume calculated via scheduled job? 
-                    // Better to calc on fly for dashboard if not heavy.
-                    $targetParams = app(\App\Services\TargetProgressService::class)->calculateProgress($activeTarget);
-                    $targetText = number_format($targetParams->actual_total) . ' / ' . number_format($targetParams->target_total);
-                    $targetProgress = $targetParams->progress_percent . '% Tercapai';
-                } else {
-                    $targetText = '-';
-                    $targetProgress = 'Belum ada target';
-                }
-
                 $suspectThisMonth = $kaderIds->isEmpty()
                     ? 0
                     : PatientScreening::query()
@@ -275,14 +204,6 @@ class DashboardController extends Controller
                         ->count();
 
                 $cards = [
-                    [
-                        'label' => 'Target Skrining',
-                        'value' => $targetText,
-                        'subtitle' => 'Target Periode Ini',
-                        'trend' => $targetProgress,
-                        'icon' => 'ri-focus-3-line',
-                        'color' => 'primary',
-                    ],
                     [
                         'label' => 'Skrining Tercatat',
                         'value' => number_format($totalScreenings),
@@ -486,57 +407,7 @@ class DashboardController extends Controller
             case UserRole::Kader:
                 $screeningsQuery = PatientScreening::query()->where('kader_id', $user->id);
                 $screenings = $screeningsQuery->get();
-                
-                // Target Logic for Kader
-                $supervisorId = optional($user->detail)->supervisor_id;
-                $targetText = '-';
-                $targetProgress = 'Belum ada target';
-                
-                if ($supervisorId) {
-                     $activeTarget = ScreeningTarget::active()
-                        ->where('kelurahan_user_id', $supervisorId)
-                        ->where('period_type', 'monthly')
-                        ->where('month', now()->format('Y-m'))
-                        ->first();
-                        
-                    if (!$activeTarget) {
-                        $activeTarget = ScreeningTarget::active()
-                            ->where('kelurahan_user_id', $supervisorId)
-                            ->where('period_type', 'custom')
-                            ->where('date_from', '<=', now())
-                            ->where('date_to', '>=', now())
-                            ->first();
-                    }
-
-                    if ($activeTarget) {
-                        $allocation = $activeTarget->allocations()
-                            ->where('kader_user_id', $user->id)
-                            ->first();
-
-                        if ($allocation) {
-                             // Use Service or manual calc
-                             // To avoid N+1 or complexity, just simple query
-                             // But service is clean
-                             $service = app(\App\Services\TargetProgressService::class);
-                             $dateRange = $service->resolveDateRange($activeTarget);
-                             $stats = $service->calculateAllocationStats($allocation, $dateRange);
-                             
-                             $targetText = number_format($stats['actual_total']) . ' / ' . number_format($allocation->allocated_total);
-                             $percent = $allocation->allocated_total > 0 ? round(($stats['actual_total'] / $allocation->allocated_total) * 100) : 0;
-                             $targetProgress = $percent . '% Tercapai';
-                        }
-                    }
-                }
-
                 $cards = [
-                    [
-                        'label' => 'Target Saya',
-                        'value' => $targetText,
-                        'subtitle' => 'Target Periode Ini',
-                        'trend' => $targetProgress,
-                        'icon' => 'ri-focus-3-line',
-                        'color' => 'primary',
-                    ],
                     [
                         'label' => 'Skrining Dicatat',
                         'value' => number_format($screenings->count()),

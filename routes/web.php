@@ -153,18 +153,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/pemda/profil', [PemdaProfileController::class, 'update'])
         ->name('pemda.profile.update');
 
-    // Target Skrining
-    Route::resource('/pemda/screening-targets', \App\Http\Controllers\Pemda\ScreeningTargetController::class)
-        ->names('pemda.screening-targets')
-        ->parameters(['screening-targets' => 'target'])
-        ->except(['destroy']); // We implement destroy as archive, but can use standard method
-    Route::delete('/pemda/screening-targets/{target}', [\App\Http\Controllers\Pemda\ScreeningTargetController::class, 'destroy'])
-        ->name('pemda.screening-targets.destroy');
-    Route::post('/pemda/screening-targets/{target}/recalculate', [\App\Http\Controllers\Pemda\ScreeningTargetController::class, 'recalculate'])
-        ->name('pemda.screening-targets.recalculate');
-    Route::put('/pemda/screening-targets/{target}/allocations', [\App\Http\Controllers\Pemda\ScreeningTargetController::class, 'updateAllocations'])
-        ->name('pemda.screening-targets.update-allocations');
-
     Route::get('/puskesmas/skrining', [PuskesmasScreeningController::class, 'index'])
         ->name('puskesmas.screenings');
     Route::get('/puskesmas/skrining/{screening}', [PuskesmasScreeningController::class, 'show'])

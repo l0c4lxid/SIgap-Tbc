@@ -101,7 +101,7 @@ jobs:
             php artisan view:clear && 
             php artisan event:clear &&
             ln -sfn /home/situbamy/situba/storage/app/public /home/situbamy/public_html/storage && 
-            php artisan up
+            php artisan down --secret="situba-aman"
           "
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}

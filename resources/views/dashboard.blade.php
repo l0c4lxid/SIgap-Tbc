@@ -359,6 +359,7 @@
                             <span class="text-[10px] font-mono text-gray-400 bg-gray-100/50 px-2 py-1 rounded-md">
                                 {{ $screening->created_at->format('d M') }}
                             </span>
+                            <span class="text-[10px] font-mono text-gray-400 bg-gray-100/50 px-2 py-1 rounded-md">{{ $screening->created_at->format('H:i') }} WIB</span>
                         </div>
 
                         {{-- Middle Row: Status & Officer --}}

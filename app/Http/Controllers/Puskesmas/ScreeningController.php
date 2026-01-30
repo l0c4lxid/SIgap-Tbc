@@ -267,94 +267,9 @@ class ScreeningController extends Controller
             }
 
            // ... existing methods ...
-           public function collection()
-           {
-               return $this->screenings->values()->map(function ($screening, $index) {
-                   $answers = $screening->answers ?? [];
-                   $getAnswer = function ($key) use ($answers) {
-                       $value = $answers[$key] ?? null;
-                       return $value === 'ya' ? 'Ya' : ($value === 'tidak' ? 'Tidak' : ($value ?? '-'));
-                   };
 
-                   // Calculate Status
-                   $positiveCount = collect($answers)
-                       ->filter(fn($answer, $key) => str_starts_with((string) $key, 'gejala_') && $answer === 'ya')
-                       ->count();
-                   $status = $positiveCount > 0 ? 'Suspek TBC' : 'Tidak Suspek';
-
-                   $asText = fn($value) => ($value === null || $value === '') ? '-' : (string) $value;
-
-                   $row = [
-                       'No' => $index + 1,
-                       'Kader PJ' => $screening->kader?->name ?? '-',
-                       'Status Skrining' => $status,
-                       'Total Gejala' => $positiveCount,
-                       'Nama' => $screening->patient_name ?? '-',
-                       'WNI' => $screening->patient_is_wni ? 'Ya' : 'Tidak',
-                       'NIK' => $asText($screening->patient_nik),
-                       'Nomor HP' => $asText($screening->patient_phone),
-                       'Alamat' => $screening->patient_address ?? '-',
-                       'Jenis Kelamin' => $screening->patient_gender ?? '-',
-                       'Tempat Lahir' => $screening->patient_birth_place ?? '-',
-                       'Tanggal Lahir' => optional($screening->patient_birth_date)?->format('d/m/Y') ?? '-',
-                       'Umur' => $screening->patient_age ?? '-',
-                       'Alamat KTP' => $screening->patient_address_ktp ?? '-',
-                       'Alamat Domisili' => $screening->patient_address_domisili ?? '-',
-                       'RT' => $asText($screening->patient_address_rt),
-                       'RW' => $asText($screening->patient_address_rw),
-                       'Kelurahan' => $screening->patient_address_kelurahan ?? '-',
-                       'BB (kg)' => $screening->patient_weight ?? '-',
-                       'TB (cm)' => $screening->patient_height ?? '-',
-                       'Tanggal Skrining' => optional($screening->created_at)?->format('d/m/Y H:i') ?? '-',
-                   ];
-
-                   foreach ($this->questionLabels as $key => $label) {
-                       $row[$label] = $getAnswer($key);
-                   }
-
-                   return $row;
-               });
-           }
            
-           public function headings(): array
-           {
-               return array_merge(
-                   [
-                       'No',
-                       'Kader PJ',
-                       'Status Skrining',
-                       'Total Gejala',
-                       'Nama',
-                       'WNI',
-                       'NIK',
-                       'Nomor HP',
-                       'Alamat',
-                       'Jenis Kelamin',
-                       'Tempat Lahir',
-                       'Tanggal Lahir',
-                       'Umur',
-                       'Alamat KTP',
-                       'Alamat Domisili',
-                       'RT',
-                       'RW',
-                       'Kelurahan',
-                       'BB (kg)',
-                       'TB (cm)',
-                       'Tanggal Skrining',
-                   ],
-                   array_values($this->questionLabels)
-               );
-           }
-           
-           public function columnFormats(): array
-           {
-               return [
-                   'G' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT, // NIK
-                   'H' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT, // HP
-                   'P' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT, // RT
-                   'Q' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT, // RW
-               ];
-           }
+
         };
 
         return Excel::download($export, 'skrining-pasien.xlsx');

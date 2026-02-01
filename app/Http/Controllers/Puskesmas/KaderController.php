@@ -86,7 +86,12 @@ class KaderController extends Controller
 
         $kader->loadMissing('detail.supervisor');
 
-        abort_if(optional($kader->detail)->supervisor_id !== $request->user()->id, 403);
+
+        abort_if(
+            optional($kader->detail)->supervisor_id !== $request->user()->id &&
+            optional(optional(optional($kader->detail)->kelurahan)->detail)->supervisor_id !== $request->user()->id,
+            403
+        );
 
         $screenings = PatientScreening::query()
             ->where('kader_id', $kader->id)
@@ -109,7 +114,12 @@ class KaderController extends Controller
 
         $kader->loadMissing('detail');
 
-        abort_if(optional($kader->detail)->supervisor_id !== $request->user()->id, 403);
+
+        abort_if(
+            optional($kader->detail)->supervisor_id !== $request->user()->id &&
+            optional(optional(optional($kader->detail)->kelurahan)->detail)->supervisor_id !== $request->user()->id,
+            403
+        );
 
         $validated = $request->validate([
             'status' => ['required', 'in:active,inactive'],
@@ -117,6 +127,10 @@ class KaderController extends Controller
 
         $kader->is_active = $validated['status'] === 'active';
         $kader->save();
+
+        if ($kader->is_active && !$kader->detail->supervisor_id) {
+            $kader->detail->update(['supervisor_id' => $request->user()->id]);
+        }
 
         return back()->with('status', 'Status kader diperbarui.');
     }

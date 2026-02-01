@@ -80,8 +80,8 @@
                                     <form method="POST" action="{{ route('puskesmas.kaders.status', $kader) }}" class="inline-block">
                                         @csrf
                                         <input type="hidden" name="status" value="{{ $kader->is_active ? 'inactive' : 'active' }}">
-                                        <button type="submit" class="border-0 bg-transparent p-0 cursor-pointer transition-colors {{ $kader->is_active ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700' }}" title="{{ $kader->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                            <i class="{{ $kader->is_active ? 'ri-close-circle-line' : 'ri-checkbox-circle-line' }} text-lg"></i>
+                                        <button type="submit" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {{ $kader->is_active ? 'bg-green-500' : 'bg-gray-300' }}" title="{{ $kader->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                            <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {{ $kader->is_active ? 'translate-x-6' : 'translate-x-1' }}"></span>
                                         </button>
                                     </form>
                                 </div>

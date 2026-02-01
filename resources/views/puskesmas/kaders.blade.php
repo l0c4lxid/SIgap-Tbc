@@ -73,9 +73,18 @@
                                 <span class="text-xs text-gray-500">{{ $kader->created_at->format('d M Y') }}</span>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('puskesmas.kaders.show', $kader) }}" class="text-[var(--color-glass-primary)] hover:text-[var(--color-glass-secondary)] font-semibold text-sm no-underline">
-                                    Detail
-                                </a>
+                                <div class="flex justify-center items-center gap-3">
+                                    <a href="{{ route('puskesmas.kaders.show', $kader) }}" class="text-[var(--color-glass-primary)] hover:text-[var(--color-glass-secondary)] font-semibold text-sm no-underline">
+                                        Detail
+                                    </a>
+                                    <form method="POST" action="{{ route('puskesmas.kaders.status', $kader) }}" class="inline-block">
+                                        @csrf
+                                        <input type="hidden" name="status" value="{{ $kader->is_active ? 'inactive' : 'active' }}">
+                                        <button type="submit" class="border-0 bg-transparent p-0 cursor-pointer transition-colors {{ $kader->is_active ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700' }}" title="{{ $kader->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                            <i class="{{ $kader->is_active ? 'ri-close-circle-line' : 'ri-checkbox-circle-line' }} text-lg"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty

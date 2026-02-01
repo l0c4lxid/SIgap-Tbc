@@ -127,10 +127,9 @@ class KaderController extends Controller
             ->with('detail')
             ->where('role', UserRole::Kader->value)
             ->whereHas('detail', function ($detail) use ($request) {
-                $detail->where('supervisor_id', $request->user()->id)
-                    ->whereHas('kelurahan.detail', function ($k) use ($request) {
-                         $k->where('supervisor_id', $request->user()->id);
-                    });
+                $detail->whereHas('kelurahan.detail', function ($k) use ($request) {
+                        $k->where('supervisor_id', $request->user()->id);
+                });
             })
             ->when($request->filled('q'), function ($query) use ($request) {
                 $term = '%' . $request->input('q') . '%';

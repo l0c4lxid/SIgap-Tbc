@@ -259,14 +259,32 @@ class SystemHealthController extends Controller
             $memUsed = (int)$memData[2] * 1024 * 1024;
             $memFree = (int)$memData[3] * 1024 * 1024;
 
-            // CPU Load (uptime)
-            $loadOutput = $ssh->exec('uptime');
-            preg_match('/load average: ([0-9.]+)/', $loadOutput, $matches);
-            $rawLoad = isset($matches[1]) ? (float)$matches[1] : 0;
+            // CPU Load (User Specific)
+            // On shared hosting, 'uptime' shows SERVER load (often high), not USER load.
+            // valid way for user load: top -b -n 1 -u username | awk ... OR ps -u username
+            // We use: ps -u username -o pcpu | awk '{s+=$1} END {print s}'
+            // This sums up %CPU of all user processes.
+            // Note: This can exceed 100% on multi-core.
             
+            $cpuCmd = "ps -u " . env('SSH_USERNAME') . " -o pcpu | awk '{s+=$1} END {print s}'";
+            $cpuOutput = $ssh->exec($cpuCmd);
+            $rawCpuSum = (float) trim($cpuOutput); // Total % across all cores (e.g. 150.5)
+
             $cores = (int) env('SYSTEM_MONITOR_CPU_CORES', 1);
             if ($cores < 1) $cores = 1;
-            $cpuLoad = min(100, round(($rawLoad / $cores) * 100, 1));
+
+            // Divide by cores to get 0-100% range per core average
+            $cpuLoad = round($rawCpuSum / $cores, 1);
+            $cpuLoad = min(100, $cpuLoad); // Cap at 100% for UI consistency
+
+            // Fallback if ps returned nothing (empty)
+            if (empty($cpuOutput) && $cpuOutput !== '0') {
+                 // Try uptime as last resort or show 0
+                 $loadOutput = $ssh->exec('uptime');
+                 preg_match('/load average: ([0-9.]+)/', $loadOutput, $matches);
+                 $rawLoad = isset($matches[1]) ? (float)$matches[1] : 0;
+                 $cpuLoad = min(100, round(($rawLoad / $cores) * 100, 1));
+            }
 
             // Disk Usage (df -h /home/user)
             $path = env('SYSTEM_MONITOR_DISK_PATH', '/');

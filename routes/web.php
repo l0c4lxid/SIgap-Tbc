@@ -20,38 +20,7 @@ use App\Enums\UserRole;
 use App\Models\NewsPost;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\SystemHealthController;
 
-Route::get('/monitor-api', [SystemHealthController::class, 'index'])->name('api.system-monitor');
-
-use Illuminate\Http\Request;
-
-Route::match(['get', 'post'], '/system-monitor', function (Request $request) {
-    // 1. Check if user is authenticated (using auth middleware on the group or here if standalone)
-    // The previous code had ->middleware('auth'), let's keep it consistent if needed, 
-    // but the user asked for a *password* when opening it. 
-    // Ideally, we keep the Auth check to ensure they are at least a system user, 
-    // AND then ask for the specific monitor password.
-    
-    // 2. Handle POST (Password Submission)
-    if ($request->isMethod('post')) {
-        $key = $request->input('monitor_key');
-        if ($key === env('SYSTEM_MONITOR_KEY')) {
-            session(['monitor_access' => true]);
-            return redirect()->route('system.monitor.view');
-        } else {
-            return back()->with('error', 'Access Denied: Invalid Key');
-        }
-    }
-
-    // 3. Handle GET (View)
-    $isLocked = !session('monitor_access', false);
-
-    return view('system.monitor', [
-        'isLocked' => $isLocked,
-        'apiKey' => $isLocked ? null : env('SYSTEM_MONITOR_KEY') // Don't expose key if locked
-    ]);
-})->middleware('auth')->name('system.monitor.view');
 
 
 Route::get('/', function () {

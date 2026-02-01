@@ -113,10 +113,12 @@ class MonitoringController extends Controller
         abort_if($kader->role !== UserRole::Kader, 404);
 
         $kelurahan = $request->user();
-        $kader->loadMissing('detail.supervisor');
-        $kaderPuskesmasId = optional($kader->detail)->supervisor_id;
-        $kelurahanPuskesmasId = optional($kelurahan->detail)->supervisor_id;
-        abort_if(!$kaderPuskesmasId || $kaderPuskesmasId !== $kelurahanPuskesmasId, 403);
+        $kader->loadMissing('detail');
+        
+        // Ensure Kader belongs to this Kelurahan
+        if ($kader->detail?->kelurahan_user_id !== $kelurahan->id) {
+             abort(403, 'Kader ini tidak terdaftar di kelurahan Anda.');
+        }
 
         $validated = $request->validate([
             'status' => ['required', 'in:active,inactive'],
@@ -124,6 +126,14 @@ class MonitoringController extends Controller
 
         $kader->is_active = $validated['status'] === 'active';
         $kader->save();
+
+        // Sync Puskesmas Link on Activation if missing
+        if ($kader->is_active && !$kader->detail->supervisor_id) {
+            $kelurahanPuskesmasId = optional($kelurahan->detail)->supervisor_id;
+            if ($kelurahanPuskesmasId) {
+                $kader->detail->update(['supervisor_id' => $kelurahanPuskesmasId]);
+            }
+        }
 
         return back()->with('status', 'Status kader diperbarui.');
     }
@@ -228,16 +238,11 @@ class MonitoringController extends Controller
     protected function kaderQuery(Request $request): ?\Illuminate\Database\Eloquent\Builder
     {
         $kelurahan = $request->user();
-        $puskesmasIds = collect(optional($kelurahan->detail)->supervisor_id ? [$kelurahan->detail->supervisor_id] : []);
-
-        if ($puskesmasIds->isEmpty()) {
-            return null;
-        }
 
         return User::query()
             ->with(['detail.supervisor'])
             ->where('role', UserRole::Kader->value)
-            ->whereHas('detail', fn($detail) => $detail->whereIn('supervisor_id', $puskesmasIds))
+            ->whereHas('detail', fn($detail) => $detail->where('kelurahan_user_id', $kelurahan->id))
             ->when($request->filled('q'), function ($query) use ($request) {
                 $term = '%' . $request->input('q') . '%';
                 $query->where(function ($sub) use ($term) {

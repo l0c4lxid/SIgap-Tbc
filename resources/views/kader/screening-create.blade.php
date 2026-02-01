@@ -139,20 +139,20 @@
                 </div>
 
                 <div class="md:col-span-6">
-                     <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat KTP</label>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Domisili</label>
                      <div class="relative">
-                        <input type="text" name="patient_address_ktp" id="patient_address_ktp" class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('patient_address_ktp') }}" placeholder="Alamat sesuai KTP" required>
+                        <input type="text" name="patient_address_domisili" id="patient_address_domisili" class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('patient_address_domisili') }}" placeholder="Alamat tempat tinggal sekarang" required>
                         <button type="button" id="triggerLocationBtn" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--color-glass-primary)] transition-colors p-1" title="Ambil Lokasi Saat Ini">
                             <i class="ri-map-pin-add-line text-lg"></i>
                         </button>
                      </div>
                 </div>
                 <div class="md:col-span-6">
-                     <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Domisili</label>
-                    <input type="text" name="patient_address_domisili" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('patient_address_domisili') }}" placeholder="Alamat tempat tinggal sekarang" required>
+                     <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat KTP</label>
+                    <input type="text" name="patient_address_ktp" id="patient_address_ktp" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('patient_address_ktp') }}" placeholder="Alamat sesuai KTP" required>
                     <div class="mt-2 flex items-center gap-2">
-                        <input type="checkbox" id="domisiliSame" name="domisili_same" class="w-4 h-4 text-[var(--color-glass-primary)] border-gray-300 rounded focus:ring-[var(--color-glass-primary)]">
-                        <label for="domisiliSame" class="text-sm text-gray-600 select-none cursor-pointer">Sama dengan alamat KTP</label>
+                        <input type="checkbox" id="ktpSame" name="ktp_same" class="w-4 h-4 text-[var(--color-glass-primary)] border-gray-300 rounded focus:ring-[var(--color-glass-primary)]">
+                        <label for="ktpSame" class="text-sm text-gray-600 select-none cursor-pointer">Sama dengan alamat Domisili</label>
                     </div>
                 </div>
             </div>
@@ -304,7 +304,7 @@
             const ageField = document.querySelector('input[name="patient_age"]');
             const addressKtpField = document.querySelector('input[name="patient_address_ktp"]');
             const addressDomField = document.querySelector('input[name="patient_address_domisili"]');
-            const domisiliSame = document.getElementById('domisiliSame');
+            const ktpSame = document.getElementById('ktpSame');
             const rtField = document.querySelector('input[name="patient_address_rt"]');
             const rwField = document.querySelector('input[name="patient_address_rw"]');
 
@@ -362,27 +362,27 @@
             birthDateField?.addEventListener('change', syncAge);
             syncAge();
 
-            const syncDomisili = () => {
-                if (!domisiliSame || !addressKtpField || !addressDomField) {
+            const syncKtpAddress = () => {
+                if (!ktpSame || !addressKtpField || !addressDomField) {
                     return;
                 }
-                if (domisiliSame.checked) {
-                    addressDomField.value = addressKtpField.value;
-                    addressDomField.setAttribute('readonly', 'readonly');
-                    addressDomField.classList.add('bg-gray-100', 'text-gray-500'); // Add styling for readonly
+                if (ktpSame.checked) {
+                    addressKtpField.value = addressDomField.value;
+                    addressKtpField.setAttribute('readonly', 'readonly');
+                    addressKtpField.classList.add('bg-gray-100', 'text-gray-500'); // Add styling for readonly
                 } else {
-                    addressDomField.removeAttribute('readonly');
-                     addressDomField.classList.remove('bg-gray-100', 'text-gray-500');
+                    addressKtpField.removeAttribute('readonly');
+                     addressKtpField.classList.remove('bg-gray-100', 'text-gray-500');
                 }
             };
 
-            domisiliSame?.addEventListener('change', syncDomisili);
-            addressKtpField?.addEventListener('input', () => {
-                if (domisiliSame?.checked) {
-                    addressDomField.value = addressKtpField.value;
+            ktpSame?.addEventListener('change', syncKtpAddress);
+            addressDomField?.addEventListener('input', () => {
+                if (ktpSame?.checked) {
+                    addressKtpField.value = addressDomField.value;
                 }
             });
-            syncDomisili();
+            syncKtpAddress();
 
             const enforceDigits = (field) => {
                 if (!field) {
@@ -452,7 +452,7 @@
             const triggerLocationBtn = document.getElementById('triggerLocationBtn');
             const latInput = document.getElementById('latitude');
             const lngInput = document.getElementById('longitude');
-            const addressInput = document.getElementById('patient_address_ktp'); // Changed target to KTP
+            const addressInput = document.getElementById('patient_address_domisili'); // Changed target to Domisili
             let map, marker;
 
             // Initialize Map (Default to Surakarta/Solo ID)
@@ -528,7 +528,7 @@
                             .then(response => response.json())
                             .then(data => {
                                     if(data && data.display_name) {
-                                         // Autofill Alamat KTP
+                                         // Autofill Alamat Domisili
                                          if(addressInput && !addressInput.value) {
                                              // User requested "Complete Address" -> display_name is usually the best validation
                                              // It includes Jalan, Kelurahan, Kecamatan, Kota, etc.

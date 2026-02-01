@@ -361,6 +361,103 @@
 
                     // Server Info (Check existence before setting content for mobile hidden elements)
                     if(document.getElementById('server-ip')) document.getElementById('server-ip').textContent = srv.ip;
+            // cPanel/LVE Data Rendering
+            if (srv.is_cpanel && data.cpanel && data.cpanel.length > 0) {
+                // Clear existing grid to render cPanel specific items
+                const grid = document.querySelector('.grid');
+                
+                // Keep the Infrastructure and Log cards, replace others or append
+                // Strategy: We will render a new "cPanel Resource Limits" section at top
+                
+                // Helper to create card HTML
+                const createCard = (title, value, percent, icon) => {
+                     let colorClass = 'text-emerald-400';
+                     if (percent > 80) colorClass = 'text-red-500';
+                     else if (percent > 60) colorClass = 'text-yellow-400';
+                     
+                     return `
+                        <div class="bg-slate-800/50 backdrop-blur border border-slate-700 p-4 rounded-lg">
+                            <h3 class="text-slate-400 text-xs font-mono uppercase tracking-widest mb-2">${title}</h3>
+                            <div class="flex items-end justify-between">
+                                <div>
+                                    <div class="text-2xl font-bold text-white mb-1 font-mono tracking-tighter">${value}</div>
+                                    <div class="text-[10px] text-slate-500 font-mono">Usage Limit</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="${colorClass} text-xl font-bold font-mono">${percent}%</div>
+                                    <div class="h-1 w-16 bg-slate-700 rounded-full mt-2 overflow-hidden">
+                                        <div class="h-full ${colorClass.replace('text', 'bg')}" style="width: ${percent}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                     `;
+                };
+
+                let cpanelHtml = '';
+                
+                // We want to extract key metrics user cares about:
+                // CPU, RAM, Entry Processes, Inodes, Disk Usage
+                
+                const stats = data.cpanel;
+                const findAndRender = (key, label) => {
+                    const item = stats.find(s => s.name === key || s.item === key || s.id === key);
+                    if (item) {
+                        // Formatted values usually in 'count' or '_count' or similar
+                        // UAPI StatsBar structure: { name: 'cpu_usage', count: '26', max: '100', percent: 26, format: '26 / 100 (26%)' }
+                        
+                        // We use the 'percent' field or parse from format
+                        let val = item.format || item.count;
+                        let pct = item.percent;
+                        
+                        // Clean up value (remove parens percentage if duplicate)
+                        if (typeof val === 'string') val = val.split('(')[0].trim();
+                        
+                        return createCard(label, val, pct, '');
+                    }
+                    return '';
+                };
+                
+                // Map common cPanel keys
+                cpanelHtml += findAndRender('cpu_usage', 'CPU Usage');
+                cpanelHtml += findAndRender('mem_usage', 'Physical Memory');
+                cpanelHtml += findAndRender('entry_processes', 'Entry Processes');
+                // Number of processes
+                cpanelHtml += findAndRender('nproc', 'Number of Processes');
+                cpanelHtml += findAndRender('inodes_usage', 'Inodes');
+                cpanelHtml += findAndRender('disk_usage', 'Disk Usage');
+
+                // If we generated cPanel cards, inject them
+                if (cpanelHtml) {
+                    const existingCpanelContainer = document.getElementById('cpanel-stats');
+                    if (existingCpanelContainer) {
+                         existingCpanelContainer.innerHTML = cpanelHtml;
+                    } else {
+                        // Create container if not exists (insert after graphs)
+                        const container = document.createElement('div');
+                        container.id = 'cpanel-stats';
+                        container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6';
+                        container.innerHTML = cpanelHtml;
+                        
+                        // Find a good place to insert. Maybe replace the existing generic cards?
+                        // Let's hide generic usage cards if cPanel is active
+                        document.getElementById('generic-usage-cards').style.display = 'none';
+                        
+                        // Insert after charts
+                        const charts = document.getElementById('charts-section');
+                        charts.parentNode.insertBefore(container, charts.nextSibling);
+                    }
+                }
+            } else {
+                 // Standard Mode
+                 if(document.getElementById('generic-usage-cards')) document.getElementById('generic-usage-cards').style.display = 'grid';
+                 document.getElementById('cpu-value').textContent = sys.cpu_load; // Corrected from cpu-val
+                 document.getElementById('memory-value').textContent = sys.memory.used; // Corrected from mem-val
+                 document.getElementById('memory-detail').textContent = `/ ${sys.memory.total}`; // Corrected from mem-total
+                 document.getElementById('disk-value').textContent = sys.disk.usage_percentage; // Corrected from disk-val
+                 document.getElementById('disk-detail').textContent = `${sys.disk.used} / ${sys.disk.total}`; // Corrected from disk-total
+            }
+
                     document.getElementById('server-software').textContent = srv.software;
                     document.getElementById('php-version').textContent = srv.php_version;
                     document.getElementById('laravel-version').textContent = srv.laravel_version;

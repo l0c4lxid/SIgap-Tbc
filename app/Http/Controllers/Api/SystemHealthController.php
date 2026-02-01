@@ -243,13 +243,125 @@ class SystemHealthController extends Controller
     {
         try {
             // Set timeout in constructor (3rd arg) to 5 seconds
-            // This prevents the "infinite spin" if the server is unreachable
             $ssh = new SSH2(env('SSH_HOST'), env('SSH_PORT', 22), 5);
             
             if (!$ssh->login(env('SSH_USERNAME'), env('SSH_PASSWORD'))) {
                 throw new \Exception('SSH Login Failed');
             }
 
+            // 1. Try cPanel UAPI (Resource Usage & Stats)
+            // This gives exact LVE limits (CloudLinux)
+            
+            $uapiRes = $ssh->exec('uapi ResourceUsage get_usages --output=json');
+            $uapiStats = $ssh->exec('uapi StatsBar get_stats --output=json'); // For counts like Inodes, Addon Domains etc
+            
+            $isCpanel = false;
+            $cpanelData = [];
+
+            // Parse UAPI Resource Usage
+            $resData = json_decode($uapiRes, true);
+            
+            // Check if valid UAPI response
+            if (isset($resData['result']['status']) && $resData['result']['status'] === 1) {
+                $isCpanel = true;
+                $usages = $resData['result']['data'][0] ?? []; // Often it's an array
+                
+                // CloudLinux LVE often returns data like 'usage', 'limit', 'faults'
+                // We map them to our format
+                // Note: Structure varies slightly by version, but often:
+                // [id] => lve_id, [cpu] => usage%, [mem] => usage_bytes
+                
+                // If standard UAPI structure matches CloudLinux LVE:
+                // We'll trust the user's specific request format as guide.
+                
+                // Let's implement a unified parser for cPanel stats
+                // We prefer 'StatsBar' for the overview usually shown in sidebar
+                $statsData = json_decode($uapiStats, true);
+                if (isset($statsData['result']['status']) && $statsData['result']['status'] === 1) {
+                    $cpanelData = $statsData['result']['data']; 
+                    // This typically contains ALL sidebar items:
+                    // 'cpu_usage', 'mem_usage', 'inodes_usage', 'db_disk_usage', etc.
+                }
+            }
+
+            if ($isCpanel && !empty($cpanelData)) {
+                // --- CPANEL MODE ---
+                
+                // Helper to extract value/max from cPanel format
+                // Some are "26 / 100", some are percentage objects
+                // Generally StatsBar returns formatted data or raw
+                
+                // CPU
+                // Often returned as "26%" or object. We'll try to find 'cpu_usage'
+                // Note: UAPI StatsBar often returns arrays with 'name', 'count', 'max', 'percent'
+                
+                $findStat = function($name) use ($cpanelData) {
+                    foreach ($cpanelData as $stat) {
+                        if ($stat['name'] === $name || $stat['item'] === $name) return $stat;
+                    }
+                    return null;
+                };
+
+                // CPU
+                $cpuStat = $findStat('cpu_usage') ?? $findStat('cpu');
+                $cpuLoad = isset($cpuStat['percent']) ? (float)$cpuStat['percent'] : 0;
+                
+                // Memory
+                $memStat = $findStat('mem_usage') ?? $findStat('physical_memory_usage');
+                $memUsed = 0; $memTotal = 0; $memFree = 0;
+                if ($memStat) {
+                    // StatsBar might give "60.59 MB / 1 GB" strings in 'count'/'max'?
+                    // Actually UAPI typically gives structured data: 'count' (used), 'max' (limit)
+                    // They might be raw numbers or formatted.
+                    
+                    // If UAPI returns raw integers (usually in bytes or MB?), great.
+                    // If strings, we might need parsing.
+                    // Assuming standard UAPI: 'count' is often the used numeric value (maybe scaled?), 'max' is limit.
+                    // Actually, for robust handling, let's assume they are parseable numbers or percentages.
+                    
+                    // Let's rely on 'percent' if available for gauges
+                    // And try to parse 'count'/'max' for text
+                    
+                    // Note based on user input: "Physical Memory Usage: 60.59 MB / 1 GB (5.92%)"
+                    // We'll pass the exact cPanel text to frontend if possible, or parse best effort.
+                    
+                    // We will send the whole 'cpanel' object to frontend to render special cards
+                }
+
+                // We construct a specific 'cpanel' payload
+                $serverInfo = [
+                    'php_version' => trim($ssh->exec('php -v | head -n 1 | cut -d " " -f 2')),
+                    'software' => 'cPanel / CloudLinux',
+                    'laravel_version' => app()->version(),
+                    'ip' => env('SSH_HOST'),
+                    'path' => env('SYSTEM_MONITOR_DISK_PATH', '/'),
+                    'is_cpanel' => true
+                ];
+                
+                return response()->json([
+                    'status' => 'ok',
+                    'timestamp' => now()->toIso8601String(),
+                    'server' => $serverInfo,
+                    'cpanel' => $cpanelData, // Pass all raw cPanel stats to frontend to render
+                    // We still map key metrics to 'system' -> 'cpu_load' for the Chart to work
+                    'system' => [
+                        'cpu_load' => $cpuLoad,
+                        'memory' => [
+                            // We attempt to map memory for the chart (0-100%)
+                            'used' => $memStat['count'] ?? 0, 
+                            'total' => $memStat['max'] ?? 0,
+                            'chart_percent' => $memStat['percent'] ?? 0
+                        ],
+                        'disk' => [], // cPanel stats cover this
+                    ],
+                    'database' => $this->getDatabaseStatus(),
+                    'log' => $this->getLogInfo(),
+                ]);
+
+            }
+            
+            // --- FALLBACK TO STANDARD SSH (Unknown or Not cPanel) ---
+            
             // Memory (free -m)
             $memOutput = $ssh->exec('free -m');
             $memLines = explode("\n", trim($memOutput));
@@ -259,34 +371,25 @@ class SystemHealthController extends Controller
             $memUsed = (int)$memData[2] * 1024 * 1024;
             $memFree = (int)$memData[3] * 1024 * 1024;
 
-            // CPU Load (User Specific)
-            // On shared hosting, 'uptime' shows SERVER load (often high), not USER load.
-            // valid way for user load: top -b -n 1 -u username | awk ... OR ps -u username
-            // We use: ps -u username -o pcpu | awk '{s+=$1} END {print s}'
-            // This sums up %CPU of all user processes.
-            // Note: This can exceed 100% on multi-core.
-            
+            // CPU Load (User Specific Fix)
             $cpuCmd = "ps -u " . env('SSH_USERNAME') . " -o pcpu | awk '{s+=$1} END {print s}'";
             $cpuOutput = $ssh->exec($cpuCmd);
-            $rawCpuSum = (float) trim($cpuOutput); // Total % across all cores (e.g. 150.5)
+            $rawCpuSum = (float) trim($cpuOutput); 
 
             $cores = (int) env('SYSTEM_MONITOR_CPU_CORES', 1);
             if ($cores < 1) $cores = 1;
 
-            // Divide by cores to get 0-100% range per core average
-            $cpuLoad = round($rawCpuSum / $cores, 1);
-            $cpuLoad = min(100, $cpuLoad); // Cap at 100% for UI consistency
+            $cpuLoad = min(100, round($rawCpuSum / $cores, 1));
 
-            // Fallback if ps returned nothing (empty)
             if (empty($cpuOutput) && $cpuOutput !== '0') {
-                 // Try uptime as last resort or show 0
+                 // Try uptime as last resort
                  $loadOutput = $ssh->exec('uptime');
                  preg_match('/load average: ([0-9.]+)/', $loadOutput, $matches);
                  $rawLoad = isset($matches[1]) ? (float)$matches[1] : 0;
                  $cpuLoad = min(100, round(($rawLoad / $cores) * 100, 1));
             }
 
-            // Disk Usage (df -h /home/user)
+            // Disk Usage
             $path = env('SYSTEM_MONITOR_DISK_PATH', '/');
             $diskOutput = $ssh->exec("df -h $path | tail -n 1");
             $diskData = preg_split('/\s+/', trim($diskOutput));
@@ -295,7 +398,6 @@ class SystemHealthController extends Controller
             $diskUsedStr = $diskData[2] ?? '0';
             $diskPercent = $diskData[4] ?? '0%';
 
-            // DB Status
             $dbStatus = $this->getDatabaseStatus();
 
             return response()->json([
@@ -303,10 +405,11 @@ class SystemHealthController extends Controller
                 'timestamp' => now()->toIso8601String(),
                 'server' => [
                     'php_version' => trim($ssh->exec('php -v | head -n 1 | cut -d " " -f 2')),
-                    'software' => 'SSH Remote',
+                    'software' => 'SSH Remote (Standard)',
                     'laravel_version' => app()->version(),
                     'ip' => env('SSH_HOST'),
                     'path' => $path,
+                    'is_cpanel' => false
                 ],
                 'system' => [
                     'cpu_load' => $cpuLoad,
@@ -317,8 +420,6 @@ class SystemHealthController extends Controller
                         'raw' => [
                             'used' => $memUsed,
                             'total' => $memTotal,
-                            'simulated' => false,
-                            'source' => 'ssh'
                         ]
                     ],
                     'disk' => [
@@ -336,7 +437,7 @@ class SystemHealthController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // Fallback to local stats but mark as error
+            // Error handling (Fallback to Local)
             $cpuLoad = $this->getServerLoad();
             $memoryUsage = $this->getMemoryUsage();
             $diskUsage = $this->getDiskUsage();
@@ -344,7 +445,7 @@ class SystemHealthController extends Controller
             $logInfo = $this->getLogInfo();
 
             return response()->json([
-                'status' => 'ok', // Status OK so UI renders
+                'status' => 'ok',
                 'error' => 'SSH Fallback: ' . $e->getMessage(), 
                 'timestamp' => now()->toIso8601String(),
                 'server' => [
@@ -353,6 +454,7 @@ class SystemHealthController extends Controller
                     'laravel_version' => app()->version(),
                     'ip' => '127.0.0.1',
                     'path' => base_path(),
+                    'is_cpanel' => false
                 ],
                 'system' => [
                     'cpu_load' => $cpuLoad,

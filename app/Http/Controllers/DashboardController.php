@@ -133,6 +133,15 @@ class DashboardController extends Controller
                         'color' => 'danger',
                         'url' => route('pemda.screenings'), 
                     ],
+                    [
+                        'label' => 'Total Kader',
+                        'value' => number_format($kaderCount),
+                        'subtitle' => 'Petugas Lapangan',
+                        'trend' => 'Tersebar di wilayah',
+                        'icon' => 'ri-team-line',
+                        'color' => 'success',
+                        'url' => route('pemda.verification', ['role' => 'kader']),
+                    ],
                 ];
 
                 $recentScreenings = $baseScreeningQuery->take(3)->get();

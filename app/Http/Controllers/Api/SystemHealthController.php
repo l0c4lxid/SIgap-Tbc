@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use phpseclib3\Net\SSH2;
 
 class SystemHealthController extends Controller
 {
@@ -12,6 +13,11 @@ class SystemHealthController extends Controller
     {
         if ($request->query('key') !== env('SYSTEM_MONITOR_KEY')) {
             abort(403, 'Unauthorized');
+        }
+
+        // Check if Remote SSH is configured
+        if (config('app.env') !== 'testing' && env('SSH_HOST')) {
+            return $this->getRemoteStats();
         }
 
         // CPU Load (Compatible with Shared Hosting / Linux)
@@ -231,5 +237,113 @@ class SystemHealthController extends Controller
         $bytes /= pow(1024, $pow);
         
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+    private function getRemoteStats()
+    {
+        try {
+            // Set timeout in constructor (3rd arg) to 5 seconds
+            // This prevents the "infinite spin" if the server is unreachable
+            $ssh = new SSH2(env('SSH_HOST'), env('SSH_PORT', 22), 5);
+            
+            if (!$ssh->login(env('SSH_USERNAME'), env('SSH_PASSWORD'))) {
+                throw new \Exception('SSH Login Failed');
+            }
+
+            // Memory (free -m)
+            $memOutput = $ssh->exec('free -m');
+            $memLines = explode("\n", trim($memOutput));
+            $memData = preg_split('/\s+/', $memLines[1]);
+            
+            $memTotal = (int)$memData[1] * 1024 * 1024; 
+            $memUsed = (int)$memData[2] * 1024 * 1024;
+            $memFree = (int)$memData[3] * 1024 * 1024;
+
+            // CPU Load (uptime)
+            $loadOutput = $ssh->exec('uptime');
+            preg_match('/load average: ([0-9.]+)/', $loadOutput, $matches);
+            $rawLoad = isset($matches[1]) ? (float)$matches[1] : 0;
+            
+            $cores = (int) env('SYSTEM_MONITOR_CPU_CORES', 1);
+            if ($cores < 1) $cores = 1;
+            $cpuLoad = min(100, round(($rawLoad / $cores) * 100, 1));
+
+            // Disk Usage (df -h /home/user)
+            $path = env('SYSTEM_MONITOR_DISK_PATH', '/');
+            $diskOutput = $ssh->exec("df -h $path | tail -n 1");
+            $diskData = preg_split('/\s+/', trim($diskOutput));
+            
+            $diskTotalStr = $diskData[1] ?? '0';
+            $diskUsedStr = $diskData[2] ?? '0';
+            $diskPercent = $diskData[4] ?? '0%';
+
+            // DB Status
+            $dbStatus = $this->getDatabaseStatus();
+
+            return response()->json([
+                'status' => 'ok',
+                'timestamp' => now()->toIso8601String(),
+                'server' => [
+                    'php_version' => trim($ssh->exec('php -v | head -n 1 | cut -d " " -f 2')),
+                    'software' => 'SSH Remote',
+                    'laravel_version' => app()->version(),
+                    'ip' => env('SSH_HOST'),
+                    'path' => $path,
+                ],
+                'system' => [
+                    'cpu_load' => $cpuLoad,
+                    'memory' => [
+                        'used' => $this->formatBytes($memUsed),
+                        'free' => $this->formatBytes($memFree),
+                        'total' => $this->formatBytes($memTotal),
+                        'raw' => [
+                            'used' => $memUsed,
+                            'total' => $memTotal,
+                            'simulated' => false,
+                            'source' => 'ssh'
+                        ]
+                    ],
+                    'disk' => [
+                        'used' => $diskUsedStr,
+                        'free' => 'N/A',
+                        'total' => $diskTotalStr,
+                        'usage_percentage' => $diskPercent,
+                         'raw' => [
+                            'path' => $path
+                        ]
+                    ],
+                ],
+                'database' => $dbStatus,
+                'log' => $this->getLogInfo(),
+            ]);
+
+        } catch (\Exception $e) {
+            // Fallback to local stats but mark as error
+            $cpuLoad = $this->getServerLoad();
+            $memoryUsage = $this->getMemoryUsage();
+            $diskUsage = $this->getDiskUsage();
+            $dbStatus = $this->getDatabaseStatus();
+            $logInfo = $this->getLogInfo();
+
+            return response()->json([
+                'status' => 'ok', // Status OK so UI renders
+                'error' => 'SSH Fallback: ' . $e->getMessage(), 
+                'timestamp' => now()->toIso8601String(),
+                'server' => [
+                    'php_version' => PHP_VERSION,
+                    'software' => 'Local Fallback',
+                    'laravel_version' => app()->version(),
+                    'ip' => '127.0.0.1',
+                    'path' => base_path(),
+                ],
+                'system' => [
+                    'cpu_load' => $cpuLoad,
+                    'memory' => $memoryUsage,
+                    'disk' => $diskUsage,
+                ],
+                'database' => $dbStatus,
+                'log' => $logInfo,
+            ]);
+        }
     }
 }

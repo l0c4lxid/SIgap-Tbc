@@ -349,6 +349,16 @@
                     const db = data.database;
                     const logInfo = data.log;
 
+                    // Show error if present
+                    if (data.error) {
+                        log("<span class='text-red-500'>" + data.error + "</span>");
+                        document.getElementById('connection-status').textContent = "ERROR";
+                        document.getElementById('connection-status').classList.add('text-red-500');
+                        document.getElementById('connection-status').classList.remove('text-green-400');
+                    } else {
+                         // Reset status if OK
+                    }
+
                     // Server Info (Check existence before setting content for mobile hidden elements)
                     if(document.getElementById('server-ip')) document.getElementById('server-ip').textContent = srv.ip;
                     document.getElementById('server-software').textContent = srv.software;

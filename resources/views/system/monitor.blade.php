@@ -42,11 +42,22 @@
             0% { bottom: 100%; }
             100% { bottom: -100%; }
         }
-        /* Chart Container adjustments */
         .chart-container {
             position: relative;
-            height: 150px;
+            height: 120px;
             width: 100%;
+        }
+        /* Mobile Adjustments */
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 100px;
+            }
+            .monitor-card {
+                padding: 1rem;
+            }
+            main {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -57,18 +68,18 @@
     @if($isLocked)
         <!-- LOCK SCREEN -->
         <div class="flex-1 flex flex-col items-center justify-center p-4">
-            <div class="monitor-card rounded-lg p-8 w-full max-w-md shadow-2xl relative overflow-hidden">
+            <div class="monitor-card rounded-lg p-6 w-full max-w-sm shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
                 <div class="mb-6 text-center">
-                    <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                     </svg>
-                    <h1 class="text-2xl font-bold text-red-500 tracking-wider">SYSTEM LOCKED</h1>
-                    <p class="text-gray-400 text-xs mt-2">SECURE ACCESS REQUIRED</p>
+                    <h1 class="text-xl font-bold text-red-500 tracking-wider">SYSTEM LOCKED</h1>
+                    <p class="text-gray-400 text-[10px] mt-2">SECURE ACCESS REQUIRED</p>
                 </div>
 
                 @if(session('error'))
-                    <div class="mb-4 bg-red-900/50 border border-red-700 text-red-200 px-4 py-2 rounded text-xs">
+                    <div class="mb-4 bg-red-900/50 border border-red-700 text-red-200 px-3 py-2 rounded text-[10px]">
                         {{ session('error') }}
                     </div>
                 @endif
@@ -76,16 +87,16 @@
                 <form action="{{ route('system.monitor.view') }}" method="POST" class="space-y-4">
                     @csrf
                     <div>
-                        <label for="monitor_key" class="block text-xs text-gray-400 mb-1 uppercase">Access Key</label>
+                        <label for="monitor_key" class="block text-[10px] text-gray-400 mb-1 uppercase">Access Key</label>
                         <input type="password" name="monitor_key" id="monitor_key" 
-                            class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-red-500 transition-colors font-mono"
+                            class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-red-500 transition-colors font-mono text-sm"
                             placeholder="Enter key..." autofocus>
                     </div>
                     <button type="submit" 
-                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors uppercase tracking-widest text-sm">
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors uppercase tracking-widest text-xs">
                         Authenticate
                     </button>
-                    <a href="/" class="block text-center text-xs text-gray-600 hover:text-gray-400 mt-4">
+                    <a href="/" class="block text-center text-[10px] text-gray-600 hover:text-gray-400 mt-4">
                         &larr; Return to Dashboard
                     </a>
                 </form>
@@ -94,38 +105,40 @@
     @else
         <!-- MONITOR DASHBOARD -->
         <header class="bg-slate-900 border-b border-slate-700 p-4 flex justify-between items-center z-10 shadow-lg">
-            <div class="flex items-center space-x-3">
-                 <div class="w-3 h-3 rounded-full bg-green-500 blink"></div>
-                 <h1 class="text-xl font-bold text-green-500 tracking-wider">SITUBA<span class="text-white">_MONITOR</span> <span class="text-xs text-gray-500 font-normal ml-2 hidden sm:inline">[SHARED_HOSTING_MODE]</span></h1>
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                 <div class="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500 blink"></div>
+                 <h1 class="text-lg sm:text-xl font-bold text-green-500 tracking-wider">SITUBA<span class="text-white">_MON</span> <span class="text-[10px] text-gray-500 font-normal ml-1 hidden md:inline">[SHARED_HOSTING]</span></h1>
             </div>
-            <div class="flex items-center space-x-6 text-xs text-gray-400">
-                <div class="flex items-center hidden sm:flex">
+            <div class="flex items-center space-x-3 sm:space-x-6 text-[10px] sm:text-xs text-gray-400">
+                <div class="flex items-center hidden lg:flex">
+                     <span class="mr-2 text-gray-600">PATH:</span>
+                     <span id="server-path-header" class="text-blue-400 truncate max-w-[150px]">...</span>
+                </div>
+                <!-- IP showed on Desktop only now, to save space -->
+                <div class="flex items-center hidden md:flex">
                      <span class="mr-2 text-gray-600">IP:</span>
                      <span id="server-ip" class="text-blue-400">Loading...</span>
                 </div>
                 <div class="flex items-center">
-                    <span class="mr-2">STATUS:</span>
-                    <span id="connection-status" class="text-green-400">CONNECTING...</span>
-                </div>
-                <div class="flex items-center">
-                    <span class="mr-2">UPDATED:</span>
-                    <span id="last-updated" class="text-white font-mono">--:--:--</span>
+                    <!-- Text hidden on mobile, simplified dot -->
+                    <span class="mr-2 hidden sm:inline">STATUS:</span>
+                    <span id="connection-status" class="text-green-400">ON</span>
                 </div>
             </div>
         </header>
 
-        <main class="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-y-auto z-10 pb-20">
+        <main class="flex-1 p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 overflow-y-auto z-10 pb-20">
             
-            <!-- CPU -->
-            <div class="monitor-card rounded-lg p-6 relative group hover:border-blue-500 transition-colors col-span-1 lg:col-span-2">
-                <div class="flex justify-between items-start mb-4">
+            <!-- CPU (Graph) -->
+            <div class="monitor-card rounded-lg p-4 sm:p-6 relative group hover:border-blue-500 transition-colors col-span-1 md:col-span-2">
+                <div class="flex justify-between items-start mb-2 sm:mb-4">
                     <div>
-                        <h3 class="text-blue-400 text-sm font-bold uppercase tracking-widest">CPU Load</h3>
-                        <p class="text-xs text-gray-600">Processing Activity (Last 60s)</p>
+                         <h3 class="text-blue-400 text-xs sm:text-sm font-bold uppercase tracking-widest">CPU Load</h3>
+                         <p class="text-[10px] text-gray-600 hidden sm:block">Processing Activity</p>
                     </div>
                     <div class="text-right">
-                        <span id="cpu-value" class="text-3xl font-bold text-white">--</span>
-                        <span class="text-sm text-gray-500">%</span>
+                        <span id="cpu-value" class="text-2xl sm:text-3xl font-bold text-white">--</span>
+                        <span class="text-[10px] sm:text-sm text-gray-500">%</span>
                     </div>
                 </div>
                 <div class="chart-container">
@@ -133,16 +146,16 @@
                 </div>
             </div>
 
-            <!-- Memory -->
-            <div class="monitor-card rounded-lg p-6 relative group hover:border-purple-500 transition-colors col-span-1 lg:col-span-2">
-                <div class="flex justify-between items-start mb-4">
+            <!-- Memory (Graph) -->
+            <div class="monitor-card rounded-lg p-4 sm:p-6 relative group hover:border-purple-500 transition-colors col-span-1 md:col-span-2">
+                <div class="flex justify-between items-start mb-2 sm:mb-4">
                      <div>
-                        <h3 class="text-purple-400 text-sm font-bold uppercase tracking-widest">Memory Usage</h3>
-                         <p class="text-xs text-gray-600" id="memory-type-label">Physical RAM</p>
+                        <h3 class="text-purple-400 text-xs sm:text-sm font-bold uppercase tracking-widest">Memory</h3>
+                         <p class="text-[10px] text-gray-600 hidden sm:block" id="memory-type-label">RAM</p>
                     </div>
                     <div class="text-right">
-                        <span id="memory-value" class="text-3xl font-bold text-white">--</span>
-                        <p class="text-xs text-gray-500" id="memory-detail">-- / --</p>
+                        <span id="memory-value" class="text-2xl sm:text-3xl font-bold text-white">--</span>
+                        <p class="text-[10px] sm:text-xs text-gray-500" id="memory-detail">-- / --</p>
                     </div>
                 </div>
                 <div class="chart-container">
@@ -151,53 +164,86 @@
             </div>
 
             <!-- Disk -->
-            <div class="monitor-card rounded-lg p-6 relative group hover:border-amber-500 transition-colors">
-                <h3 class="text-amber-400 text-sm font-bold uppercase tracking-widest mb-4">Storage</h3>
-                <div class="flex items-end mb-4">
-                    <span id="disk-value" class="text-4xl font-bold text-white">--</span>
+            <div class="monitor-card rounded-lg p-4 sm:p-6 relative group hover:border-amber-500 transition-colors">
+                <h3 class="text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-2 sm:mb-4">Storage</h3>
+                <div class="flex items-end mb-2 sm:mb-4">
+                    <span id="disk-value" class="text-3xl sm:text-4xl font-bold text-white">--</span>
                 </div>
-                <div class="w-full bg-slate-800 h-2 rounded-full mb-2 overflow-hidden">
+                <div class="w-full bg-slate-800 h-1.5 sm:h-2 rounded-full mb-2 overflow-hidden">
                     <div id="disk-bar" class="bg-amber-500 h-full w-0 progress-bar"></div>
                 </div>
-                <p class="text-xs text-gray-500 mb-1" id="disk-detail">-- / --</p>
-                <p class="text-[10px] text-gray-600">Path: <span id="server-path">...</span></p>
+                <p class="text-[10px] sm:text-xs text-gray-500 mb-1" id="disk-detail">-- / --</p>
+                <div class="mt-2 pt-2 border-t border-slate-800">
+                    <p class="text-[10px] text-amber-300 font-mono truncate" id="server-path">...</p>
+                </div>
             </div>
 
-            <!-- Database & Server Info -->
-            <div class="monitor-card rounded-lg p-6 relative group hover:border-green-500 transition-colors">
-                <h3 class="text-green-400 text-sm font-bold uppercase tracking-widest mb-4">Infrastructure</h3>
+            <!-- Database Size -->
+            <div class="monitor-card rounded-lg p-4 sm:p-6 relative group hover:border-indigo-500 transition-colors">
+                <h3 class="text-indigo-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-2 sm:mb-4">DB Size</h3>
+                <div class="flex items-end mb-2 sm:mb-4">
+                    <span id="db-size" class="text-3xl sm:text-4xl font-bold text-white">--</span>
+                    <span class="text-[10px] sm:text-sm text-gray-500 mb-2 ml-1">MB</span>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 sm:h-2 rounded-full mb-2 overflow-hidden">
+                    <div id="db-size-bar" class="bg-indigo-500 h-full w-0 progress-bar"></div>
+                </div>
+                 <div class="flex justify-between items-center mt-2">
+                    <span class="text-[10px] text-gray-500">Status</span>
+                    <div class="flex items-center">
+                        <div id="db-indicator-dot" class="w-2 h-2 rounded-full bg-gray-600 mr-2"></div>
+                        <span id="db-status" class="text-[10px] sm:text-xs font-bold text-gray-400">Check</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log File Size -->
+            <div class="monitor-card rounded-lg p-4 sm:p-6 relative group hover:border-pink-500 transition-colors">
+                <div class="flex justify-between items-start mb-2">
+                     <h3 class="text-pink-400 text-xs sm:text-sm font-bold uppercase tracking-widest">Logs</h3>
+                     <span class="text-[10px] text-gray-600">laravel.log</span>
+                </div>
                 
-                <div class="space-y-3">
+                <div class="flex items-end mb-2 sm:mb-4">
+                    <span id="log-size" class="text-3xl sm:text-4xl font-bold text-white">--</span>
+                </div>
+                 
+                 <div class="mt-2 pt-2 border-t border-slate-800">
+                     <div class="flex items-center text-[10px] sm:text-xs text-gray-400">
+                        @csrf
+                         <span class="w-2 h-2 rounded-full bg-green-500 mr-2" id="log-status-dot"></span>
+                         <span id="log-status-text">File Active</span>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Infrastructure Info -->
+            <div class="monitor-card rounded-lg p-4 sm:p-6 relative group hover:border-green-500 transition-colors">
+                <h3 class="text-green-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-2 sm:mb-4">Info</h3>
+                <div class="space-y-2 sm:space-y-3">
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                        <span class="text-xs text-gray-500">Database</span>
-                        <div class="flex items-center">
-                            <div id="db-indicator-dot" class="w-2 h-2 rounded-full bg-gray-600 mr-2"></div>
-                            <span id="db-status" class="text-xs font-bold text-gray-400">Check</span>
-                        </div>
+                        <span class="text-[10px] text-gray-500">Software</span>
+                         <span id="server-software" class="text-[10px] text-white truncate max-w-[120px]">--</span>
                     </div>
                     <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                        <span class="text-xs text-gray-500">DB Ver</span>
-                        <span id="db-version" class="text-xs text-white">--</span>
-                    </div>
-                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                        <span class="text-xs text-gray-500">PHP Ver</span>
-                        <span id="php-version" class="text-xs text-white">--</span>
+                        <span class="text-[10px] text-gray-500">PHP</span>
+                        <span id="php-version" class="text-[10px] text-white">--</span>
                     </div>
                      <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">Laravel</span>
-                        <span id="laravel-version" class="text-xs text-white">--</span>
+                        <span class="text-[10px] text-gray-500">Laravel</span>
+                        <span id="laravel-version" class="text-[10px] text-white">--</span>
                     </div>
                 </div>
             </div>
             
             <!-- Terminal Log -->
-            <div class="monitor-card rounded-lg p-4 col-span-1 md:col-span-2 lg:col-span-4 h-40 font-mono text-xs text-green-400 overflow-hidden relative">
+            <div class="monitor-card rounded-lg p-3 sm:p-4 col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 h-32 sm:h-40 font-mono text-[10px] sm:text-xs text-green-400 overflow-hidden relative">
                 <div class="absolute top-0 left-0 w-full h-6 bg-slate-800/90 px-2 flex items-center border-b border-slate-700 justify-between">
                     <span class="text-gray-400">root@situba:~# log_stream</span>
-                    <span class="text-[10px] text-gray-600" id="server-software">Server: ...</span>
+                    <span class="text-[10px] text-gray-500" id="last-updated">--:--:--</span>
                 </div>
-                <div id="log-container" class="mt-8 space-y-1 opacity-80 h-full overflow-y-auto scrollbar-hide">
-                    <p>> Initializing monitor protocol...</p>
+                <div id="log-container" class="mt-6 sm:mt-8 space-y-1 opacity-80 h-full overflow-y-auto scrollbar-hide">
+                    <p>> Initializing metrics...</p>
                 </div>
             </div>
 
@@ -215,7 +261,7 @@
                 const commonOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: false, // Disable animation for realtime feel
+                    animation: false, 
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { display: false },
@@ -284,13 +330,13 @@
                         const data = await response.json();
                         
                         updateUI(data);
-                        document.getElementById('connection-status').textContent = "ONLINE";
+                        document.getElementById('connection-status').textContent = "ON";
                         document.getElementById('connection-status').classList.remove('text-red-500');
                         document.getElementById('connection-status').classList.add('text-green-400');
 
                     } catch (error) {
                         console.error('Fetch error:', error);
-                        document.getElementById('connection-status').textContent = "OFFLINE";
+                        document.getElementById('connection-status').textContent = "OFF";
                         document.getElementById('connection-status').classList.add('text-red-500');
                         document.getElementById('connection-status').classList.remove('text-green-400');
                         log("<span class='text-red-500'>Connection lost...</span>");
@@ -301,44 +347,42 @@
                     const sys = data.system;
                     const srv = data.server;
                     const db = data.database;
+                    const logInfo = data.log;
 
-                    // Server Info
-                    document.getElementById('server-ip').textContent = srv.ip;
+                    // Server Info (Check existence before setting content for mobile hidden elements)
+                    if(document.getElementById('server-ip')) document.getElementById('server-ip').textContent = srv.ip;
                     document.getElementById('server-software').textContent = srv.software;
                     document.getElementById('php-version').textContent = srv.php_version;
                     document.getElementById('laravel-version').textContent = srv.laravel_version;
+                    document.getElementById('server-path').textContent = srv.path;
+                    if(document.getElementById('server-path-header')) document.getElementById('server-path-header').textContent = srv.path;
                     
-                    // Time
                     document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
 
                     // CPU
                     const cpuLoad = sys.cpu_load;
                     document.getElementById('cpu-value').textContent = cpuLoad;
-                    
-                    // Update CPU Chart
                     const cpuData = cpuChart.data.datasets[0].data;
                     cpuData.shift();
                     cpuData.push(cpuLoad);
                     cpuChart.update();
 
-                    if(cpuLoad > 80) log("<span class='text-amber-500'>High CPU Load: " + cpuLoad + "%</span>");
+                    if(cpuLoad > 85) log("<span class='text-amber-500'>High CPU: " + cpuLoad + "%</span>");
 
                     // Memory
-                    const memUsedRaw = sys.memory.raw.used; // Bytes
-                    const memTotalRaw = sys.memory.raw.total; // Bytes
+                    const memUsedRaw = sys.memory.raw.used; 
+                    const memTotalRaw = sys.memory.raw.total; 
                     const memUsedMB = (memUsedRaw / 1024 / 1024).toFixed(1);
-                    const memTotalMB = (memTotalRaw > 0) ? (memTotalRaw / 1024 / 1024).toFixed(1) : '???';
                     
                     document.getElementById('memory-value').textContent = sys.memory.used;
                     document.getElementById('memory-detail').textContent = `/ ${sys.memory.total}`;
                     
                     if (sys.memory.raw.simulated) {
-                        document.getElementById('memory-type-label').textContent = "Process Limit (Shared)";
+                        if(document.getElementById('memory-type-label')) document.getElementById('memory-type-label').textContent = "Process Limit";
                     } else {
-                        document.getElementById('memory-type-label').textContent = "Physical RAM";
+                        if(document.getElementById('memory-type-label')) document.getElementById('memory-type-label').textContent = "RAM";
                     }
 
-                    // Update Memory Chart (in MB)
                     const memData = memChart.data.datasets[0].data;
                     memData.shift();
                     memData.push(memUsedMB);
@@ -347,31 +391,58 @@
                     // Disk
                     const diskPercent = parseFloat(sys.disk.usage_percentage);
                     document.getElementById('disk-value').textContent = sys.disk.usage_percentage;
-                    document.getElementById('disk-detail').textContent = `${sys.disk.used} used of ${sys.disk.total}`;
+                    document.getElementById('disk-detail').textContent = `${sys.disk.used} / ${sys.disk.total}`;
                     document.getElementById('disk-bar').style.width = diskPercent + '%';
                     
-                    // DB
+                    // DB Size
+                    if (db.size_mb) {
+                        document.getElementById('db-size').textContent = db.size_mb;
+                        // Assuming 500MB is a "full" bar visual for shared hosting scale
+                        const dbPercent = Math.min((db.size_mb / 500) * 100, 100); 
+                        document.getElementById('db-size-bar').style.width = dbPercent + '%';
+                        
+                        if(db.size_mb > 100) {
+                             document.getElementById('db-size-bar').classList.remove('bg-indigo-500');
+                             document.getElementById('db-size-bar').classList.add('bg-amber-500');
+                        }
+                    }
+
+                    // DB Status
                     const dbEl = document.getElementById('db-status');
                     const dbDot = document.getElementById('db-indicator-dot');
                     
                     if (db.status === 'connected') {
-                        dbEl.textContent = 'CONNECTED';
+                        dbEl.textContent = 'OK';
                         dbEl.classList.remove('text-red-500');
                         dbEl.classList.add('text-green-500');
                         dbDot.className = 'w-2 h-2 rounded-full bg-green-500 mr-2 shadow-[0_0_10px_#22c55e]';
-                        document.getElementById('db-version').textContent = db.version || 'Unknown';
                     } else {
-                        dbEl.textContent = 'ERROR';
+                        dbEl.textContent = 'ERR';
                         dbEl.classList.add('text-red-500');
                         dbDot.className = 'w-2 h-2 rounded-full bg-red-500 mr-2 shadow-[0_0_10px_#ef4444]';
-                        document.getElementById('db-version').textContent = 'Error';
                         log("<span class='text-red-500'>DB Error: " + db.error + "</span>");
+                    }
+
+                    // Log Info
+                    document.getElementById('log-size').textContent = logInfo.size;
+                    const logDot = document.getElementById('log-status-dot');
+                    const logText = document.getElementById('log-status-text');
+                    
+                    if (logInfo.raw_size > 50 * 1024 * 1024) { // 50MB Warning
+                        logDot.className = "w-2 h-2 rounded-full bg-red-500 mr-2 blink";
+                         logText.textContent = "Log Large!";
+                         logText.classList.add('text-red-400');
+                         log("<span class='text-red-500'>Warning: Log file large (" + logInfo.size + ")</span>");
+                    } else {
+                        logDot.className = "w-2 h-2 rounded-full bg-green-500 mr-2";
+                        logText.textContent = "Log OK";
+                        logText.classList.remove('text-red-400');
                     }
                 };
 
                 // Initial fetch
                 fetchStats();
-                log("System monitor initialized.");
+                log("Mobile monitor ready.");
 
                 // Poll every 2 seconds
                 setInterval(fetchStats, 2000);

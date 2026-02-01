@@ -23,8 +23,11 @@ class SystemHealthController extends Controller
         // Disk Usage
         $diskUsage = $this->getDiskUsage();
 
-        // Database Connection & Version
+        // Database Connection, Version & Size
         $dbStatus = $this->getDatabaseStatus();
+
+        // Log File Size
+        $logInfo = $this->getLogInfo();
 
         return response()->json([
             'status' => 'ok',
@@ -34,6 +37,7 @@ class SystemHealthController extends Controller
                 'software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
                 'laravel_version' => app()->version(),
                 'ip' => $_SERVER['SERVER_ADDR'] ?? '127.0.0.1',
+                'path' => base_path(),
             ],
             'system' => [
                 'cpu_load' => $cpuLoad,
@@ -41,7 +45,25 @@ class SystemHealthController extends Controller
                 'disk' => $diskUsage,
             ],
             'database' => $dbStatus,
+            'log' => $logInfo,
         ]);
+    }
+
+    private function getLogInfo()
+    {
+        $logPath = storage_path('logs/laravel.log');
+        $size = 0;
+        
+        if (file_exists($logPath)) {
+            $size = filesize($logPath);
+        }
+
+        return [
+            'exists' => file_exists($logPath),
+            'size' => $this->formatBytes($size),
+            'raw_size' => $size,
+            'path' => $logPath
+        ];
     }
 
     private function getServerLoad()
@@ -63,18 +85,9 @@ class SystemHealthController extends Controller
         } else {
             // Linux / Unix / Shared Hosting
             $sys_load = sys_getloadavg();
-            // loadavg is for 1, 5, 15 min. We take 1 min.
-            // On shared hosting, this might be the load of the WHOLE server.
-            // There is no perfect way to get "user-only" cpu load without shell access to top/ps.
             $load = isset($sys_load[0]) ? $sys_load[0] : 0; 
             
-            // Normalize: loadavg is number of processes. To get %, we need core count.
-            // Assuming 1 core if unknown (safe fallback for visualization) or just passing raw if > 100
-            // For visualization purposes, let's try to map it to 0-100 range loosely 
-            // or just return the raw load if it's small.
-            // Many dashboards just show loadavg as is. 
-            // Let's cap at 100 for percentage bar, but send raw value too.
-            if ($load > 100) $load = 100; // Cap for bar
+            if ($load > 100) $load = 100;
         }
 
         return $load;
@@ -108,11 +121,9 @@ class SystemHealthController extends Controller
             $memoryUsed = $memoryTotal - $memoryFree;
         } else {
             // Linux / Shared Hosting
-            // Try to read /proc/meminfo
             if (@is_readable('/proc/meminfo')) {
                 $stats = @file_get_contents('/proc/meminfo');
                 if ($stats) {
-                    // Extract MemTotal and MemAvailable
                     preg_match('/MemTotal:\s+(\d+)\s+kB/', $stats, $matchesTotal);
                     preg_match('/MemAvailable:\s+(\d+)\s+kB/', $stats, $matchesFree);
                     
@@ -123,20 +134,19 @@ class SystemHealthController extends Controller
                 }
             }
             
-            // Fallback: Use PHP memory limit and usage if /proc/meminfo fails
             if ($memoryTotal <= 0) {
                 $memoryUsed = memory_get_usage(true);
                 $memoryLimit = ini_get('memory_limit');
                 if (preg_match('/^(\d+)(.)$/', $memoryLimit, $matches)) {
                     if ($matches[2] == 'M') {
-                        $memoryTotal = $matches[1] * 1024 * 1024; // MB to Bytes
+                        $memoryTotal = $matches[1] * 1024 * 1024;
                     } else if ($matches[2] == 'K') {
-                        $memoryTotal = $matches[1] * 1024; // KB to Bytes
+                        $memoryTotal = $matches[1] * 1024;
                     } else if ($matches[2] == 'G') {
-                        $memoryTotal = $matches[1] * 1024 * 1024 * 1024; // GB to Bytes
+                        $memoryTotal = $matches[1] * 1024 * 1024 * 1024;
                     }
                 } else {
-                     $memoryTotal = 128 * 1024 * 1024; // Default 128MB fallback
+                     $memoryTotal = 128 * 1024 * 1024; 
                 }
                 $memoryFree = $memoryTotal - $memoryUsed;
                 $isSimulated = true;
@@ -170,7 +180,8 @@ class SystemHealthController extends Controller
             'usage_percentage' => $total > 0 ? round(($used / $total) * 100, 2) . '%' : '0%',
             'raw' => [
                 'used' => $used,
-                'total' => $total
+                'total' => $total,
+                'path' => $path
             ]
         ];
     }
@@ -179,10 +190,25 @@ class SystemHealthController extends Controller
     {
         try {
             $pdo = DB::connection()->getPdo();
+            
+            // Get DB Size (MySQL specific)
+            $dbName = DB::connection()->getDatabaseName();
+            $size = 0;
+            
+            try {
+                $result = DB::select("SELECT table_schema 'db_name', SUM( data_length + index_length ) / 1024 / 1024 'db_size_mb' FROM information_schema.TABLES WHERE table_schema = ? GROUP BY table_schema", [$dbName]);
+                if (!empty($result)) {
+                    $size = round($result[0]->db_size_mb, 2); 
+                }
+            } catch (\Exception $ex) {
+                // Ignore if permission denied
+            }
+
             return [
                 'status' => 'connected',
                 'version' => $pdo->getAttribute(\PDO::ATTR_SERVER_VERSION),
-                'driver' => DB::connection()->getDriverName()
+                'driver' => DB::connection()->getDriverName(),
+                'size_mb' => $size
             ];
         } catch (\Exception $e) {
             return [

@@ -30,6 +30,8 @@ class PatientScreening extends Model
         'patient_height',
         'answers',
         'notes',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [

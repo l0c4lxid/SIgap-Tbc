@@ -2,6 +2,10 @@
 
 @section('subjudul', 'Detail data skrining')
 
+@push('styles')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+@endpush
+
 @section('content')
      <div class="mb-6">
         <a href="{{ route('pemda.screenings') }}" class="glass-button px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2 no-underline">
@@ -92,6 +96,45 @@
                 </div>
             </div>
 
+            </div>
+
+            {{-- Map Display --}}
+            @php
+                $lat = $screening->latitude ?? $screening->answers['latitude'] ?? null;
+                $lng = $screening->longitude ?? $screening->answers['longitude'] ?? null;
+            @endphp
+            @if($lat && $lng)
+            <div class="col-span-1 lg:col-span-2">
+                 <div class="flex items-center gap-2 mb-4">
+                     <span class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-sm"><i class="ri-map-pin-line"></i></span>
+                    <h6 class="font-bold text-lg text-gray-800 mb-0">Lokasi Penginputan</h6>
+                </div>
+                 <div class="bg-white/40 rounded-xl border border-white/50 p-4">
+                     <div id="map-detail" class="w-full h-[300px] rounded-xl border border-gray-200 shadow-sm mb-4"></div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Latitude</label>
+                            <div class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 font-mono">{{ $lat }}</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Longitude</label>
+                            <div class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 font-mono">{{ $lng }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-end">
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ $lat }},{{ $lng }}" target="_blank" class="bg-white hover:bg-gray-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm">
+                            <i class="ri-map-2-line text-lg"></i>
+                            Buka di Google Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+
+
             {{-- Risk Factors --}}
             <div>
                  <div class="flex items-center gap-2 mb-4">
@@ -129,4 +172,37 @@
             </div>
         </div>
     </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Map Logic
+            const lat = {{ $screening->latitude ?? $screening->answers['latitude'] ?? 'null' }};
+            const lng = {{ $screening->longitude ?? $screening->answers['longitude'] ?? 'null' }};
+            
+            if (lat && lng) {
+                const map = L.map('map-detail').setView([lat, lng], 16);
+                
+                // Google Maps Layer (HTTPS)
+                L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                    maxZoom: 20,
+                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                    attribution: '© Google Maps'
+                }).addTo(map);
+                
+                // Force map resize to fix "gray box" issue
+                setTimeout(() => { 
+                    map.invalidateSize(); 
+                }, 500);
+                
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup('Lokasi Penginputan')
+                    .openPopup();
+            }
+        });
+    </script>
+@endpush

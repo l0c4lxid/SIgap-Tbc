@@ -4,6 +4,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <style>
         .select2-container {
             width: 100% !important;
@@ -137,9 +138,14 @@
                     </select>
                 </div>
 
-                 <div class="md:col-span-6">
+                <div class="md:col-span-6">
                      <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat KTP</label>
-                    <input type="text" name="patient_address_ktp" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('patient_address_ktp') }}" placeholder="Alamat sesuai KTP" required>
+                     <div class="relative">
+                        <input type="text" name="patient_address_ktp" id="patient_address_ktp" class="w-full pl-4 pr-10 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('patient_address_ktp') }}" placeholder="Alamat sesuai KTP" required>
+                        <button type="button" id="triggerLocationBtn" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--color-glass-primary)] transition-colors p-1" title="Ambil Lokasi Saat Ini">
+                            <i class="ri-map-pin-add-line text-lg"></i>
+                        </button>
+                     </div>
                 </div>
                 <div class="md:col-span-6">
                      <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Domisili</label>
@@ -150,6 +156,47 @@
                     </div>
                 </div>
             </div>
+             <div class="h-px bg-gray-200/50 mb-8"></div>
+            
+             {{-- Location Section --}}
+             <h6 class="font-bold text-lg text-gray-800 mb-6">Lokasi & Peta</h6>
+             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
+                 <div class="md:col-span-12">
+                     <div class="flex flex-col gap-4">
+                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                             <div>
+                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Titik Lokasi</label>
+                                 <p class="text-xs text-gray-500 italic">Pastikan GPS aktif dan izinkan akses lokasi.</p>
+                             </div>
+                             <button type="button" id="getLocationBtn" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95">
+                                <i class="ri-map-pin-user-line text-lg"></i> Ambil Lokasi Saat Ini
+                             </button>
+                         </div>
+                         
+                         <div class="relative w-full h-[400px] rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-gray-50">
+                             <div id="map" class="absolute inset-0 z-0"></div>
+                             <div id="map-loader" class="absolute inset-0 z-10 flex items-center justify-center bg-gray-50/80 backdrop-blur-sm hidden">
+                                 <div class="flex flex-col items-center gap-2">
+                                     <i class="ri-loader-4-line text-3xl text-blue-600 animate-spin"></i>
+                                     <span class="text-sm text-gray-600 font-medium">Memuat Peta...</span>
+                                 </div>
+                             </div>
+                         </div>
+                         
+                         {{-- Visible Coordinates (Read-only) --}}
+                         <div class="grid grid-cols-2 gap-4">
+                             <div>
+                                 <label class="block text-xs font-semibold text-gray-500 mb-1">Latitude</label>
+                                 <input type="text" name="latitude" id="latitude" value="{{ old('latitude') }}" readonly class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-sm text-gray-600 focus:outline-none cursor-default">
+                             </div>
+                             <div>
+                                 <label class="block text-xs font-semibold text-gray-500 mb-1">Longitude</label>
+                                 <input type="text" name="longitude" id="longitude" value="{{ old('longitude') }}" readonly class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-100 text-sm text-gray-600 focus:outline-none cursor-default">
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
 
              <div class="h-px bg-gray-200/50 my-8"></div>
 
@@ -248,6 +295,7 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const wniField = document.querySelector('select[name="patient_is_wni"]');
@@ -397,6 +445,135 @@
                     placeholder: 'Pilih kelurahan',
                 });
             }
+
+            // --- Location Logic ---
+            const mapContainer = document.getElementById('map');
+            const getLocationBtn = document.getElementById('getLocationBtn');
+            const triggerLocationBtn = document.getElementById('triggerLocationBtn');
+            const latInput = document.getElementById('latitude');
+            const lngInput = document.getElementById('longitude');
+            const addressInput = document.getElementById('patient_address_ktp'); // Changed target to KTP
+            let map, marker;
+
+            // Initialize Map (Default to Surakarta/Solo ID)
+            const defaultLat = -7.5755;
+            const defaultLng = 110.8243;
+            
+            if (mapContainer) {
+                 map = L.map('map').setView([defaultLat, defaultLng], 13);
+                 
+                 // Google Maps Layer (HTTPS)
+                 L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                    maxZoom: 20,
+                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                    attribution: '© Google Maps'
+                }).addTo(map);
+                
+                // Force map resize to fix "gray box" issue when initially hidden or in flexible container
+                setTimeout(() => { 
+                    map.invalidateSize(); 
+                }, 500);
+                
+                // Also invalidate on window resize
+                window.addEventListener('resize', () => {
+                     map.invalidateSize();
+                });
+
+                // If old values exist (validation error), restore marker
+                if (latInput.value && lngInput.value) {
+                    const savedLat = parseFloat(latInput.value);
+                    const savedLng = parseFloat(lngInput.value);
+                    updateMarker(savedLat, savedLng);
+                    map.setView([savedLat, savedLng], 16);
+                }
+            }
+
+            function updateMarker(lat, lng) {
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                    
+                    // Update input on drag end
+                    marker.on('dragend', function(e) {
+                        const position = marker.getLatLng();
+                        latInput.value = position.lat;
+                        lngInput.value = position.lng;
+                    });
+                }
+                latInput.value = lat;
+                lngInput.value = lng;
+            }
+
+            const handleGetLocation = (btn) => {
+                if (!navigator.geolocation) {
+                    alert('Browser anda tidak mendukung Geolocation.');
+                    return;
+                }
+                
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i>';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        updateMarker(lat, lng);
+                        map.setView([lat, lng], 16);
+                        
+                        // Reverse Geocoding (Nominatim) with Indonesian Language
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=id`)
+                            .then(response => response.json())
+                            .then(data => {
+                                    if(data && data.display_name) {
+                                         // Autofill Alamat KTP
+                                         if(addressInput && !addressInput.value) {
+                                             // User requested "Complete Address" -> display_name is usually the best validation
+                                             // It includes Jalan, Kelurahan, Kecamatan, Kota, etc.
+                                             addressInput.value = data.display_name;
+                                             addressInput.dispatchEvent(new Event('input'));
+                                         }
+
+                                     // Attempt to extract RT/RW (Nominatim rarely gives this explicitly, but we can try parsing)
+                                     // Or use 'neighbourhood' field if available as fallback, though imprecise.
+                                     // For now, let's just log the full address components for debugging if needed.
+                                     
+                                     // Basic heuristic for RT/RW if present in display_name (e.g. "RT 05 RW 02")
+                                     const rtMatch = data.display_name.match(/RT\s*0*(\d+)/i);
+                                     const rwMatch = data.display_name.match(/RW\s*0*(\d+)/i);
+                                     
+                                     const rtField = document.querySelector('input[name="patient_address_rt"]');
+                                     const rwField = document.querySelector('input[name="patient_address_rw"]');
+
+                                     if (rtMatch && rtField && !rtField.value) {
+                                         rtField.value = rtMatch[1].padStart(3, '0'); // Format 005
+                                         rtField.dispatchEvent(new Event('input'));
+                                     }
+                                     if (rwMatch && rwField && !rwField.value) {
+                                         rwField.value = rwMatch[1].padStart(3, '0'); // Format 002
+                                         rwField.dispatchEvent(new Event('input'));
+                                     }
+                                }
+                            })
+                            .catch(err => console.error('Reverse Geocoding Error:', err))
+                            .finally(() => {
+                                btn.disabled = false;
+                                btn.innerHTML = originalHtml;
+                            });
+                    },
+                    (error) => {
+                        alert('Gagal mengambil lokasi: ' + error.message);
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            };
+
+            getLocationBtn?.addEventListener('click', () => handleGetLocation(getLocationBtn));
+            triggerLocationBtn?.addEventListener('click', () => handleGetLocation(triggerLocationBtn));
         });
     </script>
 @endpush

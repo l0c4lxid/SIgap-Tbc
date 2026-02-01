@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div class="bg-white/40 rounded-xl p-6 border border-white/50 shadow-sm">
              <p class="text-xs text-gray-500 uppercase font-bold mb-1">Pasien Tercatat</p>
             <h4 class="font-bold text-2xl text-gray-800 mb-0">{{ number_format($screeningSummary['total_patients']) }}</h4>
@@ -32,10 +32,6 @@
         <div class="bg-white/40 rounded-xl p-6 border border-white/50 shadow-sm">
              <p class="text-xs text-gray-500 uppercase font-bold mb-1">Total Skrining</p>
             <h4 class="font-bold text-2xl text-[var(--color-glass-primary)] mb-0">{{ number_format($screeningSummary['total_screenings']) }}</h4>
-        </div>
-         <div class="bg-white/40 rounded-xl p-6 border border-white/50 shadow-sm">
-             <p class="text-xs text-gray-500 uppercase font-bold mb-1">Suspek TBC</p>
-            <h4 class="font-bold text-2xl text-red-500 mb-0">{{ number_format($screeningSummary['suspect']) }}</h4>
         </div>
     </div>
 

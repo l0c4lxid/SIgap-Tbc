@@ -109,6 +109,8 @@ class ScreeningController extends Controller
             'patient_address_kelurahan' => $validated['patient_address_kelurahan'],
             'patient_weight' => $validated['patient_weight'],
             'patient_height' => $validated['patient_height'],
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
             'answers' => $answers,
         ]);
 
@@ -158,6 +160,8 @@ class ScreeningController extends Controller
             'patient_address_kelurahan' => $validated['patient_address_kelurahan'],
             'patient_weight' => $validated['patient_weight'],
             'patient_height' => $validated['patient_height'],
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
             'answers' => $answers,
         ]);
 
@@ -249,6 +253,8 @@ class ScreeningController extends Controller
                         'BB (kg)' => $screening->patient_weight ?? '-',
                         'TB (cm)' => $screening->patient_height ?? '-',
                         'Kader' => $this->kaderName ?? '-',
+                        'Latitude' => $screening->latitude ?? $answers['latitude'] ?? '-',
+                        'Longitude' => $screening->longitude ?? $answers['longitude'] ?? '-',
                         'Tanggal Skrining' => optional($screening->created_at)?->format('d/m/Y H:i') ?? '-',
                     ];
 
@@ -284,6 +290,8 @@ class ScreeningController extends Controller
                         'BB (kg)',
                         'TB (cm)',
                         'Kader',
+                        'Latitude',
+                        'Longitude',
                         'Tanggal Skrining',
                     ],
                     array_values($this->questionLabels),
@@ -348,6 +356,10 @@ class ScreeningController extends Controller
             'patient_address_kelurahan' => ['required', 'string', 'max:100'],
             'patient_weight' => ['required', 'numeric', 'min:0'],
             'patient_height' => ['required', 'numeric', 'min:0'],
+            'patient_weight' => ['required', 'numeric', 'min:0'],
+            'patient_height' => ['required', 'numeric', 'min:0'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ];
 
         foreach ($questions as $key => $label) {

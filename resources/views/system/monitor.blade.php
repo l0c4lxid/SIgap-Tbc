@@ -396,36 +396,52 @@
 
                 let cpanelHtml = '';
                 
-                // We want to extract key metrics user cares about:
-                // CPU, RAM, Entry Processes, Inodes, Disk Usage
+                // We want to render ALL metrics returned by cPanel StatsBar
                 
                 const stats = data.cpanel;
-                const findAndRender = (key, label) => {
-                    const item = stats.find(s => s.name === key || s.item === key || s.id === key);
-                    if (item) {
-                        // Formatted values usually in 'count' or '_count' or similar
-                        // UAPI StatsBar structure: { name: 'cpu_usage', count: '26', max: '100', percent: 26, format: '26 / 100 (26%)' }
-                        
-                        // We use the 'percent' field or parse from format
-                        let val = item.format || item.count;
-                        let pct = item.percent;
-                        
-                        // Clean up value (remove parens percentage if duplicate)
-                        if (typeof val === 'string') val = val.split('(')[0].trim();
-                        
-                        return createCard(label, val, pct, '');
-                    }
-                    return '';
-                };
                 
-                // Map common cPanel keys
-                cpanelHtml += findAndRender('cpu_usage', 'CPU Usage');
-                cpanelHtml += findAndRender('mem_usage', 'Physical Memory');
-                cpanelHtml += findAndRender('entry_processes', 'Entry Processes');
-                // Number of processes
-                cpanelHtml += findAndRender('nproc', 'Number of Processes');
-                cpanelHtml += findAndRender('inodes_usage', 'Inodes');
-                cpanelHtml += findAndRender('disk_usage', 'Disk Usage');
+                // Helper to format title from snake_case key if needed
+                const formatTitle = (str) => {
+                    return str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                };
+
+                // Sort stats to put "Resources" (CPU, Mem) first if desired, or just raw
+                // We'll trust the API order or sort specifically if needed. 
+                // Let's render everything available.
+
+                stats.forEach(item => {
+                    // Try to determine Label
+                    // UAPI often provides 'item' (e.g. 'bandwidth_usage') or 'name' ('Bandwidth')
+                    // For StatsBar, 'item' is usually the internal key, 'count' the value string.
+                    
+                    // We prefer the 'name' or 'description' if available, else format the key.
+                    let label = item.name || item.item || item.id;
+                    if (label) label = formatTitle(label.replace('_usage', ''));
+                    
+                    // Use the pre-formatted string from cPanel if available (e.g. "60.59 MB / 1 GB (5.92%)")
+                    // Often found in 'count' (if it's a string) or 'format'
+                    let val = item.format || item.count;
+                    
+                    // Percent for bar
+                    // If percent is missing but we have count/max, we could calc, but cPanel usually gives `percent`
+                    // Some items like "Subdomains 0 / Infinity" have percent: 0
+                    let pct = item.percent || 0;
+                    
+                    // Handle "infinity" or 0 usage
+                    if (item.max === 'unlimited' || item.max === 0 || item.max === '∞') {
+                         pct = 0; // Don't show full bar for infinity
+                    }
+                    
+                    // Clean up display value if it's overly verbose, 
+                    // but user requested "Databases 3 / 10 (30%)", so we keep the detailed string.
+                    // If 'val' is just the number "3", we might want to construct "3 / 10".
+                    if (item.max && item.max !== '0' && typeof val !== 'string') {
+                         val = `${item.count} / ${item.max}`;
+                    }
+
+                    // Render
+                    cpanelHtml += createCard(label, val, pct, '');
+                });
 
                 // If we generated cPanel cards, inject them
                 if (cpanelHtml) {

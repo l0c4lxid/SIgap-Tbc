@@ -8,6 +8,7 @@ use App\Http\Controllers\Kader\KelurahanController as KaderKelurahanController;
 use App\Http\Controllers\Kelurahan\MonitoringController as KelurahanMonitoringController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\Pemda\ProfileController as PemdaProfileController;
+use App\Http\Controllers\Pemda\PartnershipController as PemdaPartnershipController;
 use App\Http\Controllers\Pemda\ScreeningController as PemdaScreeningController;
 use App\Http\Controllers\Pemda\UserVerificationController;
 use App\Http\Controllers\ProfileController;
@@ -154,6 +155,15 @@ Route::middleware('auth')->group(function () {
         ->name('pemda.profile.edit');
     Route::put('/pemda/profil', [PemdaProfileController::class, 'update'])
         ->name('pemda.profile.update');
+
+    Route::get('/pemda/kemitraan', [PemdaPartnershipController::class, 'index'])
+        ->name('pemda.partnership.index');
+    Route::get('/pemda/kemitraan/{kelurahan}', [PemdaPartnershipController::class, 'edit'])
+        ->name('pemda.partnership.edit');
+    Route::put('/pemda/kemitraan/{kelurahan}', [PemdaPartnershipController::class, 'update'])
+        ->name('pemda.partnership.update');
+    Route::delete('/pemda/kemitraan/{kelurahan}', [PemdaPartnershipController::class, 'detach'])
+        ->name('pemda.partnership.detach');
 
     Route::get('/puskesmas/skrining', [PuskesmasScreeningController::class, 'index'])
         ->name('puskesmas.screenings');

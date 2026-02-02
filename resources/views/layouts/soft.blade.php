@@ -23,6 +23,7 @@
         UserRole::Pemda->value => [
             ['label' => 'Dashboard', 'url' => route('dashboard'), 'icon' => 'ri-dashboard-line'],
             ['label' => 'Verifikasi Pengguna', 'url' => route('pemda.verification'), 'icon' => 'ri-shield-user-line'],
+            ['label' => 'Kemitraan Wilayah', 'url' => route('pemda.partnership.index'), 'icon' => 'ri-git-merge-line'],
             [
                 'label' => 'Skrining',
                 'url' => route('pemda.screenings'),

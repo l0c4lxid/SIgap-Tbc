@@ -32,9 +32,34 @@ class NewsController extends Controller
 
         $posts = $postsQuery->paginate(9)->withQueryString();
 
+        // Pinned Material Logic
+        $materiDir = storage_path('app/public/materi/kader/pages');
+        $pinnedMaterial = null;
+        
+        if (file_exists($materiDir)) {
+            $files = scandir($materiDir);
+            $pages = [];
+            foreach ($files as $file) {
+                if (in_array(pathinfo($file, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png', 'webp'])) {
+                    $pages[] = asset('storage/materi/kader/pages/' . $file);
+                }
+            }
+            sort($pages);
+            $pinnedMaterial = $pages[0] ?? null;
+        }
+
+        // Fallback if no specific page image found, but we want to show the pin (since PDF likely exists)
+        if (!$pinnedMaterial) {
+             // Check if PDF exists to justify showing the link
+             if (file_exists(public_path('pdf/Lembar balik.pdf'))) {
+                 $pinnedMaterial = asset('assets/img/situba-logo.png');
+             }
+        }
+
         return view('blog.index', [
             'posts' => $posts,
             'search' => $search,
+            'pinnedMaterial' => $pinnedMaterial,
         ]);
     }
 

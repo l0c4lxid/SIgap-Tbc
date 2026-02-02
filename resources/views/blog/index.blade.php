@@ -85,8 +85,57 @@
         </div>
 
         <!-- Blog Grid -->
-        @if ($posts->count())
+        @if ($posts->count() || $pinnedMaterial)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {{-- Pinned Material --}}
+                @if($pinnedMaterial && !$search && $posts->onFirstPage())
+                    <article class="bg-emerald-50 rounded-2xl overflow-hidden border border-emerald-100 shadow-lg relative transform hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group ring-2 ring-emerald-500/20">
+                         <!-- Pin Badge -->
+                        <div class="absolute top-4 right-4 z-20">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-md">
+                                <i class="fa-solid fa-thumbtack rotate-45"></i> Disematkan
+                            </span>
+                        </div>
+
+                        <!-- Image -->
+                        <div class="relative h-56 overflow-hidden bg-gray-100 flex items-center justify-center p-4">
+                            <img src="{{ $pinnedMaterial }}" alt="Materi Edukasi Utama" class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105">
+                            <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-emerald-700 shadow-sm border border-emerald-100">
+                                <i class="fa-solid fa-book-open mr-1"></i> Materi Edukasi
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="p-6 flex flex-col flex-1">
+                            <div class="flex items-center gap-2 text-xs text-emerald-600 mb-3 font-medium">
+                                <span class="flex items-center"><i class="fa-regular fa-star mr-1.5"></i> Rekomendasi Utama</span>
+                            </div>
+
+                            <h3 class="font-heading text-xl font-bold text-gray-900 mb-3 leading-snug group-hover:text-emerald-600 transition-colors">
+                                <a href="{{ route('public.materi') }}">
+                                    Panduan Edukasi & Penanganan TBC Terkini
+                                </a>
+                            </h3>
+                            
+                            <p class="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-3">
+                                Akses materi visual lengkap mengenai pencegahan, penanganan, dan eliminasi TBC untuk kader dan masyarakat umum.
+                            </p>
+
+                            <div class="mt-auto pt-4 border-t border-emerald-100 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xs font-bold">
+                                        M
+                                    </div>
+                                    <span class="text-xs font-medium text-gray-600">Admin SITUBA</span>
+                                </div>
+                                <a href="{{ route('public.materi') }}" class="text-sm font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors">
+                                    Lihat Materi <i class="fa-solid fa-arrow-right text-xs mt-0.5"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                @endif
+
                 @foreach ($posts as $post)
                     <article class="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
                         <!-- Image -->

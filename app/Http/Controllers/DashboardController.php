@@ -14,6 +14,8 @@ class DashboardController extends Controller
     {
         $user = $request->user()->loadMissing(['detail.supervisor.detail.supervisor']);
         $role = $user->role;
+        // dump($role);
+        // dump($role === UserRole::Kader);
 
         $cards = [];
         $recentScreenings = null;
@@ -497,6 +499,8 @@ class DashboardController extends Controller
                     ? collect()
                     : $baseScreeningQuery->where('kader_id', $user->id)->take(3)->get();
                 // ... (rest of kader logic same) ...
+
+                break;
 
             default:
                 // Filter logic for Kader/Region-specific users falling into default

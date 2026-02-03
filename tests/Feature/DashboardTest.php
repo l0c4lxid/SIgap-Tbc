@@ -47,6 +47,7 @@ test('kader can view dashboard with correct cards', function () {
 
     $response->assertStatus(200);
     $response->assertViewHas('cards', function ($cards) {
+
         return count($cards) === 3
             && $cards[0]['label'] === 'Skrining Dicatat';
     });

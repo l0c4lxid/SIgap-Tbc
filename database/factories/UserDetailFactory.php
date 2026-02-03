@@ -13,7 +13,7 @@ class UserDetailFactory extends Factory
     {
         return [
             'nik' => fake()->numerify('################'),
-            'phone' => fake()->phoneNumber(),
+
             'address' => fake()->address(),
             'organization' => fake()->company(),
             'notes' => fake()->sentence(),

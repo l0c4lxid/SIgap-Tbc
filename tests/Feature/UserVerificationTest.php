@@ -20,7 +20,7 @@ test('pemda can approve a user', function () {
     $pemda = User::factory()->create(['role' => UserRole::Pemda]);
     $kader = User::factory()->create(['role' => UserRole::Kader, 'is_active' => false]);
 
-    $response = $this->actingAs($pemda)->patch(route('pemda.verification.status', $kader), [
+    $response = $this->actingAs($pemda)->post(route('pemda.verification.status', $kader), [
         'status' => 'active',
     ]);
 
@@ -33,14 +33,18 @@ test('pemda can update user info', function () {
     $kader = User::factory()->create(['role' => UserRole::Kader]);
     UserDetail::factory()->create(['user_id' => $kader->id]);
 
+    $supervisor = User::factory()->create(['role' => UserRole::Puskesmas, 'is_active' => true]);
+
     $response = $this->actingAs($pemda)->put(route('pemda.verification.update', $kader), [
         'name' => 'Updated Name',
         'is_active' => true, 
         'organization' => 'New Org',
-        'address' => 'New Address'
+        'address' => 'New Address',
+        'supervisor_id' => $supervisor->id,
     ]);
 
     $response->assertRedirect();
+    $response->assertSessionHasNoErrors();
     $this->assertDatabaseHas('users', ['id' => $kader->id, 'name' => 'Updated Name']);
     $this->assertDatabaseHas('user_details', ['user_id' => $kader->id, 'organization' => 'New Org']);
 });

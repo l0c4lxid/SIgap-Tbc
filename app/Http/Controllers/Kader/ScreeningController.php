@@ -58,17 +58,20 @@ class ScreeningController extends Controller
             ->where('role', UserRole::Kelurahan->value)
             ->where('is_active', true)
             ->get()
-            ->map(fn($user) => trim($user->detail?->organization ?: ($user->name ?? '')))
-            ->filter(fn($name) => $name !== '')
+            ->map(function ($user) {
+                $name = trim($user->detail?->organization ?: ($user->name ?? ''));
+                if ($name === '') {
+                    return null;
+                }
+                // Normalize: Ensure starts with "Kelurahan "
+                return Str::startsWith(Str::lower($name), 'kelurahan ')
+                    ? Str::title($name)
+                    : 'Kelurahan ' . Str::title($name);
+            })
+            ->filter() // Remove nulls
             ->unique()
             ->sort()
             ->values();
-        $kelurahanKeywordOptions = $kelurahanOptions
-            ->filter(fn($name) => Str::contains(Str::lower($name), 'kelurahan'))
-            ->values();
-        if ($kelurahanKeywordOptions->isNotEmpty()) {
-            $kelurahanOptions = $kelurahanKeywordOptions;
-        }
 
         return view('kader.screening-create', [
             'riskQuestions' => $riskQuestions,

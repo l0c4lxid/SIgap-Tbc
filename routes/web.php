@@ -52,11 +52,18 @@ Route::get('/', function () {
         ->whereNotNull('patient_address_kelurahan')
         ->where('patient_address_kelurahan', '!=', '')
         ->where('created_at', '>=', now()->subDays(30))
-        ->select('patient_address_kelurahan', DB::raw('count(*) as total'))
-        ->groupBy('patient_address_kelurahan')
-        ->orderByDesc('total')
-        ->limit(3)
-        ->pluck('patient_address_kelurahan');
+        ->select('patient_address_kelurahan')
+        ->get()
+        ->map(function ($screening) {
+            $name = trim($screening->patient_address_kelurahan);
+            return \Illuminate\Support\Str::startsWith(\Illuminate\Support\Str::lower($name), 'kelurahan ')
+                ? \Illuminate\Support\Str::title($name)
+                : 'Kelurahan ' . \Illuminate\Support\Str::title($name);
+        })
+        ->countBy()
+        ->sortDesc()
+        ->take(3)
+        ->keys();
     $latestScreeningAt = PatientScreening::query()
         ->latest('created_at')
         ->value('created_at');

@@ -153,6 +153,9 @@ Route::middleware('auth')->group(function () {
         ->name('pemda.verification.status');
     Route::get('/pemda/skrining', [PemdaScreeningController::class, 'index'])
         ->name('pemda.screenings');
+    Route::delete('/pemda/skrining/{screening}', [PemdaScreeningController::class, 'destroy'])->name('pemda.screenings.destroy');
+    Route::get('/pemda/skrining/{screening}/edit', [PemdaScreeningController::class, 'edit'])->name('pemda.screenings.edit');
+    Route::put('/pemda/skrining/{screening}', [PemdaScreeningController::class, 'update'])->name('pemda.screenings.update');
     Route::get('/pemda/skrining/export/excel', [PemdaScreeningController::class, 'exportExcel'])
         ->name('pemda.screenings.export.excel');
     Route::get('/pemda/skrining/{screening}', [PemdaScreeningController::class, 'show'])

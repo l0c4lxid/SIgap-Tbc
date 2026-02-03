@@ -113,6 +113,132 @@ class ScreeningController extends Controller
             'symptomQuestions' => $symptomQuestions,
         ]);
     }
+    public function edit(Request $request, PatientScreening $screening)
+    {
+        abort_if($request->user()->role !== UserRole::Pemda, 403);
+
+        [$riskQuestions, $symptomQuestions] = $this->questionSets();
+        
+        $kelurahanOptions = \App\Models\User::query()
+            ->with('detail')
+            ->where('role', UserRole::Kelurahan->value)
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($user) {
+                $name = trim($user->detail?->organization ?: ($user->name ?? ''));
+                if ($name === '') {
+                    return null;
+                }
+                // Normalize: Ensure starts with "Kelurahan "
+                return Str::startsWith(Str::lower($name), 'kelurahan ')
+                    ? Str::title($name)
+                    : 'Kelurahan ' . Str::title($name);
+            })
+            ->filter() // Remove nulls
+            ->unique()
+            ->sort()
+            ->values();
+
+        return view('pemda.screenings-edit', [
+            'screening' => $screening,
+            'riskQuestions' => $riskQuestions,
+            'symptomQuestions' => $symptomQuestions,
+            'kelurahanOptions' => $kelurahanOptions,
+        ]);
+    }
+
+    public function update(Request $request, PatientScreening $screening)
+    {
+        abort_if($request->user()->role !== UserRole::Pemda, 403);
+
+        [$riskQuestions, $symptomQuestions] = $this->questionSets();
+        $questions = $riskQuestions + $symptomQuestions;
+
+        $validated = $request->validate($this->buildRules($questions), $this->buildMessages());
+        $answers = $this->buildAnswers($questions, $validated);
+
+        $screening->update([
+            'patient_is_wni' => (bool) $validated['patient_is_wni'],
+            'patient_name' => $validated['patient_name'],
+            'patient_nik' => $validated['patient_nik'] ?? null,
+            'patient_phone' => $validated['patient_phone'] ?? null,
+            'patient_address' => $validated['patient_address_domisili'],
+            'patient_gender' => $validated['patient_gender'],
+            'patient_birth_place' => $validated['patient_birth_place'],
+            'patient_birth_date' => $validated['patient_birth_date'],
+            'patient_age' => $validated['patient_age'],
+            'patient_address_ktp' => $validated['patient_address_ktp'],
+            'patient_address_domisili' => $validated['patient_address_domisili'],
+            'patient_address_rt' => $validated['patient_address_rt'],
+            'patient_address_rw' => $validated['patient_address_rw'],
+            'patient_address_kelurahan' => Str::startsWith($val = Str::title(trim($validated['patient_address_kelurahan'])), 'Kelurahan ') ? $val : 'Kelurahan ' . $val,
+            'patient_weight' => $validated['patient_weight'],
+            'patient_height' => $validated['patient_height'],
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
+            'answers' => $answers,
+        ]);
+
+        return redirect()
+            ->route('pemda.screenings.show', $screening)
+            ->with('success', 'Data skrining berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, PatientScreening $screening)
+    {
+        abort_if($request->user()->role !== UserRole::Pemda, 403);
+        
+        $screening->delete();
+
+        return redirect()->route('pemda.screenings')->with('success', 'Data skrining berhasil dihapus.');
+    }
+
+    private function buildRules(array $questions): array
+    {
+        $rules = [
+            'patient_is_wni' => ['required', 'boolean'],
+            'patient_name' => ['required', 'string', 'max:255', "regex:/^[\\p{L}\\p{M}\\s\\.']+$/u"],
+            'patient_nik' => ['nullable', 'regex:/^\\d+$/', 'required_if:patient_is_wni,1'],
+            'patient_phone' => ['nullable', 'regex:/^\\d*$/'],
+            'patient_gender' => ['required', 'string', 'max:20'],
+            'patient_birth_place' => ['required', 'string', 'max:255', "regex:/^[\\p{L}\\p{M}\\s\\.']+$/u"],
+            'patient_birth_date' => ['required', 'date'],
+            'patient_age' => ['required', 'integer', 'min:0', 'max:150'],
+            'patient_address_ktp' => ['required', 'string', 'max:255'],
+            'patient_address_domisili' => ['required', 'string', 'max:255'],
+            'patient_address_rt' => ['required', 'string', 'max:3', 'regex:/^\\d{1,3}$/'],
+            'patient_address_rw' => ['required', 'string', 'max:3', 'regex:/^\\d{1,3}$/'],
+            'patient_address_kelurahan' => ['required', 'string', 'max:100'],
+            'patient_weight' => ['required', 'numeric', 'min:0'],
+            'patient_height' => ['required', 'numeric', 'min:0'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+        ];
+
+        foreach ($questions as $key => $label) {
+            $rules[$key] = ['required', 'in:ya,tidak'];
+        }
+
+        return $rules;
+    }
+
+    private function buildAnswers(array $questions, array $validated): array
+    {
+        return collect($questions)
+            ->keys()
+            ->mapWithKeys(fn($key) => [$key => $validated[$key]])
+            ->toArray();
+    }
+
+    private function buildMessages(): array
+    {
+        return [
+            'patient_nik.regex' => 'NIK harus berupa angka saja.',
+            'patient_nik.required_if' => 'NIK wajib diisi jika pasien WNI.',
+            'patient_address_rt.regex' => 'RT harus berupa angka saja.',
+            'patient_address_rw.regex' => 'RW harus berupa angka saja.',
+        ];
+    }
 
     public function exportExcel(Request $request)
     {

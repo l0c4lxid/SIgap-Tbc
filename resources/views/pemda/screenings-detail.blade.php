@@ -7,10 +7,24 @@
 @endpush
 
 @section('content')
-     <div class="mb-6">
+    <div class="mb-6 flex justify-between items-center">
         <a href="{{ route('pemda.screenings') }}" class="glass-button px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2 no-underline">
             <i class="ri-arrow-left-line"></i> Kembali
         </a>
+        
+        <div class="flex gap-3">
+             <a href="{{ route('pemda.screenings.edit', $screening) }}" class="glass-button px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 no-underline text-gray-700">
+                <i class="ri-edit-line"></i> Edit Data
+            </a>
+             
+             <form action="{{ route('pemda.screenings.destroy', $screening) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data skrining ini?');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all">
+                    <i class="ri-delete-bin-line"></i> Hapus Data
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="glass-card p-6">

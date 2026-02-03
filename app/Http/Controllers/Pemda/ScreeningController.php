@@ -40,27 +40,40 @@ class ScreeningController extends Controller
             ->withQueryString();
 
         $screeningCount = (clone $baseQuery)->count();
-        $rtCount = (clone $baseQuery)
-            ->whereNotNull('patient_address_rt')
-            ->where('patient_address_rt', '!=', '')
-            ->whereNotNull('patient_address_rw')
-            ->where('patient_address_rw', '!=', '')
+
+        // Helper to normalize Kelurahan name
+        $normalizeKelurahan = function ($name) {
+            $name = trim($name);
+            if ($name === '') return '';
+            return Str::startsWith(Str::lower($name), 'kelurahan ')
+                ? Str::title($name)
+                : 'Kelurahan ' . Str::title($name);
+        };
+
+        // Fetch all relevant data to process in memory (careful with large datasets, but needed for specific normalization)
+        // Optimization: Select only needed columns
+        $allData = (clone $baseQuery)
             ->whereNotNull('patient_address_kelurahan')
             ->where('patient_address_kelurahan', '!=', '')
-            ->distinct()
-            ->count(DB::raw("concat_ws('-', patient_address_kelurahan, patient_address_rw, patient_address_rt)"));
-        $rwCount = (clone $baseQuery)
-            ->whereNotNull('patient_address_rw')
-            ->where('patient_address_rw', '!=', '')
-            ->whereNotNull('patient_address_kelurahan')
-            ->where('patient_address_kelurahan', '!=', '')
-            ->distinct()
-            ->count(DB::raw("concat_ws('-', patient_address_kelurahan, patient_address_rw)"));
-        $kelurahanCount = (clone $baseQuery)
-            ->whereNotNull('patient_address_kelurahan')
-            ->where('patient_address_kelurahan', '!=', '')
-            ->distinct()
-            ->count(DB::raw('patient_address_kelurahan'));
+            ->select('patient_address_kelurahan', 'patient_address_rw', 'patient_address_rt')
+            ->get();
+
+        $kelurahanCount = $allData
+            ->map(fn($item) => $normalizeKelurahan($item->patient_address_kelurahan))
+            ->unique()
+            ->count();
+
+        $rwCount = $allData
+            ->filter(fn($item) => !empty($item->patient_address_rw))
+            ->map(fn($item) => $normalizeKelurahan($item->patient_address_kelurahan) . '-' . $item->patient_address_rw)
+            ->unique()
+            ->count();
+            
+        $rtCount = $allData
+            ->filter(fn($item) => !empty($item->patient_address_rw) && !empty($item->patient_address_rt))
+            ->map(fn($item) => $normalizeKelurahan($item->patient_address_kelurahan) . '-' . $item->patient_address_rw . '-' . $item->patient_address_rt)
+            ->unique()
+            ->count();
 
         return view('pemda.screenings-index', [
             'screenings' => $screenings,

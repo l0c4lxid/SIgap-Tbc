@@ -79,8 +79,12 @@ class UserVerificationController extends Controller
 
         $baseRules = [
             'name' => ['required', 'string', 'max:255'],
+            'nik' => ['nullable', 'string', 'max:20'],
+            'family_card_number' => ['nullable', 'string', 'max:20'],
             'organization' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
+            'rt_code' => ['nullable', 'string', 'max:5'],
+            'rw_code' => ['nullable', 'string', 'max:5'],
             'notes' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'supervisor_id' => ['nullable', 'integer'],
@@ -122,8 +126,12 @@ class UserVerificationController extends Controller
         ]);
 
         $detailData = Arr::only($validated, [
+            'nik',
+            'family_card_number',
             'organization',
             'address',
+            'rt_code',
+            'rw_code',
             'notes',
             'supervisor_id',
         ]);

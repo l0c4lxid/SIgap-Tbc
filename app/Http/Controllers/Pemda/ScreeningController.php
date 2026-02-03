@@ -35,10 +35,8 @@ class ScreeningController extends Controller
         ];
 
         $baseQuery = $this->buildQuery($request);
-        $screenings = $baseQuery
-            ->paginate(10)
-            ->withQueryString();
 
+        // Calculate counts first using clones to avoid mutation issues
         $screeningCount = (clone $baseQuery)->count();
 
         // Helper to normalize Kelurahan name
@@ -50,13 +48,24 @@ class ScreeningController extends Controller
                 : 'Kelurahan ' . Str::title($name);
         };
 
-        // Fetch all relevant data to process in memory (careful with large datasets, but needed for specific normalization)
-        // Optimization: Select only needed columns
+        // Helper to normalize Code (RT/RW)
+        $normalizeCode = function ($code) {
+             $code = trim($code);
+             if ($code === '') return '';
+             return is_numeric($code) ? (int)$code : strtoupper($code);
+        };
+
+        // Fetch all relevant data for sidebar stats (Full dataset)
         $allData = (clone $baseQuery)
             ->whereNotNull('patient_address_kelurahan')
             ->where('patient_address_kelurahan', '!=', '')
             ->select('patient_address_kelurahan', 'patient_address_rw', 'patient_address_rt')
             ->get();
+
+        // Paginate for the table list
+        $screenings = $baseQuery
+            ->paginate(10)
+            ->withQueryString();
 
         $kelurahanCount = $allData
             ->map(fn($item) => $normalizeKelurahan($item->patient_address_kelurahan))
@@ -64,14 +73,17 @@ class ScreeningController extends Controller
             ->count();
 
         $rwCount = $allData
-            ->filter(fn($item) => !empty($item->patient_address_rw))
-            ->map(fn($item) => $normalizeKelurahan($item->patient_address_kelurahan) . '-' . $item->patient_address_rw)
+            ->filter(fn($item) => $item->patient_address_rw !== null && trim($item->patient_address_rw) !== '')
+            ->map(fn($item) => $normalizeKelurahan($item->patient_address_kelurahan) . '-RW' . $normalizeCode($item->patient_address_rw))
             ->unique()
             ->count();
             
         $rtCount = $allData
-            ->filter(fn($item) => !empty($item->patient_address_rw) && !empty($item->patient_address_rt))
-            ->map(fn($item) => $normalizeKelurahan($item->patient_address_kelurahan) . '-' . $item->patient_address_rw . '-' . $item->patient_address_rt)
+            ->filter(fn($item) => 
+                $item->patient_address_rw !== null && trim($item->patient_address_rw) !== '' &&
+                $item->patient_address_rt !== null && trim($item->patient_address_rt) !== ''
+            )
+            ->map(fn($item) => $normalizeKelurahan($item->patient_address_kelurahan) . '-RW' . $normalizeCode($item->patient_address_rw) . '-RT' . $normalizeCode($item->patient_address_rt))
             ->unique()
             ->count();
 

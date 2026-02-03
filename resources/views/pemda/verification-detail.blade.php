@@ -2,6 +2,38 @@
 
 @section('subjudul', 'Detail verifikasi pengguna')
 
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container .select2-selection--single {
+            height: 46px; /* Match tailwind py-2.5 + border */
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem; /* rounded-lg */
+            background-color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px;
+            top: 1px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #374151; /* gray-700 */
+            padding-left: 0;
+            line-height: normal;
+        }
+        /* Focus state mimic */
+        .select2-container--open .select2-selection--single {
+             border-color: #10B981;
+             box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="mb-6 flex justify-between items-center">
          <a href="{{ route('pemda.verification') }}" class="glass-button px-4 py-2 rounded-lg text-sm font-semibold inline-flex items-center gap-2 no-underline">
@@ -42,6 +74,13 @@
                                 <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                             @enderror
                         </div>
+
+                         <div class="md:col-span-1">
+                             <label class="block text-sm font-semibold text-gray-700 mb-2">NIK</label>
+                            <input type="text" name="nik" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('nik', $user->detail->nik ?? '') }}" placeholder="NIK 16 digit">
+                        </div>
+
+
                         
                          <div>
                              <label class="block text-sm font-semibold text-gray-700 mb-2">Peran</label>
@@ -65,14 +104,24 @@
                         </div>
                         
                         <div class="md:col-span-2">
-                             <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat</label>
+                             <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Domisili</label>
                             <input type="text" name="address" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('address', $user->detail->address ?? '') }}">
+                        </div>
+
+                         <div class="md:col-span-1">
+                             <label class="block text-sm font-semibold text-gray-700 mb-2">RT</label>
+                            <input type="text" name="rt_code" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('rt_code', $user->detail->rt_code ?? '') }}" placeholder="000" maxlength="3">
+                        </div>
+
+                         <div class="md:col-span-1">
+                             <label class="block text-sm font-semibold text-gray-700 mb-2">RW</label>
+                            <input type="text" name="rw_code" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all" value="{{ old('rw_code', $user->detail->rw_code ?? '') }}" placeholder="000" maxlength="3">
                         </div>
 
                         @if ($supervisorLabel)
                              <div class="md:col-span-2">
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">{{ $supervisorLabel }}</label>
-                                <select name="supervisor_id" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all">
+                                <select name="supervisor_id" class="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--color-glass-primary)] transition-all select2-supervisor">
                                     <option value="">Pilih</option>
                                     @foreach ($supervisorOptions as $option)
                                         <option value="{{ $option->id }}" {{ old('supervisor_id', $user->detail->supervisor_id ?? null) == $option->id ? 'selected' : '' }}>{{ $option->name }}</option>
@@ -171,3 +220,18 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.jQuery && window.jQuery.fn.select2) {
+                window.jQuery('.select2-supervisor').select2({
+                    width: '100%',
+                    placeholder: 'Pilih instansi pembina',
+                });
+            }
+        });
+    </script>
+@endpush

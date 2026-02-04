@@ -86,17 +86,17 @@ jobs:
 
       - name: Post-deploy clear caches and link storage
         run: |
-          ssh ${SSH_USER}@${SSH_HOST} "
-            rm -f /home/situbamy/situba/public/hot /home/situbamy/public_html/hot && 
-            cd /home/situbamy/situba && 
-            php artisan storage:link && 
-            php artisan config:clear && 
-            php artisan route:clear && 
-            php artisan view:clear && 
-            php artisan event:clear &&
-            ln -sfn /home/situbamy/situba/storage/app/public /home/situbamy/public_html/storage && 
-            php artisan down --secret="situba-aman"
-          "
+          ssh ${SSH_USER}@${SSH_HOST} <<'EOF'
+          rm -f /home/situbamy/situba/public/hot /home/situbamy/public_html/hot
+          cd /home/situbamy/situba
+          php artisan storage:link
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+          php artisan event:clear
+          ln -sfn /home/situbamy/situba/storage/app/public /home/situbamy/public_html/storage
+          php artisan down --secret="situba-aman"
+          EOF
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}

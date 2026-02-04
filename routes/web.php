@@ -116,6 +116,15 @@ Route::get('/blog/{newsPost}', [NewsController::class, 'publicShow'])->name('blo
 // Public Material Access
 Route::get('/materi-edukasi', [KaderMaterialController::class, 'publicIndex'])->name('public.materi');
 
+// Password Reset via WhatsApp OTP (Public)
+Route::get('/lupa-password', [\App\Http\Controllers\Auth\PasswordResetWaController::class, 'showRequestForm'])->name('password.wa');
+Route::post('/lupa-password/kirim-otp', [\App\Http\Controllers\Auth\PasswordResetWaController::class, 'sendOtp'])->name('password.wa.request');
+Route::get('/lupa-password/verifikasi', [\App\Http\Controllers\Auth\PasswordResetWaController::class, 'showVerifyForm'])->name('password.wa.verify');
+Route::post('/lupa-password/verifikasi', [\App\Http\Controllers\Auth\PasswordResetWaController::class, 'verifyOtp'])->name('password.wa.verify.post');
+Route::post('/lupa-password/reset', [\App\Http\Controllers\Auth\PasswordResetWaController::class, 'resetPassword'])->name('password.wa.reset');
+
+
+
 Route::middleware('auth')->group(function () {
     Route::get('/berita', [NewsController::class, 'index'])->name('news.index');
     Route::get('/berita/create', [NewsController::class, 'create'])->name('news.create');
@@ -131,6 +140,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Admin WhatsApp Center
+    Route::prefix('admin')->group(function () {
+        Route::get('/whatsapp', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'index'])->name('admin.whatsapp.index');
+        Route::get('/whatsapp/create', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'create'])->name('admin.whatsapp.create');
+        Route::post('/whatsapp/send', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'send'])->name('admin.whatsapp.send');
+        Route::get('/whatsapp/{outbox}', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'show'])->name('admin.whatsapp.show');
+        Route::post('/whatsapp/{outbox}/retry', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'retry'])->name('admin.whatsapp.retry');
+        Route::post('/whatsapp/{outbox}/cancel', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'cancel'])->name('admin.whatsapp.cancel');
+    });
+
+
 
     Route::get('/pemda/verifikasi', [UserVerificationController::class, 'index'])
         ->name('pemda.verification');

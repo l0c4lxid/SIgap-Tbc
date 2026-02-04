@@ -127,6 +127,13 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'whatsapp' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/whatsapp.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 14,
+        ],
+
     ],
 
 ];

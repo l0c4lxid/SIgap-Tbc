@@ -6,6 +6,7 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -71,8 +72,11 @@ class LoginRequest extends FormRequest
 
             if ($user && $user->detail && $user->detail->initial_password === $credentials['password']) {
                 // Upgrade their stored password to the entered one for future logins.
-                $user->password = $credentials['password'];
+                $user->password = Hash::make($credentials['password']);
                 $user->save();
+
+                // Disable reuse of the bootstrap password once upgraded
+                $user->detail->forceFill(['initial_password' => null])->save();
 
                 Auth::login($user, $this->boolean('remember'));
                 RateLimiter::clear($this->throttleKey());

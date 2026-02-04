@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'node_url' => env('WA_NODE_URL'),
+        'token' => env('WA_NODE_TOKEN'),
+        'default_country' => env('WA_DEFAULT_COUNTRY', '62'),
+        'sender_name' => env('WA_SENDER_NAME', 'SITUBA'),
+    ],
+
 ];

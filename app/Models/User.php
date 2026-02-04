@@ -45,7 +45,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
+            // Removed 'password' => 'hashed' to prevent double-hashing
+            // Password is already hashed in controllers using Hash::make()
             'role' => UserRole::class,
             'is_active' => 'boolean',
         ];

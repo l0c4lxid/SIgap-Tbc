@@ -19,8 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule): void {
-        // Auto-dispatch WhatsApp messages every minute
-        $schedule->command('wa:dispatch')->everyMinute();
+        // Auto-dispatch WhatsApp messages every minute; allow during maintenance and prevent overlaps
+        $schedule->command('wa:dispatch')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->evenInMaintenanceMode();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

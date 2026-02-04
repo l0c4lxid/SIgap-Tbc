@@ -87,15 +87,24 @@ jobs:
       - name: Post-deploy clear caches and link storage
         run: |
           ssh ${SSH_USER}@${SSH_HOST} <<'EOF'
+          # Hardcode to EA-PHP 8.2 CLI (has PDO & pdo_mysql). Fallback to default php if missing.
+          PHP_BIN="/opt/cpanel/ea-php82/root/usr/bin/php"
+          if [ ! -x "$PHP_BIN" ]; then
+            PHP_BIN="$(command -v php)"
+          fi
+          echo "Using PHP: $PHP_BIN"
+          "$PHP_BIN" -v
+          "$PHP_BIN" -m | grep -iE '^PDO$|^pdo_mysql$' >/dev/null 2>&1 || { echo "PDO extension missing on $PHP_BIN"; exit 1; }
+
           rm -f /home/situbamy/situba/public/hot /home/situbamy/public_html/hot
           cd /home/situbamy/situba
-          php artisan storage:link
-          php artisan config:clear
-          php artisan route:clear
-          php artisan view:clear
-          php artisan event:clear
+          "$PHP_BIN" artisan storage:link
+          "$PHP_BIN" artisan config:clear
+          "$PHP_BIN" artisan route:clear
+          "$PHP_BIN" artisan view:clear
+          "$PHP_BIN" artisan event:clear
           ln -sfn /home/situbamy/situba/storage/app/public /home/situbamy/public_html/storage
-          php artisan down --secret="situba-aman"
+          "$PHP_BIN" artisan down --secret="situba-aman"
           EOF
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}

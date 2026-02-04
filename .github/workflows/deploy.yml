@@ -84,6 +84,24 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
 
+      - name: Ensure production index.php points to app directory
+        run: |
+          ssh ${SSH_USER}@${SSH_HOST} <<'EOF'
+          cat > /home/situbamy/public_html/index.php <<'PHP'
+          <?php
+          require __DIR__.'/../situba/vendor/autoload.php';
+          $app = require_once __DIR__.'/../situba/bootstrap/app.php';
+          $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+          $response = $kernel->handle(
+              $request = Illuminate\Http\Request::capture()
+          )->send();
+          $kernel->terminate($request, $response);
+          PHP
+          EOF
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+
       - name: Post-deploy clear caches and link storage
         run: |
           ssh ${SSH_USER}@${SSH_HOST} <<'EOF'

@@ -8,7 +8,7 @@
             <h2 class="text-2xl font-bold text-gray-800 m-0">Kirim Pesan Baru</h2>
             <p class="text-sm text-gray-500 mt-1">Buat dan jadwalkan pesan WhatsApp untuk kader atau masyarakat.</p>
         </div>
-        <a href="{{ route('admin.whatsapp.index') }}" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 no-underline shadow-sm">
+        <a href="{{ route('pemda.whatsapp.index') }}" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2 no-underline shadow-sm">
             <i class="ri-arrow-left-line"></i> Kembali
         </a>
     </div>
@@ -31,7 +31,7 @@
         <!-- Form Section -->
         <div class="space-y-6">
             <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-6">
-                <form method="POST" action="{{ route('admin.whatsapp.send') }}" id="waForm" class="space-y-6">
+                <form method="POST" action="{{ route('pemda.whatsapp.send') }}" id="waForm" class="space-y-6">
                     @csrf
                     
                     <!-- Phone Input -->

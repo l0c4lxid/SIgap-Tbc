@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -52,7 +52,7 @@
             
             <div class="relative z-10 max-w-lg text-center">
                 <div class="inline-flex items-center justify-center w-24 h-24 bg-white rounded-3xl shadow-2xl mb-8">
-                    <i class="fa-solid fa-shield-check text-5xl text-emerald-600"></i>
+                    <i class="ri-shield-check-fill text-5xl text-emerald-600"></i>
                 </div>
                 
                 <h1 class="font-heading text-5xl font-bold text-gray-900 leading-tight mb-6">
@@ -67,7 +67,7 @@
                 <!-- Security Info -->
                 <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
                     <div class="flex items-center gap-3 text-sm text-gray-700">
-                        <i class="fa-solid fa-clock text-emerald-600 text-xl"></i>
+                        <i class="ri-time-line text-emerald-600 text-xl"></i>
                         <div class="text-left">
                             <p class="font-semibold">Kode berlaku 5 menit</p>
                             <p class="text-xs text-gray-500">Maksimal 5 percobaan</p>
@@ -93,7 +93,7 @@
                 <!-- Page Title -->
                 <div class="mb-8">
                     <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-2xl mb-4 lg:hidden">
-                        <i class="fa-solid fa-shield-check text-2xl text-emerald-600"></i>
+                        <i class="ri-shield-check-fill text-2xl text-emerald-600"></i>
                     </div>
                     <h2 class="font-heading text-3xl font-bold text-gray-900 mb-2">Verifikasi Kode OTP</h2>
                     <p class="text-gray-600">Masukkan 6 digit kode yang dikirim ke WhatsApp Anda.</p>
@@ -127,27 +127,27 @@
                         
                         <div class="flex items-center justify-between text-xs">
                             <p class="text-gray-500 flex items-center gap-1.5">
-                                <i class="fa-solid fa-paste text-gray-400"></i>
+                                <i class="ri-file-copy-line text-gray-400"></i>
                                 <span>Tempel (Paste) kode dari WhatsApp</span>
                             </p>
                             <p class="text-gray-500 flex items-center gap-1.5">
-                                <i class="fa-solid fa-clock text-gray-400"></i>
+                                <i class="ri-time-line text-gray-400"></i>
                                 <span>Berlaku 5 menit</span>
                             </p>
                         </div>
                         
                         @error('code')
                             <p class="text-sm text-red-600 flex items-center gap-1.5 mt-2">
-                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <i class="ri-error-warning-fill"></i>
                                 <span>{{ $message }}</span>
                             </p>
                         @enderror
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" 
+                    <button type="submit"
                         class="w-full flex justify-center items-center gap-2.5 py-4 px-6 border border-transparent rounded-xl shadow-lg shadow-emerald-500/20 text-base font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                        <i class="fa-solid fa-check-circle text-xl"></i>
+                        <i class="ri-checkbox-circle-fill text-xl"></i>
                         <span>Verifikasi Kode</span>
                     </button>
 

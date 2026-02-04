@@ -4,20 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name', 'SITUBA') }} | Reset Password via WhatsApp</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
+
     <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
         .font-heading { font-family: 'Outfit', sans-serif; }
         .font-body { font-family: 'Work Sans', sans-serif; }
@@ -35,7 +33,7 @@
             
             <div class="relative z-10 max-w-lg text-center">
                 <div class="inline-flex items-center justify-center w-24 h-24 bg-white rounded-3xl shadow-2xl mb-8">
-                    <i class="fab fa-whatsapp text-5xl text-emerald-600"></i>
+                    <i class="ri-whatsapp-fill text-5xl text-emerald-600"></i>
                 </div>
                 
                 <h1 class="font-heading text-5xl font-bold text-gray-900 leading-tight mb-6">
@@ -51,19 +49,19 @@
                  <div class="flex items-center justify-center gap-8 text-sm font-medium text-gray-600">
                     <div class="flex flex-col items-center gap-2">
                         <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                            <i class="fa-solid fa-shield-check text-emerald-600 text-xl"></i>
+                            <i class="ri-shield-check-fill text-emerald-600 text-xl"></i>
                         </div>
                         <span>Aman</span>
                     </div>
                     <div class="flex flex-col items-center gap-2">
                         <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                            <i class="fa-solid fa-clock text-emerald-600 text-xl"></i>
+                            <i class="ri-time-fill text-emerald-600 text-xl"></i>
                         </div>
                         <span>Cepat</span>
                     </div>
                     <div class="flex flex-col items-center gap-2">
                         <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                            <i class="fa-solid fa-lock text-emerald-600 text-xl"></i>
+                            <i class="ri-lock-fill text-emerald-600 text-xl"></i>
                         </div>
                         <span>Terpercaya</span>
                     </div>
@@ -88,7 +86,7 @@
                 <!-- Page Title -->
                 <div class="mb-8">
                     <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-2xl mb-4 lg:hidden">
-                        <i class="fab fa-whatsapp text-2xl text-emerald-600"></i>
+                        <i class="ri-whatsapp-fill text-2xl text-emerald-600"></i>
                     </div>
                     <h2 class="font-heading text-3xl font-bold text-gray-900 mb-2">Lupa Password?</h2>
                     <p class="text-gray-600">Masukkan nomor WhatsApp yang terdaftar untuk menerima kode OTP.</p>
@@ -110,21 +108,21 @@
                                 placeholder="8123456789">
                         </div>
                         <p class="text-xs text-gray-500 flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-info text-gray-400"></i>
+                            <i class="ri-information-fill text-gray-400"></i>
                             <span>Tanpa 0 di depan. Contoh: 8123456789</span>
                         </p>
                         @error('phone')
                             <p class="text-sm text-red-600 flex items-center gap-1.5">
-                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <i class="ri-error-warning-fill"></i>
                                 <span>{{ $message }}</span>
                             </p>
                         @enderror
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" 
+                    <button type="submit"
                         class="w-full flex justify-center items-center gap-2.5 py-4 px-6 border border-transparent rounded-xl shadow-lg shadow-emerald-500/20 text-base font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                        <i class="fab fa-whatsapp text-xl"></i>
+                        <i class="ri-whatsapp-line text-xl"></i>
                         <span>Kirim Kode OTP</span>
                     </button>
 

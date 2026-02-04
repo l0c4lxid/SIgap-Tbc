@@ -4,20 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name', 'SITUBA') }} | Reset Password</title>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Scripts & Styles -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
         .font-heading { font-family: 'Outfit', sans-serif; }
         .font-body { font-family: 'Work Sans', sans-serif; }
@@ -35,7 +21,7 @@
             
             <div class="relative z-10 max-w-lg text-center">
                 <div class="inline-flex items-center justify-center w-24 h-24 bg-white rounded-3xl shadow-2xl mb-8">
-                    <i class="fa-solid fa-key text-5xl text-emerald-600"></i>
+                    <i class="ri-key-2-fill text-5xl text-emerald-600"></i>
                 </div>
                 
                 <h1 class="font-heading text-5xl font-bold text-gray-900 leading-tight mb-6">
@@ -50,7 +36,7 @@
                 <!-- Security Info -->
                 <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
                     <div class="flex items-center gap-3 text-sm text-gray-700">
-                        <i class="fa-solid fa-shield-halved text-emerald-600 text-xl"></i>
+                        <i class="ri-shield-keyhole-line text-emerald-600 text-xl"></i>
                         <div class="text-left">
                             <p class="font-semibold">Password Aman</p>
                             <p class="text-xs text-gray-500">Minimal 8 karakter</p>
@@ -76,7 +62,7 @@
                 <!-- Page Title -->
                 <div class="mb-8">
                     <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-2xl mb-4 lg:hidden">
-                        <i class="fa-solid fa-key text-2xl text-emerald-600"></i>
+                        <i class="ri-key-2-fill text-2xl text-emerald-600"></i>
                     </div>
                     <h2 class="font-heading text-3xl font-bold text-gray-900 mb-2">Reset Password</h2>
                     <p class="text-gray-600">Masukkan password baru untuk akun Anda.</p>
@@ -101,7 +87,7 @@
                         </div>
                         @error('password')
                             <p class="text-sm text-red-600 flex items-center gap-1.5">
-                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <i class="ri-error-warning-fill"></i>
                                 <span>{{ $message }}</span>
                             </p>
                         @enderror
@@ -112,14 +98,14 @@
                         <label class="block text-sm font-semibold text-gray-700 font-heading">Konfirmasi Password</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-lock text-gray-400"></i>
+                                <i class="ri-lock-2-line text-gray-400"></i>
                             </div>
                             <input type="password" name="password_confirmation" required
                                 class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all"
                                 placeholder="Ketik ulang password">
                         </div>
                         <p class="text-xs text-gray-500 flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-info text-gray-400"></i>
+                            <i class="ri-information-fill text-gray-400"></i>
                             <span>Password harus sama</span>
                         </p>
                     </div>
@@ -129,11 +115,11 @@
                         <p class="text-sm font-semibold text-blue-900 mb-2">Syarat Password:</p>
                         <ul class="text-xs text-blue-700 space-y-1">
                             <li class="flex items-center gap-2">
-                                <i class="fa-solid fa-check-circle text-blue-500"></i>
+                                <i class="ri-checkbox-circle-line text-blue-500"></i>
                                 <span>Minimal 8 karakter</span>
                             </li>
                             <li class="flex items-center gap-2">
-                                <i class="fa-solid fa-check-circle text-blue-500"></i>
+                                <i class="ri-checkbox-circle-line text-blue-500"></i>
                                 <span>Gunakan kombinasi huruf dan angka</span>
                             </li>
                         </ul>
@@ -142,7 +128,7 @@
                     <!-- Submit Button -->
                     <button type="submit" 
                         class="w-full flex justify-center items-center gap-2.5 py-4 px-6 border border-transparent rounded-xl shadow-lg shadow-emerald-500/20 text-base font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                        <i class="fa-solid fa-check-circle text-xl"></i>
+                        <i class="ri-checkbox-circle-fill text-xl"></i>
                         <span>Reset Password</span>
                     </button>
 

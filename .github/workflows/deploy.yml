@@ -84,36 +84,6 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
 
-      - name: Ensure production index.php points to app directory
-        run: |
-          ssh ${SSH_USER}@${SSH_HOST} <<'EOF'
-          cat > /home/situbamy/public_html/index.php <<'PHP'
-          <?php
-
-          use Illuminate\Foundation\Application;
-          use Illuminate\Http\Request;
-
-          define('LARAVEL_START', microtime(true));
-
-          // Maintenance mode
-          if (file_exists($maintenance = __DIR__.'/../situba/storage/framework/maintenance.php')) {
-              require $maintenance;
-          }
-
-          // Composer autoload
-          require __DIR__.'/../situba/vendor/autoload.php';
-
-          // Bootstrap Laravel and handle the request
-          /** @var Application $app */
-          $app = require __DIR__.'/../situba/bootstrap/app.php';
-
-          $app->handleRequest(Request::capture());
-          PHP
-          EOF
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-
       - name: Post-deploy clear caches and link storage
         run: |
           ssh ${SSH_USER}@${SSH_HOST} <<'EOF'

@@ -21,6 +21,64 @@ class AdminWhatsAppController extends Controller
      */
     public function index(Request $request)
     {
+        $data = $this->getDashboardData($request);
+        return view('admin.whatsapp.index', array_merge($data, ['selectedMessage' => null]));
+    }
+
+    /**
+     * Show the form for creating a new message
+     */
+    public function create()
+    {
+        return view('admin.whatsapp.create');
+    }
+
+    /**
+     * Store a newly created message in storage
+     */
+    public function send(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+            'message' => 'required|string|max:4096',
+            'delay_minutes' => 'nullable|integer|min:0|max:1440',
+            'send_now' => 'nullable|boolean',
+        ]);
+
+        $delaySeconds = $request->send_now 
+            ? 0 
+            : ($request->delay_minutes ?? 0) * 60;
+
+        $outbox = $this->waService->queueMessage(
+            $request->phone,
+            $request->message,
+            'notif',
+            $delaySeconds,
+            [
+                'created_by' => auth()->id(),
+                'source' => 'admin_panel',
+            ]
+        );
+
+        return redirect()->route('pemda.whatsapp.show', $outbox)
+            ->with('success', 'Pesan berhasil diantrikan. ID: ' . $outbox->id);
+    }
+
+    /**
+     * Display the specified message
+     */
+    public function show(Request $request, WaOutbox $outbox)
+    {
+        if ($request->ajax()) {
+            return view('admin.whatsapp.detail-partial', ['selectedMessage' => $outbox])->render();
+        }
+
+        $data = $this->getDashboardData($request);
+        return view('admin.whatsapp.index', array_merge($data, ['selectedMessage' => $outbox]));
+    }
+
+    private function getDashboardData(Request $request)
+    {
         $query = WaOutbox::query()->latest();
 
         // Calculate Stats (Current Month)
@@ -65,54 +123,7 @@ class AdminWhatsAppController extends Controller
         // Get Node service health
         $nodeHealth = $this->waService->checkHealth();
 
-        return view('admin.whatsapp.index', compact('messages', 'nodeHealth', 'stats'));
-    }
-
-    /**
-     * Show the form for creating a new message
-     */
-    public function create()
-    {
-        return view('admin.whatsapp.create');
-    }
-
-    /**
-     * Store a newly created message in storage
-     */
-    public function send(Request $request)
-    {
-        $request->validate([
-            'phone' => 'required|string',
-            'message' => 'required|string|max:4096',
-            'delay_minutes' => 'nullable|integer|min:0|max:1440',
-            'send_now' => 'nullable|boolean',
-        ]);
-
-        $delaySeconds = $request->send_now 
-            ? 0 
-            : ($request->delay_minutes ?? 0) * 60;
-
-        $outbox = $this->waService->queueMessage(
-            $request->phone,
-            $request->message,
-            'notif',
-            $delaySeconds,
-            [
-                'created_by' => auth()->id(),
-                'source' => 'admin_panel',
-            ]
-        );
-
-        return redirect()->route('admin.whatsapp.show', $outbox)
-            ->with('success', 'Pesan berhasil diantrikan. ID: ' . $outbox->id);
-    }
-
-    /**
-     * Display the specified message
-     */
-    public function show(WaOutbox $outbox)
-    {
-        return view('admin.whatsapp.show', compact('outbox'));
+        return compact('messages', 'nodeHealth', 'stats');
     }
 
     /**
@@ -148,7 +159,17 @@ class AdminWhatsAppController extends Controller
 
         $outbox->update(['status' => 'cancelled']);
 
-        return redirect()->route('admin.whatsapp.index')
+        return redirect()->route('pemda.whatsapp.index')
             ->with('success', 'Pesan berhasil dibatalkan.');
+    }
+
+    /**
+     * Remove the specified message from storage.
+     */
+    public function destroy(WaOutbox $outbox)
+    {
+        $outbox->delete();
+        return redirect()->route('pemda.whatsapp.index')
+            ->with('success', 'Pesan berhasil dihapus.');
     }
 }

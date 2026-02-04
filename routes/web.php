@@ -141,14 +141,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Admin WhatsApp Center
-    Route::prefix('admin')->group(function () {
-        Route::get('/whatsapp', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'index'])->name('admin.whatsapp.index');
-        Route::get('/whatsapp/create', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'create'])->name('admin.whatsapp.create');
-        Route::post('/whatsapp/send', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'send'])->name('admin.whatsapp.send');
-        Route::get('/whatsapp/{outbox}', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'show'])->name('admin.whatsapp.show');
-        Route::post('/whatsapp/{outbox}/retry', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'retry'])->name('admin.whatsapp.retry');
-        Route::post('/whatsapp/{outbox}/cancel', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'cancel'])->name('admin.whatsapp.cancel');
+    // Pemda WhatsApp Center
+    Route::prefix('pemda')->group(function () {
+        Route::get('/whatsapp', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'index'])->name('pemda.whatsapp.index');
+        Route::get('/whatsapp/create', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'create'])->name('pemda.whatsapp.create');
+        Route::post('/whatsapp/send', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'send'])->name('pemda.whatsapp.send');
+        Route::get('/whatsapp/{outbox}', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'show'])->name('pemda.whatsapp.show');
+        Route::post('/whatsapp/{outbox}/retry', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'retry'])->name('pemda.whatsapp.retry');
+        Route::post('/whatsapp/{outbox}/cancel', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'cancel'])->name('pemda.whatsapp.cancel');
+        Route::delete('/whatsapp/{outbox}', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'destroy'])->name('pemda.whatsapp.destroy');
     });
 
 

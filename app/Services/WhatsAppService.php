@@ -92,7 +92,8 @@ class WhatsAppService
                 'attempt' => $msg->attempts + 1,
             ]);
 
-            $response = Http::timeout(10)
+            $response = Http::withoutVerifying()
+                ->timeout(10)
                 ->withToken($this->token)
                 ->post("{$this->nodeUrl}/send", [
                     'to' => $msg->to_phone,
@@ -176,7 +177,7 @@ class WhatsAppService
     public function checkHealth(): array
     {
         try {
-            $response = Http::timeout(5)->get("{$this->nodeUrl}/health");
+            $response = Http::withoutVerifying()->timeout(5)->get("{$this->nodeUrl}/health");
             
             if ($response->successful()) {
                 return $response->json();

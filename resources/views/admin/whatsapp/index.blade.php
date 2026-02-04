@@ -201,14 +201,14 @@
                                     <!-- Quick Actions (Hover) -->
                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         @if(in_array($msg->status, ['failed', 'pending']))
-                                            <form action="{{ route('pemda.whatsapp.retry', $msg) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" class="w-6 h-6 flex items-center justify-center rounded bg-white border border-gray-200 text-amber-500 hover:bg-amber-50 cursor-pointer" title="Retry">
-                                                    <i class="ri-refresh-line"></i>
-                                                </button>
-                                            </form>
+                                        <form action="{{ route('pemda.whatsapp.retry', $msg) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" class="w-6 h-6 flex items-center justify-center rounded bg-white border border-gray-200 text-amber-500 hover:bg-amber-50 cursor-pointer" title="Retry">
+                                                <i class="ri-refresh-line"></i>
+                                            </button>
+                                        </form>
                                         @endif
-                                        <form action="{{ route('pemda.whatsapp.destroy', $msg) }}" method="POST" onsubmit="return confirm('Hapus pesan ini?')" class="inline z-10">
+                                        <form action="{{ route('pemda.whatsapp.destroy', $msg) }}" method="POST" class="inline z-10" data-confirm="Hapus pesan ini?" data-confirm-text="Ya, hapus">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="w-6 h-6 flex items-center justify-center rounded bg-white border border-gray-200 text-red-500 hover:bg-red-50 cursor-pointer" title="Hapus">

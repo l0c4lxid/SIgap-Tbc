@@ -12,7 +12,7 @@
         </div>
         <div class="flex items-center gap-2">
             @if($selectedMessage->status === 'pending')
-                <form action="{{ route('pemda.whatsapp.cancel', $selectedMessage) }}" method="POST" onsubmit="return confirm('Batalkan?')">
+                <form action="{{ route('pemda.whatsapp.cancel', $selectedMessage) }}" method="POST" data-confirm="Batalkan pesan ini?" data-confirm-text="Ya, batalkan">
                     @csrf
                     <button type="submit" class="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-100 transition">
                         Batalkan
@@ -27,7 +27,7 @@
                     </button>
                 </form>
             @endif
-             <form action="{{ route('pemda.whatsapp.destroy', $selectedMessage) }}" method="POST" onsubmit="return confirm('Hapus pesan ini?')">
+             <form action="{{ route('pemda.whatsapp.destroy', $selectedMessage) }}" method="POST" data-confirm="Hapus pesan ini?" data-confirm-text="Ya, hapus">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Hapus">

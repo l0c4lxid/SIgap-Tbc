@@ -95,7 +95,7 @@ class WhatsAppService
             $response = Http::withoutVerifying()
                 ->timeout(10)
                 ->withToken($this->token)
-                ->post("{$this->nodeUrl}/send", [
+                ->post("{$this->nodeUrl}/api/send", [
                     'to' => $msg->to_phone,
                     'message' => $msg->message,
                     'clientRef' => "outbox_{$msg->id}",
@@ -180,7 +180,16 @@ class WhatsAppService
             $response = Http::withoutVerifying()->timeout(5)->get("{$this->nodeUrl}/health");
             
             if ($response->successful()) {
-                return $response->json();
+                $data = $response->json();
+                // Normalize for view compatibility
+                if (!isset($data['status'])) {
+                    $data['status'] = ($data['ok'] ?? false) ? 'online' : 'error';
+                }
+                // Map connected status (from Node service) to view variable
+                if (isset($data['connected'])) {
+                    $data['waConnected'] = $data['connected'];
+                }
+                return $data;
             }
 
             return [

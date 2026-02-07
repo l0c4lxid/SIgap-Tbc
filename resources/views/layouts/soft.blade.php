@@ -88,14 +88,13 @@
     $shortName = Str::words($user?->name ?? 'Pengguna', 2, '');
 @endphp
 <!DOCTYPE html>
-<html lang="id">
-
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <title>SItuba | {{ $subjudul ?? 'Dashboard' }}</title>
+    <title>@yield('title', 'Dashboard') - {{ config('app.name', 'SITUBA') }}</title>
     
     <!-- Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -103,6 +102,9 @@
     <!-- Icons: RemixIcon -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+
     <!-- Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')

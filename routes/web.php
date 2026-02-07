@@ -146,10 +146,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/whatsapp', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'index'])->name('pemda.whatsapp.index');
         Route::get('/whatsapp/create', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'create'])->name('pemda.whatsapp.create');
         Route::post('/whatsapp/send', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'send'])->name('pemda.whatsapp.send');
+        Route::get('/whatsapp/inbox/{messageId}/media', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'inboxMedia'])
+            ->name('pemda.whatsapp.inbox.media');
         Route::get('/whatsapp/{outbox}', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'show'])->name('pemda.whatsapp.show');
         Route::post('/whatsapp/{outbox}/retry', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'retry'])->name('pemda.whatsapp.retry');
         Route::post('/whatsapp/{outbox}/cancel', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'cancel'])->name('pemda.whatsapp.cancel');
         Route::delete('/whatsapp/{outbox}', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'destroy'])->name('pemda.whatsapp.destroy');
+        Route::delete('/whatsapp/inbox/{inbox}', [\App\Http\Controllers\Admin\AdminWhatsAppController::class, 'destroyInbox'])->name('pemda.whatsapp.inbox.destroy');
     });
 
 

@@ -66,8 +66,7 @@ class PasswordResetWaController extends Controller
         $user = $userCandidates->first();
 
         if (!$user) {
-            // Don't reveal if phone exists or not (security)
-            return back()->with('success', 'Jika nomor terdaftar, kode OTP akan dikirim ke WhatsApp Anda.');
+            return back()->withErrors(['phone' => 'Nomor WhatsApp tidak terdaftar.']);
         }
 
         // Normalize phone once (used for rate limit + sending)

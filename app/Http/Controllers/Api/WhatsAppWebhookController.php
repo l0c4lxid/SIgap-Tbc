@@ -47,7 +47,7 @@ class WhatsAppWebhookController extends Controller
             $jid = $data['from'] ?? '';
             $rawPhone = explode('@', $jid)[0];
             $jidType = explode('@', $jid)[1] ?? 'unknown';
-            
+
             // Log for debugging
             Log::info('WA Webhook JID extraction', [
                 'jid' => $jid,
@@ -55,61 +55,43 @@ class WhatsAppWebhookController extends Controller
                 'raw_phone' => $rawPhone,
                 'message_type' => $data['type'] ?? 'unknown'
             ]);
-            
+
             // Handle different JID types
             if ($jidType === 'lid') {
-                // @lid is WhatsApp's internal ID, not a real phone number
-                // For now, store as-is and log warning
-                Log::warning('Received message with @lid JID (not a real phone number)', [
-                    'jid' => $jid,
-                    'text' => $data['text'] ?? null
-                ]);
-                $normalizedPhone = $rawPhone; // Store as-is for now
+                return response()->json(['status' => 'ignored', 'reason' => 'lid_message']);
             } else {
-                // Normal JID (@s.whatsapp.net or @g.us)
-                // Use WhatsAppService to normalize (handles Indonesian format)
                 $normalizedPhone = $this->waService->normalizePhone($rawPhone);
             }
 
-            // Parse timestamp (can be Unix ms/sec or ISO string)
+            // Parse timestamp
             $timestamp = $data['timestamp'] ?? null;
+            $receivedAt = now(); // Default
+
             if ($timestamp) {
                 if (is_numeric($timestamp)) {
                     $ts = (int) $timestamp;
-                    // If timestamp is in milliseconds (13+ digits), convert to seconds
                     if ($ts > 10_000_000_000) {
                         $ts = (int) floor($ts / 1000);
                     }
                     $receivedAt = \Carbon\Carbon::createFromTimestamp($ts, 'Asia/Jakarta');
-                } else {
-                    // ISO 8601 or other string timestamp
-                    try {
-                        $receivedAt = \Carbon\Carbon::parse($timestamp)->setTimezone('Asia/Jakarta');
-                    } catch (\Exception $e) {
-                        Log::warning('WA Webhook timestamp parse failed', [
-                            'timestamp' => $timestamp,
-                            'error' => $e->getMessage(),
-                        ]);
-                        $receivedAt = now();
-                    }
                 }
-            } else {
-                $receivedAt = now();
             }
 
             // Save to database
-            WaInbox::create([
+            $inbox = WaInbox::create([
                 'wa_message_id' => $data['id'],
                 'from_phone' => $normalizedPhone,
-                'message' => $data['text'],
+                'message' => $data['text'] ?? '',
                 'received_at' => $receivedAt,
                 'is_group' => $data['isGroup'] ?? false,
                 'media_path' => $data['media'] ? ($data['media']['file'] ?? null) : null,
                 'media_type' => $data['media'] ? ($data['media']['mime'] ?? null) : null,
-                'raw_data' => $data // JSON cast handled by model
+                'raw_data' => $data
             ]);
 
             Log::info('WA Webhook processed', ['from' => $normalizedPhone, 'msg_id' => $data['id']]);
+
+            // AI reply is handled by external wa-service only.
 
             return response()->json(['status' => 'ok']);
 

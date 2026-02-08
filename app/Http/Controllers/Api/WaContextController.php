@@ -12,30 +12,8 @@ use Illuminate\Support\Facades\File;
 
 class WaContextController extends Controller
 {
-    private function isAuthorized(Request $request): bool
+    private function buildStatsFacts(): array
     {
-        $provided = (string) ($request->header('X-WA-Context-Key') ?? '');
-        $allowedSecrets = array_values(array_filter([
-            (string) config('services.whatsapp.context_key', ''),
-            (string) config('services.whatsapp.token', ''),
-        ]));
-
-        return $provided !== '' && collect($allowedSecrets)->contains(
-            fn ($secret) => $secret !== '' && hash_equals($secret, $provided)
-        );
-    }
-
-    private function unauthorizedResponse()
-    {
-        return response()->json(['ok' => false, 'error' => 'Unauthorized'], 401);
-    }
-
-    public function stats(Request $request)
-    {
-        if (!$this->isAuthorized($request)) {
-            return $this->unauthorizedResponse();
-        }
-
         $usersByRole = User::query()
             ->select('role', DB::raw('COUNT(*) as total'))
             ->groupBy('role')
@@ -68,41 +46,29 @@ class WaContextController extends Controller
             ->values()
             ->all();
 
-        return response()->json([
-            'ok' => true,
-            'generated_at' => now()->toISOString(),
-            'facts' => [
-                'usersByRole' => $usersByRole,
-                'totalUsers' => array_sum($usersByRole),
-                'totalKelurahan' => (int) ($usersByRole[UserRole::Kelurahan->value] ?? 0),
-                'totalPuskesmas' => (int) ($usersByRole[UserRole::Puskesmas->value] ?? 0),
-                'totalKader' => (int) ($usersByRole[UserRole::Kader->value] ?? 0),
-                'totalPemda' => (int) ($usersByRole[UserRole::Pemda->value] ?? 0),
-                'totalScreenings' => $totalScreenings,
-                'screeningsLast30Days' => $screenings30Days,
-                'distinctKelurahanWithScreening' => $distinctKelurahanScreening,
-                'topKelurahanByScreening' => $topKelurahan,
-            ]
-        ]);
+        return [
+            'usersByRole' => $usersByRole,
+            'totalUsers' => array_sum($usersByRole),
+            'totalKelurahan' => (int) ($usersByRole[UserRole::Kelurahan->value] ?? 0),
+            'totalPuskesmas' => (int) ($usersByRole[UserRole::Puskesmas->value] ?? 0),
+            'totalKader' => (int) ($usersByRole[UserRole::Kader->value] ?? 0),
+            'totalPemda' => (int) ($usersByRole[UserRole::Pemda->value] ?? 0),
+            'totalScreenings' => $totalScreenings,
+            'screeningsLast30Days' => $screenings30Days,
+            'distinctKelurahanWithScreening' => $distinctKelurahanScreening,
+            'topKelurahanByScreening' => $topKelurahan,
+        ];
     }
 
-    public function knowledge(Request $request)
+    private function buildKnowledgePayload(): array
     {
-        if (!$this->isAuthorized($request)) {
-            return $this->unauthorizedResponse();
-        }
-
         $knowledgePath = storage_path('app/knowledge/lembar_balik.txt');
         if (!File::exists($knowledgePath)) {
-            return response()->json([
-                'ok' => true,
-                'generated_at' => now()->toISOString(),
-                'knowledge' => [
-                    'source' => 'storage/app/knowledge/lembar_balik.txt',
-                    'content' => '',
-                    'exists' => false,
-                ],
-            ]);
+            return [
+                'source' => 'storage/app/knowledge/lembar_balik.txt',
+                'content' => '',
+                'exists' => false,
+            ];
         }
 
         $content = (string) File::get($knowledgePath);
@@ -113,26 +79,18 @@ class WaContextController extends Controller
             $content = mb_substr($content, 0, $maxChars) . '...';
         }
 
-        return response()->json([
-            'ok' => true,
-            'generated_at' => now()->toISOString(),
-            'knowledge' => [
-                'source' => 'storage/app/knowledge/lembar_balik.txt',
-                'content' => $content,
-                'exists' => true,
-                'updated_at' => date(DATE_ATOM, File::lastModified($knowledgePath)),
-            ],
-        ]);
+        return [
+            'source' => 'storage/app/knowledge/lembar_balik.txt',
+            'content' => $content,
+            'exists' => true,
+            'updated_at' => date(DATE_ATOM, File::lastModified($knowledgePath)),
+        ];
     }
 
-    public function docs(Request $request)
+    private function buildDocsPayload(int $maxFiles = 160): array
     {
-        if (!$this->isAuthorized($request)) {
-            return $this->unauthorizedResponse();
-        }
-
         $root = base_path();
-        $maxFiles = max(20, min((int) $request->integer('max_files', 160), 400));
+        $maxFiles = max(20, min($maxFiles, 400));
         $targets = [
             'routes' => ['*.php'],
             'app/Http/Controllers' => ['*.php'],
@@ -174,14 +132,90 @@ class WaContextController extends Controller
             }
         }
 
-        return response()->json([
-            'ok' => true,
-            'generated_at' => now()->toISOString(),
+        return [
             'root' => [
                 'label' => basename($root),
                 'is_accessible' => File::isDirectory($root),
             ],
             'docs' => $docs,
+        ];
+    }
+
+    private function isAuthorized(Request $request): bool
+    {
+        $provided = (string) ($request->header('X-WA-Context-Key') ?? '');
+        $allowedSecrets = array_values(array_filter([
+            (string) config('services.whatsapp.context_key', ''),
+            (string) config('services.whatsapp.token', ''),
+        ]));
+
+        return $provided !== '' && collect($allowedSecrets)->contains(
+            fn ($secret) => $secret !== '' && hash_equals($secret, $provided)
+        );
+    }
+
+    private function unauthorizedResponse()
+    {
+        return response()->json(['ok' => false, 'error' => 'Unauthorized'], 401);
+    }
+
+    public function stats(Request $request)
+    {
+        if (!$this->isAuthorized($request)) {
+            return $this->unauthorizedResponse();
+        }
+
+        return response()->json([
+            'ok' => true,
+            'generated_at' => now()->toISOString(),
+            'facts' => $this->buildStatsFacts(),
+        ]);
+    }
+
+    public function knowledge(Request $request)
+    {
+        if (!$this->isAuthorized($request)) {
+            return $this->unauthorizedResponse();
+        }
+
+        return response()->json([
+            'ok' => true,
+            'generated_at' => now()->toISOString(),
+            'knowledge' => $this->buildKnowledgePayload(),
+        ]);
+    }
+
+    public function docs(Request $request)
+    {
+        if (!$this->isAuthorized($request)) {
+            return $this->unauthorizedResponse();
+        }
+
+        $payload = $this->buildDocsPayload((int) $request->integer('max_files', 160));
+
+        return response()->json([
+            'ok' => true,
+            'generated_at' => now()->toISOString(),
+            'root' => $payload['root'],
+            'docs' => $payload['docs'],
+        ]);
+    }
+
+    public function bundle(Request $request)
+    {
+        if (!$this->isAuthorized($request)) {
+            return $this->unauthorizedResponse();
+        }
+
+        $docsPayload = $this->buildDocsPayload((int) $request->integer('max_files', 160));
+
+        return response()->json([
+            'ok' => true,
+            'generated_at' => now()->toISOString(),
+            'facts' => $this->buildStatsFacts(),
+            'knowledge' => $this->buildKnowledgePayload(),
+            'root' => $docsPayload['root'],
+            'docs' => $docsPayload['docs'],
         ]);
     }
 }

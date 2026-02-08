@@ -75,7 +75,7 @@ class WhatsAppService
     {
         // Check if service is configured
         if (!$this->nodeUrl || !$this->token) {
-            $error = 'WhatsApp service not configured. Please set WA_NODE_URL and WA_NODE_TOKEN in .env';
+            $error = 'WhatsApp service not configured. Please set WA_SERVICE_URL and WA_SHARED_KEY in .env';
             Log::channel('whatsapp')->error($error);
             $msg->markAsFailed($error);
             return [

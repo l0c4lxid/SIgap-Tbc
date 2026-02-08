@@ -8,10 +8,11 @@ use App\Models\PatientScreening;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class WaContextController extends Controller
 {
-    public function stats(Request $request)
+    private function isAuthorized(Request $request): bool
     {
         $provided = (string) ($request->header('X-WA-Context-Key') ?? '');
         $allowedSecrets = array_values(array_filter([
@@ -19,11 +20,20 @@ class WaContextController extends Controller
             (string) config('services.whatsapp.token', ''),
         ]));
 
-        $authorized = $provided !== '' && collect($allowedSecrets)->contains(
+        return $provided !== '' && collect($allowedSecrets)->contains(
             fn ($secret) => $secret !== '' && hash_equals($secret, $provided)
         );
-        if (!$authorized) {
-            return response()->json(['ok' => false, 'error' => 'Unauthorized'], 401);
+    }
+
+    private function unauthorizedResponse()
+    {
+        return response()->json(['ok' => false, 'error' => 'Unauthorized'], 401);
+    }
+
+    public function stats(Request $request)
+    {
+        if (!$this->isAuthorized($request)) {
+            return $this->unauthorizedResponse();
         }
 
         $usersByRole = User::query()
@@ -73,6 +83,105 @@ class WaContextController extends Controller
                 'distinctKelurahanWithScreening' => $distinctKelurahanScreening,
                 'topKelurahanByScreening' => $topKelurahan,
             ]
+        ]);
+    }
+
+    public function knowledge(Request $request)
+    {
+        if (!$this->isAuthorized($request)) {
+            return $this->unauthorizedResponse();
+        }
+
+        $knowledgePath = storage_path('app/knowledge/lembar_balik.txt');
+        if (!File::exists($knowledgePath)) {
+            return response()->json([
+                'ok' => true,
+                'generated_at' => now()->toISOString(),
+                'knowledge' => [
+                    'source' => 'storage/app/knowledge/lembar_balik.txt',
+                    'content' => '',
+                    'exists' => false,
+                ],
+            ]);
+        }
+
+        $content = (string) File::get($knowledgePath);
+        $content = preg_replace('/\s+/', ' ', $content) ?? '';
+        $content = trim($content);
+        $maxChars = 18000;
+        if (mb_strlen($content) > $maxChars) {
+            $content = mb_substr($content, 0, $maxChars) . '...';
+        }
+
+        return response()->json([
+            'ok' => true,
+            'generated_at' => now()->toISOString(),
+            'knowledge' => [
+                'source' => 'storage/app/knowledge/lembar_balik.txt',
+                'content' => $content,
+                'exists' => true,
+                'updated_at' => date(DATE_ATOM, File::lastModified($knowledgePath)),
+            ],
+        ]);
+    }
+
+    public function docs(Request $request)
+    {
+        if (!$this->isAuthorized($request)) {
+            return $this->unauthorizedResponse();
+        }
+
+        $root = base_path();
+        $maxFiles = max(20, min((int) $request->integer('max_files', 160), 400));
+        $targets = [
+            'routes' => ['*.php'],
+            'app/Http/Controllers' => ['*.php'],
+            'resources/views' => ['*.blade.php'],
+            'config' => ['*.php'],
+        ];
+
+        $docs = [];
+        foreach ($targets as $dir => $patterns) {
+            $fullDir = $root . DIRECTORY_SEPARATOR . $dir;
+            if (!File::isDirectory($fullDir)) {
+                continue;
+            }
+
+            $files = File::allFiles($fullDir);
+            foreach ($files as $file) {
+                if (count($docs) >= $maxFiles) {
+                    break 2;
+                }
+
+                $relative = str_replace('\\', '/', $file->getRelativePathname());
+                $relative = trim($dir . '/' . $relative, '/');
+                $allowed = collect($patterns)->contains(function ($pattern) use ($relative) {
+                    return fnmatch($pattern, basename($relative));
+                });
+                if (!$allowed) {
+                    continue;
+                }
+
+                $category = str_starts_with($relative, 'routes/') ? 'routing'
+                    : (str_starts_with($relative, 'app/Http/Controllers/') ? 'controller'
+                        : (str_starts_with($relative, 'resources/views/') ? 'view' : 'config'));
+                $docs[] = [
+                    'source' => $relative,
+                    'type' => 'code',
+                    'category' => $category,
+                    'summary' => "Dokumen aplikasi SITUBA kategori {$category}. Gunakan sebagai referensi perilaku fitur.",
+                ];
+            }
+        }
+
+        return response()->json([
+            'ok' => true,
+            'generated_at' => now()->toISOString(),
+            'root' => [
+                'label' => basename($root),
+                'is_accessible' => File::isDirectory($root),
+            ],
+            'docs' => $docs,
         ]);
     }
 }

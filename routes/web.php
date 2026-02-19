@@ -112,6 +112,8 @@ Route::get('/sitemap.xml', function () {
 });
 Route::get('/blog', [NewsController::class, 'publicIndex'])->name('blog.index');
 Route::get('/blog/{newsPost}', [NewsController::class, 'publicShow'])->name('blog.show');
+Route::view('/kebijakan-privasi', 'privacy')->name('privacy');
+Route::view('/bantuan', 'help')->name('help');
 
 // Public Material Access
 Route::get('/materi-edukasi', [KaderMaterialController::class, 'publicIndex'])->name('public.materi');

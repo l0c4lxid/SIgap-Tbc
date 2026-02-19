@@ -103,15 +103,15 @@
         <!-- Mobile Drawer -->
         <div id="mobile-menu"
             class="hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 shadow-xl flex-col p-6 space-y-4 md:hidden">
-            <a href="#alur" class="block text-base font-medium text-gray-700 py-2 border-b border-gray-50">Alur
+            <a href="#alur" class="block text-base font-medium text-gray-700 py-2 border-b border-gray-50"><i class="fa-solid fa-route mr-2 text-emerald-500"></i>Alur
                 SITUBA</a>
-            <a href="#dampak" class="block text-base font-medium text-gray-700 py-2 border-b border-gray-50">Dampak</a>
+            <a href="#dampak" class="block text-base font-medium text-gray-700 py-2 border-b border-gray-50"><i class="fa-solid fa-chart-line mr-2 text-emerald-500"></i>Dampak</a>
 
             <a href="{{ route('blog.index') }}"
-                class="block text-base font-medium text-gray-700 py-2 border-b border-gray-50">Berita & Edukasi</a>
+                class="block text-base font-medium text-gray-700 py-2 border-b border-gray-50"><i class="fa-solid fa-newspaper mr-2 text-emerald-500"></i>Berita & Edukasi</a>
             <a href="{{ route('login') }}"
                 class="block w-full text-center py-3 mt-4 rounded-lg bg-emerald-600 text-white font-bold shadow-md">
-                Masuk Dashboard
+                <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Masuk Dashboard
             </a>
         </div>
     </header>
@@ -213,7 +213,7 @@
                             
                             <!-- Mulai Pantau: Order 3 on Mobile (Above Title) -->
                             <a href="{{ route('login') }}" class="flex items-center justify-center px-8 py-3.5 rounded-lg bg-gray-900 text-white font-semibold shadow-xl hover:bg-emerald-600 transition-all hover:-translate-y-1 w-full sm:w-auto order-3 lg:order-none hero-reveal delay-400">
-                                Mulai Pantau Kasus
+                                <i class="fa-solid fa-chart-line mr-2"></i> Mulai Pantau Kasus
                             </a>
 
                             <!-- Pelajari Alur: Order 6 on Mobile (Below Desc) -->
@@ -236,6 +236,24 @@
                                 <i class="fa-solid fa-mobile-screen text-emerald-500"></i>
                                 <span>Mobile Ready</span>
                             </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 hero-reveal delay-500 order-6 lg:order-6">
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs text-gray-600">
+                                <i class="fa-solid fa-hospital text-emerald-500"></i> Puskesmas
+                            </span>
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs text-gray-600">
+                                <i class="fa-solid fa-people-group text-emerald-500"></i> Kader
+                            </span>
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs text-gray-600">
+                                <i class="fa-solid fa-city text-emerald-500"></i> Pemda
+                            </span>
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs text-gray-600">
+                                <i class="fa-solid fa-shield-heart text-emerald-500"></i> Monitoring
+                            </span>
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs text-gray-600">
+                                <i class="fa-solid fa-file-medical text-emerald-500"></i> Pelaporan
+                            </span>
                         </div>
                     </div>
 
@@ -653,8 +671,8 @@
             </div>
 
             <div class="flex gap-6 text-sm text-gray-500">
-                <a href="#" class="hover:text-emerald-600 transition-colors">Kebijakan Privasi</a>
-                <a href="#" class="hover:text-emerald-600 transition-colors">Bantuan</a>
+                <a href="{{ route('privacy') }}" class="hover:text-emerald-600 transition-colors">Kebijakan Privasi</a>
+                <a href="{{ route('help') }}" class="hover:text-emerald-600 transition-colors">Bantuan</a>
             </div>
         </div>
     </footer>

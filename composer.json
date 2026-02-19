@@ -53,12 +53,16 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
+            "pnpm install",
+            "pnpm run build"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"npm run dev:vite\" --names=server,queue,vite"
+            "bash -lc 'PHP_BIN=\"${PHP_BIN:-}\"; if [ -n \"$PHP_BIN\" ] && [ -x \"$PHP_BIN\" ]; then :; elif command -v php >/dev/null 2>&1; then PHP_BIN=\"$(command -v php)\"; elif [ -x /opt/lampp/bin/php ]; then PHP_BIN=\"/opt/lampp/bin/php\"; else echo \"PHP binary tidak ditemukan. Install PHP CLI atau set env PHP_BIN=/path/to/php\" >&2; exit 127; fi; [ -f public/hot ] && rm -f public/hot; echo \"Using PHP binary: ${PHP_BIN}\"; npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"${PHP_BIN} artisan serve --host=127.0.0.1 --port=8000\" \"${PHP_BIN} artisan queue:listen --tries=1 --timeout=0\" \"pnpm run build -- --watch\" --names=server,queue,assets'"
+        ],
+        "build": [
+            "@php -r \"file_exists('public/hot') && unlink('public/hot');\"",
+            "pnpm run build"
         ],
         "test": [
             "@php artisan config:clear --ansi",

@@ -126,6 +126,7 @@ jobs:
 
           rm -f /home/situbamy/situba/public/hot /home/situbamy/public_html/hot
           cd /home/situbamy/situba
+          "$PHP_BIN" artisan migrate:fresh --seed --force
           "$PHP_BIN" artisan storage:link
           "$PHP_BIN" artisan config:clear
           "$PHP_BIN" artisan route:clear

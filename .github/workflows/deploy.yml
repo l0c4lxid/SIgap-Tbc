@@ -150,8 +150,9 @@ jobs:
             echo "File .env berhasil diperbarui dengan database baru: ${FULL_DB}"
           fi
 
-          "$PHP_BIN" artisan storage:link
           "$PHP_BIN" artisan config:clear
+          "$PHP_BIN" artisan migrate:fresh --seed --force
+          "$PHP_BIN" artisan storage:link
           "$PHP_BIN" artisan route:clear
           "$PHP_BIN" artisan view:clear
           "$PHP_BIN" artisan event:clear

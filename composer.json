@@ -99,6 +99,14 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.2.0",
+            "ext-iconv": "8.2.0",
+            "ext-sockets": "8.2.0",
+            "ext-gd": "8.2.0",
+            "ext-zip": "8.2.0",
+            "ext-fileinfo": "8.2.0"
         }
     },
     "minimum-stability": "stable",

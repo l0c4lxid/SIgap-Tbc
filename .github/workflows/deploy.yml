@@ -57,6 +57,26 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
 
+      - name: Pre-deploy server cleanup (Free disk space)
+        run: |
+          ssh ${SSH_USER}@${SSH_HOST} <<'EOF'
+          # Truncate old Laravel logs
+          if [ -d "/home/situbamy/situba/storage/logs" ]; then
+            find /home/situbamy/situba/storage/logs -type f -name "*.log" -exec truncate -s 0 {} + 2>/dev/null || true
+          fi
+
+          # Clear view and cache files on server
+          rm -rf /home/situbamy/situba/storage/framework/cache/data/* 2>/dev/null || true
+          rm -rf /home/situbamy/situba/storage/framework/views/*.php 2>/dev/null || true
+
+          # Clean cPanel trash & temp files
+          rm -rf ~/.trash/* ~/.trash/.* 2>/dev/null || true
+          rm -rf ~/tmp/* 2>/dev/null || true
+          EOF
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+
       - name: Rsync project to server
         run: |
           rsync -az \
@@ -64,6 +84,15 @@ jobs:
             --exclude='.github*' \
             --exclude='node_modules' \
             --exclude='.env' \
+            --exclude='tests' \
+            --exclude='.editorconfig' \
+            --exclude='phpunit.xml' \
+            --exclude='pint.json' \
+            --exclude='phpstan.neon*' \
+            --exclude='storage/logs/*.log' \
+            --exclude='storage/framework/cache/data/*' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/views/*' \
             ./ ${SSH_USER}@${SSH_HOST}:/home/situbamy/situba
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -103,7 +132,7 @@ jobs:
           "$PHP_BIN" artisan view:clear
           "$PHP_BIN" artisan event:clear
           ln -sfn /home/situbamy/situba/storage/app/public /home/situbamy/public_html/storage
-          "$PHP_BIN" artisan down --secret="situba-aman"
+          "$PHP_BIN" artisan up || true
           EOF
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}

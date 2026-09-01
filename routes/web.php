@@ -115,6 +115,7 @@ Route::get('/blog/{newsPost}', [NewsController::class, 'publicShow'])->name('blo
 Route::view('/kebijakan-privasi', 'privacy')->name('privacy');
 Route::view('/bantuan', 'help')->name('help');
 
+
 // Public Material Access
 Route::get('/materi-edukasi', [KaderMaterialController::class, 'publicIndex'])->name('public.materi');
 

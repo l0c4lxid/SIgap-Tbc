@@ -1,10 +1,25 @@
 @php
-    $pageTitle = $title ?? (isset($subjudul) ? $subjudul . ' - ' . config('app.name', 'SITUBA') : 'SITUBA Surakarta | Tuberculosis Assistant');
-    $pageDescription = $description ?? 'SITUBA (Sistem Informasi Tuberkulosis Surakarta) - Platform digital kolaboratif Pemda, Puskesmas, Kelurahan, dan Kader Kesehatan untuk skrining dini, edukasi, dan monitoring eliminasi TBC di Kota Surakarta.';
-    $pageImage = $image ?? asset('android-chrome-512x512.png');
-    $pageUrl = $url ?? url()->current();
-    $pageType = $type ?? 'website';
+    $appName = config('app.name', 'SITUBA');
     $siteName = 'SITUBA Surakarta';
+    $pageTitle = $title ?? (isset($subjudul) ? $subjudul . ' - ' . $appName : 'SITUBA Surakarta | Tuberculosis Assistant');
+    $pageDescription = $description ?? 'SITUBA (Sistem Informasi Tuberkulosis Surakarta) - Platform digital kolaboratif Pemda, Puskesmas, Kelurahan, dan Kader Kesehatan untuk skrining dini, edukasi, dan monitoring eliminasi TBC di Kota Surakarta.';
+    
+    // Resolve absolute URL & force HTTPS for social scrapers (WhatsApp, FB, Telegram)
+    $baseUrl = url('/');
+    if (str_starts_with($baseUrl, 'http://') && !str_contains($baseUrl, 'localhost')) {
+        $baseUrl = str_replace('http://', 'https://', $baseUrl);
+    }
+
+    $rawImage = $image ?? asset('android-chrome-512x512.png');
+    if (!str_starts_with($rawImage, 'http')) {
+        $pageImage = rtrim($baseUrl, '/') . '/' . ltrim($rawImage, '/');
+    } else {
+        $pageImage = str_replace('http://situba.my.id', 'https://situba.my.id', $rawImage);
+    }
+
+    $rawUrl = $url ?? url()->current();
+    $pageUrl = str_replace('http://situba.my.id', 'https://situba.my.id', $rawUrl);
+    $pageType = $type ?? 'website';
 @endphp
 
 <!-- Primary Meta Tags -->
@@ -14,6 +29,11 @@
 <meta name="keywords" content="SITUBA, SITUBA Surakarta, TBC Surakarta, Tuberkulosis Solo, Skrining TBC, Puskesmas Surakarta, Kader Kesehatan Solo, Eliminasi TBC Solo, Dinas Kesehatan Surakarta">
 <meta name="author" content="Pemerintah Kota Surakarta & SITUBA">
 <meta name="robots" content="index, follow">
+
+<!-- Schema.org / Google / WhatsApp itemprop -->
+<meta itemprop="name" content="{{ $pageTitle }}">
+<meta itemprop="description" content="{{ $pageDescription }}">
+<meta itemprop="image" content="{{ $pageImage }}">
 
 <!-- Favicon & PWA Icons -->
 <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">

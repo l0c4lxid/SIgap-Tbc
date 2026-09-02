@@ -8,8 +8,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SITUBA | Blog & Berita</title>
-    <meta name="description" content="Kabar terbaru, artikel kesehatan, dan cerita sukses eliminasi TBC di Kota Surakarta.">
+
+    @include('partials.seo-meta', [
+        'title' => 'SITUBA | Blog & Berita Eliminasi TBC Surakarta',
+        'description' => 'Kabar terbaru, artikel edukasi kesehatan, dan cerita sukses gerakan eliminasi TBC di Kota Surakarta.'
+    ])
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

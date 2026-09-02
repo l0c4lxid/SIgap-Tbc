@@ -126,33 +126,8 @@ jobs:
 
           rm -f /home/situbamy/situba/public/hot /home/situbamy/public_html/hot
           cd /home/situbamy/situba
-
-          # --- Setup / Buat Database Baru via cPanel uAPI ---
-          CP_USER="$(whoami)"
-          NEW_DB_NAME="situba_app"
-          NEW_DB_USER="situba_usr"
-          NEW_DB_PASS="SitubaSecure2026!#"
-
-          FULL_DB="${CP_USER}_${NEW_DB_NAME}"
-          FULL_USER="${CP_USER}_${NEW_DB_USER}"
-
-          echo "Membuat database: $FULL_DB dan user: $FULL_USER..."
-          uapi Mysql create_database name="${FULL_DB}"
-          uapi Mysql create_user name="${FULL_USER}" password="${NEW_DB_PASS}"
-          uapi Mysql set_privileges_on_database user="${FULL_USER}" database="${FULL_DB}" privileges=ALL%20PRIVILEGES
-
-          # Update .env di server dengan kredensial database baru
-          if [ -f "/home/${CP_USER}/situba/.env" ]; then
-            cd "/home/${CP_USER}/situba"
-            grep -q "^DB_DATABASE=" .env && sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${FULL_DB}|" .env || echo "DB_DATABASE=${FULL_DB}" >> .env
-            grep -q "^DB_USERNAME=" .env && sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${FULL_USER}|" .env || echo "DB_USERNAME=${FULL_USER}" >> .env
-            grep -q "^DB_PASSWORD=" .env && sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=\"${NEW_DB_PASS}\"|" .env || echo "DB_PASSWORD=\"${NEW_DB_PASS}\"" >> .env
-            echo "File .env berhasil diperbarui dengan database baru: ${FULL_DB}"
-          fi
-
-          "$PHP_BIN" artisan config:clear
-          "$PHP_BIN" artisan migrate:fresh --seed --force
           "$PHP_BIN" artisan storage:link
+          "$PHP_BIN" artisan config:clear
           "$PHP_BIN" artisan route:clear
           "$PHP_BIN" artisan view:clear
           "$PHP_BIN" artisan event:clear

@@ -5,10 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>SItuba | {{ $subjudul ?? 'SItuba' }}</title>
-
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.ico') }}">
+        @include('partials.seo-meta', [
+            'title' => 'SITUBA | ' . ($subjudul ?? 'SITUBA')
+        ])
         
         <!--     Fonts and icons     -->
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />

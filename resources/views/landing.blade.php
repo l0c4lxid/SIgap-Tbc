@@ -4,7 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SITUBA Surakarta | Tuberculosis Assistant</title>
+
+    @include('partials.seo-meta', [
+        'title' => 'SITUBA Surakarta | Tuberculosis Assistant',
+        'description' => 'SITUBA (Sistem Informasi Tuberkulosis Surakarta) - Platform digital kolaboratif Pemda, Puskesmas, Kelurahan, dan Kader Kesehatan untuk skrining dini, monitoring, dan eliminasi TBC di Kota Surakarta.'
+    ])
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

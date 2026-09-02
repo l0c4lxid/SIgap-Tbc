@@ -7,8 +7,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $post->title }} | SITUBA Blog</title>
-    <meta name="description" content="{{ Str::limit(strip_tags($post->summary ?? $post->content), 150) }}">
+
+    @include('partials.seo-meta', [
+        'title' => $post->title . ' | SITUBA Artikel',
+        'description' => Str::limit(strip_tags($post->summary ?? $post->content), 160),
+        'image' => (!empty($post->image) ? (str_starts_with($post->image, 'http') ? $post->image : asset('storage/' . $post->image)) : asset('android-chrome-512x512.png')),
+        'type' => 'article'
+    ])
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

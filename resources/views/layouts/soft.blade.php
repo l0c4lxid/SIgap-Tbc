@@ -30,12 +30,14 @@
                 'icon' => 'ri-stethoscope-line',
                 'active_routes' => ['pemda.screenings', 'pemda.screenings.show'],
             ],
+            /*
             [
                 'label' => 'Pusat WhatsApp',
                 'url' => route('pemda.whatsapp.index'),
                 'icon' => 'ri-whatsapp-line', 
                 'active_routes' => ['pemda.whatsapp.index', 'pemda.whatsapp.create', 'pemda.whatsapp.show'],
             ],
+            */
             ['label' => 'Materi', 'url' => route('pemda.materi'), 'icon' => 'ri-book-open-line'],
             ['label' => 'Semua Berita', 'url' => route('news.index'), 'icon' => 'ri-newspaper-line'],
         ],

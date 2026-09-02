@@ -111,10 +111,12 @@
                             <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded" {{ old('remember') ? 'checked' : '' }}>
                             <label for="remember" class="ml-2 block text-sm text-gray-600">Ingat Saya</label>
                         </div>
+                        {{-- 
                         <a href="{{ route('password.wa') }}" class="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1.5">
                             <i class="fab fa-whatsapp"></i>
                             <span>Lupa Password?</span>
                         </a>
+                        --}}
                     </div>
 
                     <div class="pt-2">

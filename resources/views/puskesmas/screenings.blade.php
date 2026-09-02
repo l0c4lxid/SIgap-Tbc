@@ -118,11 +118,13 @@
                             <td>
                                 <div class="flex flex-col gap-2">
                                     <span class="text-xs text-gray-600">{{ $screening->patient_phone ?? '-' }}</span>
+                                    {{-- 
                                     @if ($waLink)
                                         <a href="{{ $waLink }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 hover:text-green-700 no-underline bg-green-50 hover:bg-green-100 px-2 py-1 rounded-md transition-colors w-fit">
                                             <i class="ri-whatsapp-line"></i> Chat
                                         </a>
                                     @endif
+                                    --}}
                                 </div>
                             </td>
                         </tr>
